@@ -1,0 +1,69 @@
+# SentryAML - 本地开发数据库
+#
+# 启动:  docker compose up -d
+# 停止:  docker compose down          (数据保留)
+# 清空:  docker compose down -v       (删除数据卷，谨慎!)
+# 日志:  docker compose logs -f postgres
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: sentryaml-pg
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      # 统一字符集与排序规则，避免中文和特殊字符出问题
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+
+    ports:
+      # 宿主机端口:容器端口
+      # 如果你本机已经装了 Postgres 占用 5432，把左边改成 5433 即可
+      - "5433:5432"
+
+    volumes:
+      # 具名卷：数据存在 WSL2 的 ext4 磁盘里（也就是你已迁到 D 盘的 Docker 镜像位置）
+      # 不要改成绑定挂载 D:/... ，Windows 权限模型会让 Postgres 拒绝启动
+      - pgdata:/var/lib/postgresql/data
+      # SQL 脚本目录：只读绑定挂载，容器内可以用 psql -f /sql/xxx.sql 执行
+      - ./sql:/sql:ro
+
+    # 共享内存。Postgres 做大排序和建索引时会用到，
+    # Docker 默认只给 64MB，建 500 万行的索引会直接报错
+    shm_size: 1gb
+
+    # 针对"单机、大批量导入、大量分析查询"场景的参数调优
+    command:
+      - "postgres"
+      # 数据库自己的缓存池。经验值取物理内存的 25%，你有 15.75GB，这里给 2GB
+      - "-c"
+      - "shared_buffers=2GB"
+      # 单个查询做排序/哈希时可用的内存。调大能显著加速 GROUP BY 和 JOIN
+      - "-c"
+      - "work_mem=128MB"
+      # 建索引、VACUUM 时可用的内存。这个值直接决定后面建索引要几分钟还是几十分钟
+      - "-c"
+      - "maintenance_work_mem=1GB"
+      # 告诉优化器"操作系统层面大概有多少缓存可用"，影响它选择索引扫描还是全表扫描
+      - "-c"
+      - "effective_cache_size=6GB"
+      # SSD 的随机读代价接近顺序读，默认值 4.0 是给机械硬盘的，会让优化器过度回避索引
+      - "-c"
+      - "random_page_cost=1.1"
+      # 记录执行超过 1 秒的慢查询，方便后面做性能分析
+      - "-c"
+      - "log_min_duration_statement=1000"
+
+    # 健康检查：让 docker compose 知道数据库什么时候真的可以接受连接了
+    # （容器"启动"和 Postgres"就绪"之间有几秒差距）
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+    name: sentryaml_pgdata
