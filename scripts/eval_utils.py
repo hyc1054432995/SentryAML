@@ -34,10 +34,21 @@ def precision_at_recall(y: np.ndarray, score: np.ndarray, target: float) -> floa
 
 
 def alert_budget(y: np.ndarray, score: np.ndarray, frac: float) -> dict:
-    """把分数最高的 frac 比例交易标为告警，能抓到多少洗钱。"""
+    """
+    把分数最高的 frac 比例交易标为告警，能抓到多少洗钱。
+
+    并列处理：如果第 k 名的分数有很多交易并列（单特征模型、规则类分数很常见），
+    "取哪几笔"不能交给排序算法随手决定——那样结果取决于行的物理顺序，而不是模型。
+    这里按"并列者中随机抽取"的期望值计算：
+        分数 > 门槛的全部计入；等于门槛的，按需要的名额比例计入。
+    分数连续、几乎没有并列时，结果与直接取前 k 名相同。
+    """
     k = max(1, math.ceil(frac * len(y)))
-    top = np.argpartition(-score, k - 1)[:k]        # 取前 k 大，不必全排序
-    tp = int(y[top].sum())
+    thr = np.partition(score, len(score) - k)[len(score) - k]   # 第 k 大的分数
+    above = score > thr
+    at = score == thr
+    need = k - int(above.sum())                                 # 并列组里还要取几笔
+    tp = float(y[above].sum()) + need * float(y[at].mean())
     return {"alerts": k, "tp": tp,
             "precision": tp / k,
             "recall": tp / int(y.sum())}
@@ -80,7 +91,7 @@ def print_report(m: dict, r: float, split_name: str = "验证集", rough_rule_co
     print("\n  --- 告警预算：只审查分数最高的一部分交易 ---")
     print(f"  {'预算':<10}{'告警数':>10}{'抓到':>8}{'召回率':>10}{'精确率':>10}")
     for name, b in m["budget"].items():
-        print(f"  {name:<10}{b['alerts']:>10,}{b['tp']:>8,}"
+        print(f"  {name:<10}{b['alerts']:>10,}{b['tp']:>8,.0f}"
               f"{b['recall']:>10.1%}{b['precision']:>10.2%}")
 
     if not rough_rule_compare:

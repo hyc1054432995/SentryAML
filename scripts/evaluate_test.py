@@ -17,6 +17,10 @@ SentryAML - M5：测试集评测（只运行一次）
 用法：
     python scripts/evaluate_test.py --model m4b       # 使用 M4b 手工最优（lgbm_best.txt）
     python scripts/evaluate_test.py --model optuna    # 使用 Optuna 最优（lgbm_optuna.txt）
+    python scripts/evaluate_test.py --model ablate_F  # 保守版本：去掉全部来往历史特征（M6b）
+
+保守版本属于 D24 事先登记的"有 / 无首次来往两个版本"，不是看过测试集后新挑的模型。
+每个模型的报告单独保存（m4b 为 m5_test.json，其他为 m5_test_<model>.json），各自只跑一次。
 """
 
 import argparse
@@ -45,6 +49,8 @@ REPORT_DIR = PROJECT_ROOT / "reports"
 MODELS = {
     "m4b":    ("lgbm_best.txt",   "lgbm_best_meta.joblib"),
     "optuna": ("lgbm_optuna.txt", "lgbm_optuna_meta.json"),
+    "ablate_E": ("lgbm_ablate_E.txt", "lgbm_ablate_E_meta.joblib"),
+    "ablate_F": ("lgbm_ablate_F.txt", "lgbm_ablate_F_meta.joblib"),
 }
 BUDGETS = (0.001, 0.005, 0.01)
 
@@ -120,7 +126,8 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 
-    out_path = REPORT_DIR / "m5_test.json"
+    out_path = REPORT_DIR / ("m5_test.json" if args.model == "m4b"
+                             else f"m5_test_{args.model}.json")
     if out_path.exists():
         print(f"注意：{out_path} 已存在，说明测试集已经评测过一次。")
         print("      如果这是为了换模型重跑，那测试集就不再是干净的了。继续请输入 yes：")
@@ -211,7 +218,8 @@ def main():
     if lr_path.exists():
         lr = joblib.load(lr_path)
         lr_cols = lr["features_num"] + lr["features_cat"]
-        X_lr = X_te[lr_cols].copy()
+        # 逻辑回归有自己的特征集合（可能包含被评测模型没用的列），单独读取
+        X_lr, _ = load_split("test", lr_cols, lr["features_cat"], None, args.seed)
         for c in lr["features_cat"]:
             X_lr[c] = X_lr[c].astype(str)
         s_lr = lr["pipeline"].predict_proba(X_lr)[:, 1]
