@@ -1,0 +1,748 @@
+# ============================================================================
+# SentryAML - RAG 评测问题集 v1（RAG 层 R4）
+# ============================================================================
+# 先有评测集，再做检索：之后每加一项技术（混合检索、重排、图扩展、上下文增强），
+# 都在这套题上量化"提升了多少"，而不是看几个例子觉得"好像变好了"。
+#
+# 字段：
+#   type         lookup 条款查找 / definition 定义 / exact_id 按编号查 / typology 由场景找风险信号 /
+#                str_filing 报送操作 / multi_hop 需要两条以上条款 / version 答案随调查日期变化 / unanswerable 知识库答不了
+#   lang         en / zh。中文题都与一道英文题配对，用来量跨语言检索的差距
+#   split        dev 开发集：调参、做消融都只看它；test 测试集：最后跑一次
+#   as_of        调查日期，默认 default_as_of。只检索这一天有效的文件版本（D45）
+#   gold         回答这道题必须用到的条款（文件族 + 编号；版本由 as_of 决定）
+#   also_ok      也能回答、检索到不扣分的条款（防止"只标一条正确答案"冤枉其他合理结果）
+#   near_miss    看起来相关、但不足以回答或会答错的条款（无答案题、版本题的陷阱）
+#   answer_keys  答案要点，必须逐字出现在 gold 原文里（rag_golden_check.py 核对）
+#   must_not     版本陷阱：答案里出现它，说明答成了另一个版本
+#   group        同组的题必须在同一侧（配对的版本题、共享前提的题）
+#
+# 切分规则（rag_golden_check.py 强制）：同一条款不能同时是开发集和测试集的 gold。
+# 否则在开发集上调参，就等于提前知道了测试集答案在哪。
+#
+# 修改流程：改这个文件 → python scripts/rag_golden_check.py → 通过后提交 git。
+# 测试集一旦用于报告结果就冻结；需要扩充时新建 v2，不改 v1。
+# ============================================================================
+default_as_of: '2026-09-30'
+questions:
+- id: q001
+  type: lookup
+  lang: en
+  split: dev
+  question: Is there a minimum transaction amount below which a bank does not need to report a suspicious transaction?
+  gold:
+  - {family: mas_n626, unit_id: '14.2'}
+  answer_keys: [regardless of the amount]
+- id: q002
+  type: lookup
+  lang: en
+  split: dev
+  question: For how many years do we have to hold on to transaction records?
+  gold:
+  - {family: mas_n626, unit_id: '12.3'}
+  answer_keys: [a period of at least 5 years following the completion of the transaction]
+- id: q003
+  type: lookup
+  lang: en
+  split: test
+  question: Can a bank keep its AML/CFT records purely in electronic form?
+  gold:
+  - {family: mas_n626, unit_id: '12.4'}
+  answer_keys: [in paper or electronic form, admissible as evidence]
+- id: q004
+  type: lookup
+  lang: en
+  split: test
+  question: A bank suspects money laundering but believes that carrying out further customer due diligence would alert the customer. What may it do?
+  gold:
+  - {family: mas_n626, unit_id: '14.4'}
+  answer_keys: [may stop performing those measures, file an STR]
+- id: q005
+  type: lookup
+  lang: en
+  split: test
+  question: If a bank has reasonable grounds to suspect a customer of money laundering but decides to keep the relationship, what must it do?
+  gold:
+  - {family: mas_n626, unit_id: '6.25'}
+  also_ok:
+  - {family: mas_n626, unit_id: '6.26'}
+  - {family: mas_n626_guidelines, unit_id: 14-4}
+  - {family: mas_tm_guidance, unit_id: '2.28'}
+  answer_keys: [substantiate and document the reasons, enhanced ongoing monitoring]
+- id: q006
+  type: lookup
+  lang: en
+  split: test
+  question: What should a bank do when it suspects that several smaller transactions are really one transaction deliberately broken up to avoid its controls?
+  gold:
+  - {family: mas_n626, unit_id: '6.4'}
+  answer_keys: [aggregate their values]
+- id: q007
+  type: lookup
+  lang: en
+  split: dev
+  question: Does a bank need to keep a record of alerts that were escalated internally but in the end not reported to STRO?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-6}
+  also_ok:
+  - {family: mas_tm_guidance, unit_id: '2.26'}
+  answer_keys: [including transactions that are not reported to STRO]
+- id: q008
+  type: lookup
+  lang: en
+  split: dev
+  question: Who should sign off on the thresholds in our monitoring rules, and how often should we revisit them?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 6-10-12}
+  also_ok:
+  - {family: mas_tm_guidance, unit_id: '2.11'}
+  - {family: mas_tm_guidance, unit_id: '2.5'}
+  answer_keys: [independently validated, periodically review]
+- id: q009
+  type: lookup
+  lang: en
+  split: dev
+  question: A client has accounts in both private banking and retail. Should monitoring look at them separately?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 6-10-10}
+  also_ok:
+  - {family: mas_n626_guidelines, unit_id: 6-10-11}
+  answer_keys: [holistically within a business unit and across business units]
+- id: q010
+  type: lookup
+  lang: en
+  split: dev
+  question: What kinds of transactions must a bank pay special attention to during ongoing monitoring?
+  gold:
+  - {family: mas_n626, unit_id: '6.21'}
+  also_ok:
+  - {family: mas_n626, unit_id: '6.22'}
+  answer_keys: ['complex, unusually large or unusual patterns of transactions', no apparent or visible economic or lawful purpose]
+- id: q011
+  type: lookup
+  lang: en
+  split: test
+  question: Once unusual transactions are identified, what is the bank expected to find out and record about them?
+  gold:
+  - {family: mas_n626, unit_id: '6.23'}
+  answer_keys: [inquire into the background and purpose, document its findings]
+- id: q012
+  type: lookup
+  lang: en
+  split: dev
+  question: A transaction looked normal when it happened, but later information makes it look suspicious. Does the bank still have to report it?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-3}
+  also_ok:
+  - {family: mas_tm_guidance, unit_id: '2.26'}
+  answer_keys: ['if suspicions are raised later, an obligation to report then arises']
+- id: q013
+  type: lookup
+  lang: en
+  split: dev
+  question: How should a bank alert STRO when a case is urgent, for example because it is part of an ongoing investigation?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-5}
+  answer_keys: [initial notification to STRO by telephone or email]
+- id: q014
+  type: lookup
+  lang: en
+  split: test
+  question: What does MAS expect banks to do about transaction monitoring alerts that are not cleared on time?
+  gold:
+  - {family: mas_tm_guidance, unit_id: '2.22'}
+  answer_keys: [escalating overdue alerts, ageing reports]
+- id: q015
+  type: lookup
+  lang: en
+  split: dev
+  question: Before an analyst dismisses a monitoring hit, what level of scrutiny is expected?
+  gold:
+  - {family: mas_tm_guidance, unit_id: '2.20'}
+  answer_keys: [adequate due diligence and challenge before dismissing alerts, review customers' history of past transactions and alerts]
+- id: q016
+  type: lookup
+  lang: en
+  split: dev
+  question: What internal arrangement must a bank have so that staff know where to send transactions they suspect are linked to money laundering?
+  gold:
+  - {family: mas_n626, unit_id: '14.1'}
+  answer_keys: [single reference point]
+- id: q017
+  type: lookup
+  lang: en
+  split: dev
+  question: A customer turns up in press reports linked to a fraud ring. Should that by itself make the bank think about reporting?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-3}
+  also_ok:
+  - {family: mas_tm_guidance, unit_id: '2.25'}
+  answer_keys: [adverse news in relation to financial crime]
+- id: q018
+  type: lookup
+  lang: en
+  split: test
+  question: What processes should a bank have for concerns of higher ML/TF risk that come up before any suspicion has been formed?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-A}
+  answer_keys: [identify and prioritise the review of concerns of higher ML/TF risks, escalated to senior management]
+- id: q019
+  type: version
+  lang: en
+  split: dev
+  as_of: '2025-03-01'
+  question: Within what time should a bank complete its internal evaluation of whether to file an STR?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-1}
+  answer_keys: [should not exceed 15 business days]
+  must_not: [after suspicion was first established]
+  group: str_deadline
+- id: q020
+  type: version
+  lang: en
+  split: dev
+  question: Within what time should a bank file an STR once a matter is escalated?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-1}
+  also_ok:
+  - {family: mas_n626_guidelines, unit_id: fn14}
+  answer_keys: [should not exceed 5 business days after suspicion was first established]
+  must_not: [15 business days]
+  group: str_deadline
+- id: q021
+  type: version
+  lang: en
+  split: dev
+  as_of: '2025-03-01'
+  question: When a bank files an STR, does it also have to send a copy to MAS?
+  gold:
+  - {family: mas_n626, unit_id: '14.2'}
+  answer_keys: [extend a copy to the Authority for information]
+  must_not: [upon request]
+- id: q022
+  type: version
+  lang: en
+  split: dev
+  question: When a bank files an STR, does it also have to send a copy to MAS?
+  gold:
+  - {family: mas_n626, unit_id: '14.2'}
+  answer_keys: [extend a copy to the Authority upon request]
+  must_not: [for information]
+- id: q023
+  type: version
+  lang: en
+  split: dev
+  as_of: '2025-03-01'
+  question: For a corporate customer, must the bank identify its legal form, constitution and powers, and which paragraph of the Notice requires this?
+  gold:
+  - {family: mas_n626, unit_id: '6.7'}
+  answer_keys: ['legal form, constitution and powers']
+  group: legal_form
+- id: q024
+  type: version
+  lang: en
+  split: dev
+  question: For a corporate customer, must the bank identify its legal form, constitution and powers, and which paragraph of the Notice requires this?
+  gold:
+  - {family: mas_n626, unit_id: '6.6'}
+  also_ok:
+  - {family: mas_n626, unit_id: '6.7'}
+  answer_keys: ['the legal form, constitution, and powers that regulate and bind']
+  group: legal_form
+  note: 2025 版把 6.7 删除、内容并入 6.6(b)(ix)；引用 6.7 即为引用了已删除的条款
+- id: q025
+  type: version
+  lang: en
+  split: test
+  as_of: '2025-08-01'
+  question: We already reported this customer and now see new suspicious activity. What do the Guidelines say we should consider?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-4}
+  answer_keys: [further or supplementary STR]
+  note: STR 表格指南 2026-08-20 才生效，此日期下不能引用
+- id: q026
+  type: version
+  lang: en
+  split: test
+  question: For a customer that is not high risk, if the bank cannot obtain the beneficial owner's identification number or residential address, what can it collect instead?
+  gold:
+  - {family: mas_n626, unit_id: 6.14C}
+  answer_keys: [date of birth and nationality, business address of the beneficial owner]
+  group: bo_alt
+- id: q027
+  type: version
+  lang: en
+  split: test
+  as_of: '2025-03-01'
+  question: For a customer that is not high risk, if the bank cannot obtain the beneficial owner's identification number or residential address, what can it collect instead?
+  gold: []
+  near_miss:
+  - {family: mas_n626, unit_id: 6.8A}
+  - {family: mas_n626, unit_id: '6.14'}
+  why: 6.14C 自 2025-07-01 起生效；2024 版只对关联方（connected party）有类似安排（6.8A），不适用于受益所有人
+  group: bo_alt
+- id: q028
+  type: multi_hop
+  lang: en
+  split: dev
+  question: For STRs involving sanctioned parties, what is the filing deadline and from what moment is it counted?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-1}
+  - {family: mas_n626_guidelines, unit_id: fn17}
+  also_ok:
+  - {family: mas_n626_guidelines, unit_id: fn15}
+  - {family: mas_n626_guidelines, unit_id: fn16}
+  answer_keys: [no later than 1 business day after suspicion was first established, concludes that the filing of an STR is warranted]
+  group: str_deadline
+- id: q029
+  type: multi_hop
+  lang: en
+  split: dev
+  question: Where do the Guidelines list examples of suspicious transactions, and what is one example involving an account that used to be inactive?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-3}
+  - {family: mas_n626_guidelines, unit_id: B-2}
+  answer_keys: [Appendix B, intensive use of what was previously a relatively inactive account]
+- id: q030
+  type: multi_hop
+  lang: en
+  split: test
+  question: A bank participating in COSMIC decides to keep a customer it suspects of money laundering. Which Notice paragraph applies and what does it require?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 6-10-13}
+  - {family: mas_n626, unit_id: '6.25'}
+  also_ok:
+  - {family: mas_n626, unit_id: '6.26'}
+  answer_keys: [paragraph 6.25 of the Notice, substantiate and document the reasons]
+- id: q031
+  type: multi_hop
+  lang: en
+  split: dev
+  question: What are examples of higher-risk customers for which enhanced CDD under Notice paragraph 8.7 applies, and what does 8.7 require?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 8-2}
+  - {family: mas_n626, unit_id: '8.7'}
+  answer_keys: [cash-intensive businesses, enhanced CDD measures in paragraph 8.3]
+- id: q032
+  type: multi_hop
+  lang: en
+  split: dev
+  question: The MAS transaction monitoring guidance points to specific Notice paragraphs on ongoing monitoring. What systems do those paragraphs require a bank to put in place?
+  gold:
+  - {family: mas_tm_guidance, unit_id: fn3}
+  - {family: mas_n626, unit_id: '6.22'}
+  also_ok:
+  - {family: mas_n626, unit_id: '6.19'}
+  - {family: mas_n626, unit_id: '6.20'}
+  - {family: mas_n626, unit_id: '6.21'}
+  answer_keys: [Paragraphs 6.19-6.26 of MAS Notice 626, adequate systems and processes]
+- id: q033
+  type: multi_hop
+  lang: en
+  split: test
+  question: In the AMLworld dataset, are transactions outside the eight laundering patterns also labelled as laundering?
+  gold:
+  - {family: ibm_aml_paper, unit_id: p5.5}
+  - {family: ibm_aml_paper, unit_id: p5.6}
+  answer_keys: [through all transactions used to launder those funds, not limited to specific patterns]
+- id: q034
+  type: definition
+  lang: en
+  split: dev
+  question: What is STRO?
+  gold:
+  - {family: mas_n626, unit_id: '2.1:STRO'}
+  answer_keys: [Commercial Affairs Department of the Singapore Police Force]
+- id: q035
+  type: definition
+  lang: en
+  split: test
+  question: Who counts as the beneficial owner of a customer?
+  gold:
+  - {family: mas_n626, unit_id: '2.1:beneficial owner'}
+  answer_keys: [ultimately owns or controls the customer]
+- id: q036
+  type: definition
+  lang: en
+  split: dev
+  question: What is proliferation financing?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 1-4-6A}
+  answer_keys: [proliferation of weapons of mass destruction]
+- id: q037
+  type: definition
+  lang: en
+  split: dev
+  question: What does nested correspondent banking mean?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: fn13}
+  answer_keys: [respondent FIs]
+- id: q038
+  type: definition
+  lang: en
+  split: dev
+  question: What are the three stages of money laundering?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 1-4-2}
+  answer_keys: [Placement, Layering, Integration]
+- id: q039
+  type: definition
+  lang: en
+  split: test
+  question: What does 'source of wealth' refer to?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 8-5-5}
+  answer_keys: [entire body of wealth]
+- id: q040
+  type: definition
+  lang: en
+  split: dev
+  question: What is a scatter-gather pattern?
+  gold:
+  - {family: ibm_aml_paper, unit_id: p4.5}
+  answer_keys: [to the same set of intermediate vertices]
+- id: q041
+  type: definition
+  lang: en
+  split: test
+  question: What is a professional money launderer?
+  gold:
+  - {family: fatf_pml, unit_id: p8.1}
+  also_ok:
+  - {family: fatf_pml, unit_id: p8.2}
+  answer_keys: [third-party laundering for a fee or commission]
+- id: q042
+  type: typology
+  lang: en
+  split: test
+  question: An account gets a big incoming wire and within hours sends almost all of it onward, so the balance stays close to zero. Which red-flag indicators describe this behaviour?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: B-4}
+  - {family: fatf_cef, unit_id: p65.4}
+  also_ok:
+  - {family: mas_n626_guidelines, unit_id: B-2}
+  - {family: mas_tm_guidance, unit_id: case-B}
+  answer_keys: [High velocity of funds through an account, in order to empty the account]
+- id: q043
+  type: typology
+  lang: en
+  split: dev
+  question: A personal account showed almost no activity for months and is now suddenly receiving and paying out large sums with no clear purpose. Which suspicious-transaction example fits?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: B-2}
+  also_ok:
+  - {family: mas_n626_guidelines, unit_id: B-3}
+  - {family: mas_tm_guidance, unit_id: '2.8'}
+  answer_keys: [previously a relatively inactive account]
+- id: q044
+  type: typology
+  lang: en
+  split: dev
+  question: Lots of different people are paying cash into one person's account without any explanation. Is there a matching red flag?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: B-5}
+  also_ok:
+  - {family: mas_n626_guidelines, unit_id: B-4}
+  answer_keys: [remitted to a single account by a large number of different persons]
+- id: q045
+  type: typology
+  lang: en
+  split: dev
+  question: Money arrives from a company overseas and is immediately sent back to another party in the same country. What do the Guidelines call this?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: B-5}
+  answer_keys: [U-turn]
+- id: q046
+  type: typology
+  lang: en
+  split: dev
+  question: A customer opened three accounts, moved large sums between them over a few days and then paid it all to an unknown third party. The analyst closed the alerts as transfers between the customer's
+    own accounts. Was that right?
+  gold:
+  - {family: mas_tm_guidance, unit_id: case-M}
+  answer_keys: [first party (inter-account) transfers, not a known counterparty]
+- id: q047
+  type: typology
+  lang: en
+  split: dev
+  question: Our pass-through rule fires on total inflows versus outflows over a period. What weakness did MAS find with this kind of rule?
+  gold:
+  - {family: mas_tm_guidance, unit_id: case-B}
+  answer_keys: ['1:1 pass-through transactions']
+- id: q048
+  type: typology
+  lang: en
+  split: test
+  question: What role do money mule accounts play in laundering?
+  gold:
+  - {family: fatf_pml, unit_id: p25.4}
+  answer_keys: [initial layering stage]
+- id: q049
+  type: typology
+  lang: en
+  split: dev
+  question: How do professional launderers use shell companies to hide where the money came from?
+  gold:
+  - {family: fatf_pml, unit_id: p28.2}
+  also_ok:
+  - {family: fatf_pml, unit_id: p28.3}
+  answer_keys: [multiple layers of shell companies, redistribute and mix funds]
+- id: q050
+  type: typology
+  lang: en
+  split: dev
+  question: What are the typical steps of a cross-border laundering scheme run by a proxy network?
+  gold:
+  - {family: fatf_pml, unit_id: p28.3}
+  answer_keys: [shell companies controlled by the PML, mixed within the same accounts]
+- id: q051
+  type: typology
+  lang: en
+  split: test
+  question: A brand-new account starts moving money in and out right after it is opened. Which FATF indicator covers this?
+  gold:
+  - {family: fatf_cef, unit_id: p65.3}
+  answer_keys: [after opening of an account]
+- id: q052
+  type: typology
+  lang: en
+  split: dev
+  question: Is it a risk indicator if the account holder was previously a scam victim or was used as a money mule?
+  gold:
+  - {family: fatf_cef, unit_id: p67.7}
+  answer_keys: ['known or suspected previous victim of scam, mule']
+- id: q053
+  type: typology
+  lang: en
+  split: dev
+  question: A customer makes many small cash deposits, each unremarkable, that together add up to a large amount. Which example in the Guidelines matches?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: B-3}
+  answer_keys: [cumulative total of which is substantial]
+- id: q054
+  type: typology
+  lang: en
+  split: dev
+  question: Which known typologies have banks designed TM scenarios to target, according to MAS?
+  gold:
+  - {family: mas_tm_guidance, unit_id: '2.7'}
+  also_ok:
+  - {family: mas_tm_guidance, unit_id: '2.8'}
+  answer_keys: ['smurfing, pass-through payments, or circular flows']
+- id: q055
+  type: typology
+  lang: en
+  split: test
+  question: Outgoing transfers keep lining up with cash that came in a day earlier. Should that worry us?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: B-4}
+  answer_keys: [Matching of payments out with credits paid in by cash]
+- id: q056
+  type: str_filing
+  lang: en
+  split: dev
+  question: How many transactions can be entered directly in the STR form, and what if there are more?
+  gold:
+  - {family: spf_str_form_guide, unit_id: p17}
+  answer_keys: [maximum no. of transactions that can be added is 40, .csv file]
+- id: q057
+  type: str_filing
+  lang: en
+  split: test
+  question: How long can the free-text explanation in the report be?
+  gold:
+  - {family: spf_str_form_guide, unit_id: p23}
+  answer_keys: ['10,000']
+- id: q058
+  type: str_filing
+  lang: en
+  split: test
+  question: Can we send our suspicious transaction report by post or email, or is there a required channel?
+  gold:
+  - {family: spf_stro_page, unit_id: p1.4}
+  also_ok:
+  - {family: spf_str_form_guide, unit_id: p25}
+  - {family: mas_tm_guidance, unit_id: '2.25'}
+  answer_keys: [electronically via STRO Online Notices And Reporting platform (SONAR)]
+- id: q059
+  type: str_filing
+  lang: en
+  split: dev
+  question: I need to correct a mistake in an STR that was already submitted. How do I file the follow-up?
+  gold:
+  - {family: spf_str_form_guide, unit_id: p24}
+  answer_keys: [Reference number of previously filed STR]
+- id: q060
+  type: str_filing
+  lang: en
+  split: dev
+  question: Who in Singapore is legally required to file an STR, and under which law?
+  gold:
+  - {family: spf_stro_page, unit_id: p1.3}
+  answer_keys: [know or have reasonable grounds to suspect, Section 45]
+- id: q061
+  type: str_filing
+  lang: en
+  split: dev
+  question: The report I am filing is not tied to any police advisory. What do I enter in the NRN field?
+  gold:
+  - {family: spf_str_form_guide, unit_id: p5}
+  answer_keys: [select the "N/A" checkbox]
+- id: q062
+  type: str_filing
+  lang: en
+  split: test
+  question: Besides the account holder, who else has to be named as an involved person in the report?
+  gold:
+  - {family: spf_str_form_guide, unit_id: p9}
+  answer_keys: ['joint accounts holders, authorised signatories and beneficial owners']
+- id: q063
+  type: exact_id
+  lang: en
+  split: dev
+  question: What does paragraph 12.5 of MAS Notice 626 require?
+  gold:
+  - {family: mas_n626, unit_id: '12.5'}
+  answer_keys: [under investigation, subject of an STR]
+- id: q064
+  type: exact_id
+  lang: en
+  split: dev
+  question: Summarise paragraph 14-6 of the Guidelines to MAS Notice 626.
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-6}
+  answer_keys: [basis for not submitting STRs]
+- id: q065
+  type: exact_id
+  lang: en
+  split: test
+  question: What happened in Case Study G of the MAS transaction monitoring guidance?
+  gold:
+  - {family: mas_tm_guidance, unit_id: case-G}
+  answer_keys: [closed alerts without appropriate levels of inquiry and probing]
+- id: q066
+  type: exact_id
+  lang: en
+  split: dev
+  question: What does footnote 2 of the MAS TM guidance explain?
+  gold:
+  - {family: mas_tm_guidance, unit_id: fn2}
+  answer_keys: [increasing and decreasing the pre-determined thresholds]
+- id: q067
+  type: lookup
+  lang: zh
+  split: dev
+  question: 可疑交易金额很小的话，银行还需要报告吗？
+  gold:
+  - {family: mas_n626, unit_id: '14.2'}
+  answer_keys: [regardless of the amount]
+- id: q068
+  type: version
+  lang: zh
+  split: dev
+  question: 银行确立怀疑之后，最晚几个工作日内必须提交可疑交易报告？
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 14-1}
+  answer_keys: [5 business days after suspicion was first established]
+  must_not: [15 business days]
+  group: str_deadline
+- id: q069
+  type: lookup
+  lang: zh
+  split: dev
+  question: 与交易相关的资料至少要保存多久？
+  gold:
+  - {family: mas_n626, unit_id: '12.3'}
+  answer_keys: [a period of at least 5 years following the completion of the transaction]
+- id: q070
+  type: typology
+  lang: zh
+  split: test
+  question: 账户收到一大笔转账后马上全部转走，余额几乎为零，这对应哪些风险信号？
+  gold:
+  - {family: mas_n626_guidelines, unit_id: B-4}
+  - {family: fatf_cef, unit_id: p65.4}
+  answer_keys: [High velocity of funds through an account, in order to empty the account]
+- id: q071
+  type: typology
+  lang: zh
+  split: dev
+  question: 什么是 U 型交易（U-turn）？
+  gold:
+  - {family: mas_n626_guidelines, unit_id: B-5}
+  answer_keys: [U-turn]
+- id: q072
+  type: str_filing
+  lang: zh
+  split: dev
+  question: 可疑交易报告表里最多能直接填写多少笔交易？
+  gold:
+  - {family: spf_str_form_guide, unit_id: p17}
+  answer_keys: [maximum no. of transactions that can be added is 40]
+- id: q073
+  type: definition
+  lang: zh
+  split: dev
+  question: 洗钱的三个阶段分别是什么？
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 1-4-2}
+  answer_keys: [Placement, Layering, Integration]
+- id: q074
+  type: typology
+  lang: zh
+  split: test
+  question: 钱骡账户在洗钱过程中起什么作用？
+  gold:
+  - {family: fatf_pml, unit_id: p25.4}
+  answer_keys: [initial layering stage]
+- id: q075
+  type: unanswerable
+  lang: en
+  split: test
+  question: What is the cash amount above which US banks must file a Currency Transaction Report?
+  gold: []
+  why: 美国法规不在知识库内
+- id: q076
+  type: unanswerable
+  lang: en
+  split: dev
+  question: What is the maximum fine for failing to file an STR in Singapore?
+  gold: []
+  near_miss:
+  - {family: spf_stro_page, unit_id: p1.3}
+  why: STRO 页面只说未报送“可能构成刑事犯罪”，没有给出罚款金额；CDSA 原文不在知识库内
+- id: q077
+  type: unanswerable
+  lang: en
+  split: dev
+  question: Within how many days must suspicious transaction reports be filed under Malaysia's AML rules?
+  gold: []
+  why: 马来西亚法规不在知识库内；FATF CEF 报告提到马来西亚的反诈中心，但不涉及报送时限
+- id: q078
+  type: unanswerable
+  lang: en
+  split: dev
+  question: How long must banks in Hong Kong keep customer records?
+  gold: []
+  why: 香港法规不在知识库内
+- id: q079
+  type: unanswerable
+  lang: en
+  split: test
+  question: How many STRs did STRO receive last year?
+  gold: []
+  why: 知识库没有 STRO 的统计数据
+- id: q080
+  type: unanswerable
+  lang: en
+  split: dev
+  question: Which transaction monitoring software vendors has MAS approved for banks?
+  gold: []
+  why: MAS 文件不涉及具体供应商
+- id: q081
+  type: unanswerable
+  lang: zh
+  split: dev
+  question: MAS 对 2023 年新加坡 30 亿新元洗钱案涉及的银行罚了多少钱？
+  gold: []
+  why: 知识库没有执法处罚记录

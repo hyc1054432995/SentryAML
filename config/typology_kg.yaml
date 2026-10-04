@@ -1,0 +1,249 @@
+# ============================================================================
+# SentryAML - 洗钱手法知识图谱（RAG 层 R3）
+# ============================================================================
+# 四类节点，三种边，以"手法"为中心：
+#
+#                        ┌─has_indicator─▶ 风险信号 indicator（监管 / FATF 原文怎么描述：文字证据）
+#   手法 typology ───────┤
+#   （是什么、哪个阶段）   └─has_signal────▶ 数据信号 signal（我们的数据里怎么看到：数据证据）──measured_by──▶ 工具 tool
+#
+# 为什么不直接连 indicator → signal：监管原文的粒度和数据信号对不齐
+# （"High velocity of funds through an account" 同时对应过桥、扇入、扇出），硬连会产生大量多对多，
+# 而且每条边都要人来论证。"手法"是两边都能对齐的公共粒度。
+#
+# 规则：
+#   1. 每个 indicator 必须引用知识库里的原文：family + unit_id（+ 列表项编号 item）+ quote。
+#      quote 必须逐字出现在该单元的原文里——kb_typology_load.py 会逐条核对，对不上就拒绝入库。
+#      这张图是人整理的，但每一条边都能追溯到原文，不允许凭记忆写。
+#   2. 每个 signal 注明在我们数据里的度量方式（特征列名 / 工具），以及我们自己实测过的证据（决策编号）。
+#      特征列名会与 scripts/feature_spec.py 核对，写错了同样拒绝入库。
+#   3. 工具在 Agent 层实现；status 标明当前状态，backing 指向已有的实现基础。
+# ============================================================================
+
+typologies:
+  - id: fan_in
+    name: Fan-in（资金归集）
+    dataset_pattern: FAN-IN
+    stage: layering
+    description: 一个账户在短时间内从多个不同账户收款，典型为钱骡账户归集赃款或多账户汇集到一个收款点。
+    definition: {family: ibm_aml_paper, unit_id: p4.5, quote: "for a fan-in pattern, shown in Figure 2b, v is connected to k ≥ 2 different vertices via incoming edges"}
+    indicators: [mas_b4_v, mas_b4_vi, mas_b5_vii, mas_b5_i, pml_mule_accounts]
+    signals: [s_fan_in_cp, s_first_contact, s_amount_band]
+
+  - id: fan_out
+    name: Fan-out（资金分散）
+    dataset_pattern: FAN-OUT
+    stage: layering
+    description: 一个账户在短时间内向多个不同账户转出，把大额资金拆散，降低单笔可见度。
+    definition: {family: ibm_aml_paper, unit_id: p4.5, quote: "a fan-out pattern of vertex v, shown in Figure 2a, is defined by the outgoing edges of v connecting v to at least k ≥ 2 different vertices"}
+    indicators: [tm_aggregated_small, mas_b3_ix]
+    signals: [s_fan_out_cp, s_first_contact, s_amount_band]
+
+  - id: gather_scatter
+    name: Gather-scatter（过桥账户：先归集再分散）
+    dataset_pattern: GATHER-SCATTER
+    stage: layering
+    description: 同一账户先从多方收款、随即向多方转出，资金只"路过"。对应监管语言里的 pass-through / high velocity。
+    definition: {family: ibm_aml_paper, unit_id: p4.5, quote: "A gather-scatter pattern combines a fan-in pattern with a fan-out pattern of the same vertex"}
+    indicators: [mas_b4_i, mas_b4_iii, mas_b2_iii, cef_rapid_empty, tm_case_b_pass_through, tm_case_m_pass_through]
+    signals: [s_pass_through, s_fan_in_cp, s_fan_out_cp, s_same_owner]
+
+  - id: scatter_gather
+    name: Scatter-gather（拆分后经中间账户重新汇合）
+    dataset_pattern: SCATTER-GATHER
+    stage: layering
+    description: 资金从一个账户分散到多个中间账户，再汇合到另一个账户；中间层常为壳公司或钱骡。
+    definition: {family: ibm_aml_paper, unit_id: p4.5, quote: "form a scatter-gather pattern if the fan-out and the fan-in patterns connect vertices v and u, respectively, to the same set of intermediate vertices"}
+    indicators: [pml_shell_layers, mas_b5_i]
+    signals: [s_common_intermediaries, s_first_contact]
+
+  - id: cycle
+    name: Cycle（资金回流 / 循环转账）
+    dataset_pattern: CYCLE
+    stage: layering
+    description: 资金经过若干账户后回到起点，制造交易外观、掩盖来源；跨境时称 U-turn。
+    definition: {family: ibm_aml_paper, unit_id: p4.6, quote: "A simple cycle pattern, shown in Figure 2e, is a sequence of edges that starts and ends with the same vertex and visits other vertices at most once"}
+    indicators: [mas_b5_viii]
+    signals: [s_cycle_3plus, s_round_trip_2hop]
+
+  - id: random_walk
+    name: Random（受控账户间的随机游走）
+    dataset_pattern: RANDOM
+    stage: layering
+    description: 与循环类似但资金不回到起点，在同一控制人名下的多个账户（含壳公司）之间多跳转移。
+    definition: {family: ibm_aml_paper, unit_id: p4.6, quote: "random can be viewed as a random walk among accounts owned or controlled"}
+    indicators: [mas_layering_def, pml_shell_layers, mas_b2_ii]
+    signals: [s_multi_hop_chain, s_same_owner, s_first_contact]
+
+  - id: bipartite
+    name: Bipartite（一组账户到另一组账户）
+    dataset_pattern: BIPARTITE
+    stage: layering
+    description: 一组输入账户把资金转给一组输出账户，常见于代理网络（proxy network）为多名客户集中转移资金。
+    definition: {family: ibm_aml_paper, unit_id: p4.6, quote: "A bipartite pattern in Figure 2g moves funds from a set of input accounts to a set of output accounts"}
+    indicators: [pml_proxy_network]
+    signals: [s_common_intermediaries, s_first_contact]
+
+  - id: stack
+    name: Stack（多层 bipartite）
+    dataset_pattern: STACK
+    stage: layering
+    description: 在 bipartite 之上再加一层，形成多层转账结构，对应多层壳公司的分层转移。
+    definition: {family: ibm_aml_paper, unit_id: p4.6, quote: "a stack pattern in Figure 2h extends the bipartite pattern by adding an additional bipartite layer"}
+    indicators: [pml_shell_layers, mas_layering_def]
+    signals: [s_multi_hop_chain, s_common_intermediaries]
+
+  - id: dormant_activation
+    name: 休眠 / 新开账户被突然启用
+    dataset_pattern: null
+    stage: placement
+    description: 长期不活跃或刚开立的账户突然有大额进出，典型的钱骡账户特征。注意：人群变化时误报极多（D36）。
+    definition: {family: mas_n626_guidelines, unit_id: B-2, item: "iv)", quote: "intensive use of what was previously a relatively inactive account"}
+    indicators: [mas_b2_iv, mas_b3_iv, cef_after_opening, tm_deviation_inactivity, pml_mule_accounts]
+    signals: [s_dormant_reactivation, s_amount_band]
+
+  - id: structuring
+    name: 拆分交易（structuring）
+    dataset_pattern: null
+    stage: placement
+    description: 把大额拆成多笔中等金额，每笔都不显眼，累计却很大。本数据集洗钱金额集中在 1,000–25,000 美元（D13）。
+    definition: {family: mas_n626_guidelines, unit_id: B-3, item: "ix)", quote: "the amount of each deposit is not substantial, but the cumulative total of which is substantial"}
+    indicators: [mas_b3_ix, tm_aggregated_small]
+    signals: [s_amount_band, s_fan_out_cp]
+
+  - id: known_launderer_integration
+    name: 已知洗钱账户的后续交易（整合阶段）
+    dataset_pattern: null
+    stage: integration
+    description: >-
+      洗钱资金在分层之后被花出去、重新进入正常经济活动，这些交易本身看起来很普通。
+      IBM 数据集把非法资金从源头到所有使用它的交易都标为洗钱，所以"无模式标签的洗钱"大量来自这一阶段——
+      这解释了 D37 的盲区：训练期已洗过钱的账户，其后续交易模型召回仅 4%。
+    definition: {family: ibm_aml_paper, unit_id: p5.5, quote: "AMLworld tags illicit funds from their origin (e.g. smuggling proceeds) through all transactions used to launder those funds"}
+    indicators: [mas_integration_def, cef_adverse_mule]
+    signals: [s_known_launderer]
+
+# ----------------------------------------------------------------------------
+indicators:
+  - {id: mas_b4_i, family: mas_n626_guidelines, unit_id: B-4, item: "i)", quote: "High velocity of funds through an account"}
+  - {id: mas_b4_iii, family: mas_n626_guidelines, unit_id: B-4, item: "iii)", quote: "Matching of payments out with credits paid in by cash on the same or previous day"}
+  - {id: mas_b4_v, family: mas_n626_guidelines, unit_id: B-4, item: "v)", quote: "Transfers of funds from various third parties into an account, which is inconsistent with the nature of the customer’s business"}
+  - {id: mas_b4_vi, family: mas_n626_guidelines, unit_id: B-4, item: "vi)", quote: "Multiple depositors using a single account"}
+  - {id: mas_b5_i, family: mas_n626_guidelines, unit_id: B-5, item: "i)", quote: "a regular consolidated process from such accounts prior to a request for onward transmission of the funds elsewhere"}
+  - {id: mas_b5_vii, family: mas_n626_guidelines, unit_id: B-5, item: "vii)", quote: "Cash payments remitted to a single account by a large number of different persons without an adequate explanation"}
+  - {id: mas_b5_viii, family: mas_n626_guidelines, unit_id: B-5, item: "viii)", quote: "“U-turn” transactions"}
+  - {id: mas_b2_ii, family: mas_n626_guidelines, unit_id: B-2, item: "ii)", quote: "a customer has a large number of accounts with the same bank, and has frequent transfers between different accounts"}
+  - {id: mas_b2_iii, family: mas_n626_guidelines, unit_id: B-2, item: "iii)", quote: "Transactions in which assets are withdrawn immediately after being deposited"}
+  - {id: mas_b2_iv, family: mas_n626_guidelines, unit_id: B-2, item: "iv)", quote: "intensive use of what was previously a relatively inactive account"}
+  - {id: mas_b3_iv, family: mas_n626_guidelines, unit_id: B-3, item: "iv)", quote: "Large cash withdrawals from a previously dormant/inactive account"}
+  - {id: mas_b3_ix, family: mas_n626_guidelines, unit_id: B-3, item: "ix)", quote: "the amount of each deposit is not substantial, but the cumulative total of which is substantial"}
+  - {id: mas_layering_def, family: mas_n626_guidelines, unit_id: 1-4-2, item: "(b)", quote: "creating layers of financial transactions designed to disguise the ultimate source and transfer of these benefits"}
+  - {id: mas_integration_def, family: mas_n626_guidelines, unit_id: 1-4-2, item: "(c)", quote: "the integration schemes place the laundered funds back into the economy"}
+  - {id: cef_rapid_empty, family: fatf_cef, unit_id: p65.4, quote: "Rapid or immediate cash withdrawals or transfers of large amounts following the receipt of a funds transfer in order to empty the account"}
+  - {id: cef_after_opening, family: fatf_cef, unit_id: p65.3, quote: "Rapid or immediate, high or low value transactions after opening of an account"}
+  - {id: cef_adverse_mule, family: fatf_cef, unit_id: p67.7, quote: "account held by a known or suspected previous victim of scam, mule, or identity takeover activity"}
+  - {id: tm_case_b_pass_through, family: mas_tm_guidance, unit_id: case-B, quote: "a US$5 million inflow was transferred out three days later, for which no pass-through alert was generated"}
+  - {id: tm_case_m_pass_through, family: mas_tm_guidance, unit_id: case-M, quote: "used to route a series of large pass-through transactions that were ultimately transferred to an external third party"}
+  - {id: tm_aggregated_small, family: mas_tm_guidance, unit_id: "2.8", quote: "Aggregated frequent and small transactions"}
+  - {id: tm_deviation_inactivity, family: mas_tm_guidance, unit_id: "2.8", quote: "Significant deviations from past account activity (or inactivity)"}
+  - {id: pml_shell_layers, family: fatf_pml, unit_id: p28.2, quote: "multiple layers of shell companies in different jurisdictions, which have been established purely to redistribute and mix funds from various sources"}
+  - {id: pml_proxy_network, family: fatf_pml, unit_id: p28.3, item: "Step 2", quote: "The funds from different clients are mixed within the same accounts"}
+  - {id: pml_mule_accounts, family: fatf_pml, unit_id: p25.4, quote: "Bank accounts, opened by the mules, serve as the initial layering stage in the laundering process"}
+
+# ----------------------------------------------------------------------------
+signals:
+  - id: s_first_contact
+    name: 与收款方首次来往
+    features: [f_pair_prev_cnt]
+    tools: [counterparty_history]
+    evidence: "D24：洗钱 81.2% vs 正常 5.5%；D33：告警中 SHAP 约 +6 到 +8；D35：去掉后验证 AP −0.13"
+    caution: "可能被数据生成器放大（D33、D36），不宜单独作为结论"
+
+  - id: s_amount_band
+    name: 金额落在洗钱集中区间
+    features: [f_log_amount]
+    tools: [amount_profile]
+    evidence: "D13：洗钱 P25–P95 为 2,154–24,075 美元；D33：SHAP 在 1 万–2.5 万美元达到峰值"
+    caution: "区间来自本数据集，换到真实数据需重新估计"
+
+  - id: s_fan_in_cp
+    name: 收款方近期对手方数多
+    features: [r_in_cp_1d, r_in_cp_3d, r_today_in_cp]
+    tools: [fan_profile]
+    evidence: "D17：对手方 11–38 个的账户洗钱浓度最高（0.376%，最低档的 4.2 倍）"
+    caution: "清算层账户（对手方 > 200）天然扇入，需排除（D17）"
+
+  - id: s_fan_out_cp
+    name: 付款方近期对手方数多
+    features: [p_out_cp_1d, p_out_cp_3d, p_today_out_cp]
+    tools: [fan_profile]
+    evidence: "D25：逻辑回归中 p_out_cp_1d 系数 +1.94，与 3 天窗口形成'近期突增'对比"
+    caution: "高频商户也会扇出"
+
+  - id: s_pass_through
+    name: 过桥：收到后短时间内等额或多笔转出
+    features: [r_in_cnt_3d, p_out_cnt_3d]
+    tools: [pass_through_check]
+    evidence: "D33：告警中真洗钱的收款方前 3 天转入中位数 6 笔，误报为 0；模型未充分利用这一差异"
+    caution: "MAS TM 指引 Case B：按累计金额的规则会漏掉 1:1 过桥交易，应逐笔匹配金额与时间"
+
+  - id: s_cycle_3plus
+    name: 3 跳以上资金回流
+    features: []
+    tools: [trace_cycle]
+    evidence: "D19：12 跳内还原 49/49 个 CYCLE；D20：正常账户出现率 0.10%，似然比保守估计 ≥ 200"
+    caution: "只对 CYCLE 手法有效，对其他手法似然比约 2（D20）"
+
+  - id: s_round_trip_2hop
+    name: 两跳回流（A→B→A）
+    features: [f_pair_rev_prev_cnt]
+    tools: [counterparty_history]
+    evidence: "D20：正常账户中也有 2.25%，只能作弱信号"
+    caution: "退款、退押金等正常业务也会产生"
+
+  - id: s_multi_hop_chain
+    name: 多跳链式转移
+    features: []
+    tools: [trace_cycle]
+    evidence: "D18：RANDOM 与 CYCLE 的前后笔首尾相接率 100%，可按时间递增追踪"
+    caution: "需要时间窗和清算账户剪枝，否则路径数爆炸（D19）"
+
+  - id: s_common_intermediaries
+    name: 多个账户经同一批中间账户流转
+    features: []
+    tools: [two_hop_structure]
+    evidence: "D18：STACK / SCATTER-GATHER 的首尾相接率约 55%，需用两跳与中间节点聚合识别"
+    caution: "尚未量化其区分度，属于待验证信号"
+
+  - id: s_same_owner
+    name: 资金在同一实体控制的多个账户之间转移
+    features: [f_same_entity, p_ent_n_accounts, r_ent_n_accounts]
+    tools: [entity_profile]
+    evidence: "D25：逻辑回归中 p_ent_n_accounts 系数 +1.90（需与 p_ent_n_banks −2.34 一起读，两者共线）"
+    caution: "MAS TM 指引 Case M：'本人账户间转账'不等于无风险，要看资金最终流向谁"
+
+  - id: s_dormant_reactivation
+    name: 近期不活跃的账户突然转出
+    features: [p_active_days_3d, p_out_cnt_3d]
+    tools: [account_activity_history]
+    evidence: "D33：付款方近期转出少时 SHAP 为正；D36/D37：9/9 约 10 万笔此类正常交易涌入，去掉来往历史的模型因此崩溃"
+    caution: "人群变化时误报极多，必须与其他信号联合使用"
+
+  - id: s_known_launderer
+    name: 账户或对手方有已确认的洗钱案件
+    features: []
+    tools: [case_history]
+    evidence: "D37：训练期已洗过钱的账户，其后续无标签交易模型召回仅 4.1%"
+    caution: "只能使用评估时点之前已确认的案件，避免前视偏差"
+
+# ----------------------------------------------------------------------------
+tools:
+  - {id: counterparty_history, status: planned, backing: "sql/011_feature_table.sql", description: "两个账户之间此前的同向/反向来往笔数与金额"}
+  - {id: amount_profile, status: planned, backing: "sql/006_rule_baseline.sql", description: "按美元归一化的金额，是否落在洗钱集中区间，是否为整数金额"}
+  - {id: fan_profile, status: planned, backing: "sql/008_node_degrees.sql", description: "账户在时间窗内的收付对手方数与笔数，并标记清算层账户"}
+  - {id: pass_through_check, status: planned, backing: null, description: "收款后 N 天内是否有金额相近（±10%）的转出，逐笔匹配"}
+  - {id: trace_cycle, status: planned, backing: "sql/009_cycle_trace.sql", description: "递归查询：时间递增、7 天窗口、12 跳以内的回流路径"}
+  - {id: two_hop_structure, status: planned, backing: null, description: "两跳内共同中间账户的聚合，识别 scatter-gather / bipartite / stack"}
+  - {id: account_activity_history, status: planned, backing: "sql/010_feature_snapshot.sql", description: "账户近 N 天的活跃天数、收付笔数，识别休眠后突然启用"}
+  - {id: entity_profile, status: planned, backing: "sql/011_feature_table.sql", description: "账户所属实体名下的账户数、银行数，以及本笔是否为同一实体内部转账"}
+  - {id: case_history, status: planned, backing: null, description: "账户与对手方的已确认案件记录（HITL 层写入），按评估时点过滤"}

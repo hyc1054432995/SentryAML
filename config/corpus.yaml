@@ -1,0 +1,169 @@
+# ============================================================================
+# SentryAML - 知识库文件清单（RAG 层 R1）
+# ============================================================================
+# 清单即代码：知识库里有哪些文件、哪个版本、从哪里下载，都写在这里并提交到 git。
+# 原始 PDF 不提交（放在 data/corpus/raw/，已被 .gitignore 忽略），
+# 别人拿到仓库后按这份清单下载，就能重建出完全相同的知识库。
+#
+# 下载后的文件名一律用 doc_id：data/corpus/raw/<doc_id>.pdf
+#
+# 标为 TODO 的字段，需要你打开 PDF 封面或下载页面核对后填写。
+# register_corpus.py 会拒绝登记任何还有 TODO 的条目——版本信息必须人工确认过。
+#
+# 日期约定：
+#   effective_from / effective_to 是生效区间 [from, to)，to 为 null 表示仍然有效。
+#   研究报告类（FATF、论文）没有"生效"的概念，用发布日期作为 effective_from。
+#   只知道月份时，填当月 1 日，并在 version_label 里写原文的月份。
+# ============================================================================
+
+documents:
+
+  # --------------------------------------------------------------------------
+  # 一、监管义务（新加坡）
+  # --------------------------------------------------------------------------
+  - doc_id: mas_n626_2024
+    family: mas_n626
+    title: "MAS Notice 626 Prevention of Money Laundering and Countering the Financing of Terrorism - Banks"
+    issuer: MAS
+    doc_type: notice
+    jurisdiction: SG
+    version_label: "28 March 2024"
+    issued_date: 2024-03-28
+    effective_from: 2024-04-01
+    effective_to: 2025-07-01          # 被 2025 年 6 月 30 日的修订版取代
+    source_url: "https://www.mas.gov.sg/regulation/notices/notice-626"
+    download_hint: "页面上 'MAS Notice 626 (28 Mar 2024)' 那个 PDF"
+    optional: true                    # 用来演示版本切换；没下到也不影响主流程
+
+  - doc_id: mas_n626_2025
+    family: mas_n626
+    title: "MAS Notice 626 Prevention of Money Laundering and Countering the Financing of Terrorism - Banks"
+    issuer: MAS
+    doc_type: notice
+    jurisdiction: SG
+    version_label: "28 March 2024, last revised on 30 June 2025"
+    issued_date: 2025-06-30
+    effective_from: 2025-07-01
+    effective_to: null
+    source_url: "https://www.mas.gov.sg/-/media/amld-amendments---30-june-2025/mas-notice-626.pdf"
+    download_hint: "直接下载；若链接失效，到 Notice 626 页面找最新的合并版（consolidated）"
+
+  # Guidelines 的版本链：28 Mar 2024（取代 2015 版）→ 18 Oct 2024 修订 → 30 Jun 2025 修订
+  # 页面的 Amendment Notes 里写着 "30 Jun 2025: Previous version dated 18 October 2024 is revised"，
+  # 所以封面写 "Last revised on 18 October 2024" 的那份是【上一版】，不是最新版。
+  - doc_id: mas_n626_guidelines_2024
+    family: mas_n626_guidelines
+    title: "Guidelines to MAS Notice 626 on Prevention of Money Laundering and Countering the Financing of Terrorism - Banks"
+    issuer: MAS
+    doc_type: guidelines
+    jurisdiction: SG
+    version_label: "28 March 2024, last revised on 18 October 2024"
+    issued_date: 2024-10-18
+    effective_from: 2024-10-18
+    effective_to: 2025-07-01          # 被 2025 年 6 月 30 日的修订版取代
+    source_url: "https://www.mas.gov.sg/regulation/guidelines/guidelines-to-notice-626-on-prevention-of-money-laundering-and-cft-for-banks"
+    download_hint: "Amendment Notes 里 'Previous version dated 18 October 2024' 那个链接（就是你已经下载的那份）"
+    optional: true                    # 用来演示版本切换
+
+  - doc_id: mas_n626_guidelines_2025
+    family: mas_n626_guidelines
+    title: "Guidelines to MAS Notice 626 on Prevention of Money Laundering and Countering the Financing of Terrorism - Banks"
+    issuer: MAS
+    doc_type: guidelines
+    jurisdiction: SG
+    version_label: "28 March 2024, last revised on 1 July 2025"   # 下载后对照封面核对
+    issued_date: 2025-07-01
+    effective_from: 2025-07-01        # 2025 年 6 月 30 日发布的这批修订（通知与指引）自 7 月 1 日生效
+    effective_to: null
+    source_url: "https://www.mas.gov.sg/regulation/guidelines/guidelines-to-notice-626-on-prevention-of-money-laundering-and-cft-for-banks"
+    download_hint: "页面顶部的当前版本 PDF（不是 Amendment Notes 里的旧版链接）"
+
+  - doc_id: mas_tm_guidance
+    family: mas_tm_guidance
+    title: "Guidance for Effective AML/CFT Transaction Monitoring Controls"
+    issuer: MAS
+    doc_type: guidance
+    jurisdiction: SG
+    version_label: "Sep 2018"              # 封面上的发布月份
+    issued_date: 2018-09-24
+    effective_from: 2018-09-24
+    effective_to: null
+    source_url: "https://www.mas.gov.sg/regulation/guidance/guidance-for-effective-amlcft-tm-controls"
+    download_hint: "这份讲的就是交易监控告警的处理与调优，和本项目最直接相关"
+
+  # --------------------------------------------------------------------------
+  # 二、洗钱手法与风险信号（FATF）
+  # --------------------------------------------------------------------------
+  - doc_id: fatf_pml_2018
+    family: fatf_pml
+    title: "Professional Money Laundering"
+    issuer: FATF
+    doc_type: typology
+    jurisdiction: INTL
+    version_label: "July 2018"
+    issued_date: 2018-07-01
+    effective_from: 2018-07-01
+    effective_to: null
+    source_url: "https://www.fatf-gafi.org/content/dam/fatf-gafi/reports/Professional-Money-Laundering.pdf"
+    download_hint: "直接下载完整报告（不是 Executive Summary）"
+
+  - doc_id: fatf_cef_2023
+    family: fatf_cef
+    title: "Illicit Financial Flows from Cyber-Enabled Fraud"
+    issuer: FATF
+    doc_type: typology
+    jurisdiction: INTL
+    version_label: "November 2023"
+    issued_date: 2023-11-01
+    effective_from: 2023-11-01
+    effective_to: null
+    source_url: "https://www.fatf-gafi.org/en/publications/Methodsandtrends/illicit-financial-flows-cyber-enabled-fraud.html"
+    download_hint: "页面上的完整报告 PDF；重点在钱骡（money mule）网络与资金快速转移"
+
+  # --------------------------------------------------------------------------
+  # 三、可疑交易报告（STR）
+  # --------------------------------------------------------------------------
+  # STRO 页面本身只有几段话；真正讲"STR 每一栏填什么、案情叙述怎么写"的是页面上的填表指南 PDF。
+  # 空白的 STR Form 不需要（字段在指南里都有说明，而且表单要通过 SONAR 在线提交）。
+  - doc_id: spf_str_form_guide
+    family: spf_str_form_guide
+    title: "Guide to fill up STR Form"
+    issuer: SPF
+    doc_type: str_guidance
+    jurisdiction: SG
+    version_label: "20 August 2026"             # 封面或页脚上的版本 / 日期；都没有就写 "Retrieved YYYY-MM-DD"
+    issued_date: 2026-08-20
+    effective_from: 2026-08-20              # 有日期用文件日期，没有就用你下载的日期
+    effective_to: null
+    source_url: "https://www.police.gov.sg/Advisories/Commercial-Crimes/Suspicious-Transaction-Reporting-Office/Suspicious-Transaction-Reporting"
+    download_hint: "页面 'How to file' 表格里的 'Guide to fill up STR Form' [PDF/2.4MB]"
+
+  - doc_id: spf_stro_page
+    family: spf_stro_page
+    title: "Suspicious Transaction Reporting (Suspicious Transaction Reporting Office)"
+    issuer: SPF
+    doc_type: str_guidance
+    jurisdiction: SG
+    version_label: "Last updated on 26 April 2025"               # "Web page retrieved YYYY-MM-DD"
+    issued_date: 2025-04-26
+    effective_from: 2025-04-26              # 你保存网页的日期
+    effective_to: null
+    source_url: "https://www.police.gov.sg/Advisories/Commercial-Crimes/Suspicious-Transaction-Reporting-Office/Suspicious-Transaction-Reporting"
+    download_hint: "先把 Reporting Requirements 等折叠栏全部展开，再 Ctrl+P → 另存为 PDF"
+    optional: true                    # 报送义务的法律依据在 Notice 626 里已有，这页只是补充
+
+  # --------------------------------------------------------------------------
+  # 四、数据集本身的洗钱模式定义
+  # --------------------------------------------------------------------------
+  - doc_id: ibm_aml_paper
+    family: ibm_aml_paper
+    title: "Realistic Synthetic Financial Transactions for Anti-Money Laundering Models"
+    issuer: IBM Research
+    doc_type: dataset_paper
+    jurisdiction: INTL
+    version_label: "arXiv:2306.16424v3"               # 例如 "arXiv:2306.16424v3"
+    issued_date: 2024-01-25                 # arXiv 页面上该版本的日期
+    effective_from: 2024-01-25
+    effective_to: null
+    source_url: "https://arxiv.org/abs/2306.16424"
+    download_hint: "页面右侧 'View PDF'；8 种洗钱模式（FAN-IN、CYCLE 等）的定义出自这里"
