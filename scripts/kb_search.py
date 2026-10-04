@@ -43,6 +43,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import threading
 from datetime import date
 from pathlib import Path
 
@@ -57,10 +58,15 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _client, _embedder = None, None
 
 
+_lock = threading.Lock()
+
+
 def _clients():
+    """惰性创建 Qdrant 客户端和向量模型。加锁：R7 评测并发调用时，多个线程不能同时各建一个（D53）。"""
     global _client, _embedder
-    if _client is None:
-        _client, _embedder = qdrant(), get_embedder()
+    with _lock:
+        if _client is None:
+            _client, _embedder = qdrant(), get_embedder()
     return _client, _embedder
 
 
