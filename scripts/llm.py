@@ -35,7 +35,9 @@ _client = None
 
 
 class LLMError(Exception):
-    pass
+    """调用或解析失败。由 chat_json 抛出时带有 .raw（模型原始输出）和 .usage（这次调用的用量）。"""
+    raw: str | None = None
+    usage: dict | None = None
 
 
 def _get_client():
@@ -73,7 +75,8 @@ def parse_json(raw: str, finish: str | None) -> dict:
     try:
         return json.loads(m.group(0) if m else text)
     except json.JSONDecodeError as e:
-        raise LLMError(f"JSON 解析失败：{raw[:80]!r}") from e
+        # 带上解析器给出的具体原因和位置（R7 测试集 q027：只记了前 80 字，看不出坏在哪里）
+        raise LLMError(f"JSON 解析失败（{e.msg}，第 {e.pos} 个字符）：{raw[:80]!r}") from e
 
 
 def chat_json(messages: list[dict], purpose: str, max_tokens: int = 4000, use_cache: bool = True
@@ -95,7 +98,13 @@ def chat_json(messages: list[dict], purpose: str, max_tokens: int = 4000, use_ca
         raw, u2 = _call(messages, min(max_tokens * 2, 16000))
         usage = {k: usage[k] + u2[k] for k in ("prompt", "completion", "hit", "reasoning")} | {"finish": u2["finish"],
                                                                                             "length_retry": True}
-    data = parse_json(raw, usage["finish"])            # 解析失败直接抛出，不写缓存
+    try:
+        data = parse_json(raw, usage["finish"])        # 解析失败直接抛出，不写缓存
+    except LLMError as e:
+        # 失败的调用也要留下原始输出和用量：原始输出用于事后诊断，用量用于如实记账（失败的调用同样计费）。
+        # R7 测试集 q027 生成失败时，这两样都丢了
+        e.raw, e.usage = raw, {**usage, "cached": False}
+        raise
     with connect() as conn, conn.cursor() as cur:
         cur.execute("""INSERT INTO llm_cache (cache_key, model, purpose, response, prompt_tokens, cache_hit_tokens,
                                               completion_tokens, reasoning_tokens)

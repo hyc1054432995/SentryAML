@@ -51,6 +51,9 @@ RESOLVED = PROJECT_ROOT / "reports" / "rag_golden_resolved.json"
 CONFIGS = {"full": dict(use_scope=True), "no_scope": dict(use_scope=False)}
 
 
+JUDGED = {"out_of_scope", "insufficient"}       # 由判断得出的拒答原因；其余为兜底
+
+
 def words(s: str) -> list[str]:
     """实词（去掉 the、should、was 这类功能词），用于词级覆盖判断。"""
     return [w for w in re.findall(r"[a-z0-9]+(?:[.\-][a-z0-9]+)*", norm(s)) if w not in STOPWORDS]
@@ -176,6 +179,12 @@ def main():
             "cite_ok": float(np.mean([x["cite_ok"] for x in A if not x["abstained"]] or [0])),
             "gold_cov": float(np.mean([x["gold_cov"] for x in A])),
             "abstain_unanswerable": float(np.mean([x["abstained"] for x in U])) if U else None,
+            # 测验 R7 收尾第 1 题的建议：无答案题的拒答按原因拆开。
+            #   判断拒答：范围检查拦下（out_of_scope）或模型判断资料不足（insufficient），是系统"看出来答不了"；
+            #   兜底拒答：生成失败（generation_error）或没有一条引文通过核验（unverifiable），是系统"出错时不乱答"。
+            # 只有前者能证明系统识别得了无答案的问题
+            "abstain_judged": sum(x["reason"] in JUDGED for x in U),
+            "abstain_fallback": sum(x["abstained"] and x["reason"] not in JUDGED for x in U),
             "cost": sum(x["cost"] for x in A + U),
             "median_s": float(np.median([x["ms"] for x in A + U])) / 1000,
         }
@@ -186,7 +195,8 @@ def main():
               f"{f(s['abstain_unanswerable']):>11}{s['cost']:>8.3f}{s['median_s']:>8.1f}")
     for name, s in summary.items():
         lo, hi = s["key_cov_ci"]
-        print(f"    {name} 要点覆盖率 95% 区间 [{lo:.3f}, {hi:.3f}]")
+        print(f"    {name} 要点覆盖率 95% 区间 [{lo:.3f}, {hi:.3f}]；无答案 {len(una_q)} 题：判断拒答 "
+              f"{s['abstain_judged']}，兜底拒答 {s['abstain_fallback']}（生成失败或引文全部未通过，不算识别能力）")
     print("  说明：费用只计实际调用 API 的部分；命中本地缓存的调用不计费，也几乎不耗时。")
 
     main_cfg = "full" if "full" in configs else next(iter(configs))

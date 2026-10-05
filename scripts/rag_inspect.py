@@ -50,6 +50,8 @@ def main():
             print(f"格式重写：{r['schema_retry']}")
         if r.get("raw"):
             print(f"模型原始输出（前 600 字）：{r['raw'][:600]}")
+        if r.get("raw_failed"):
+            print(f"解析失败的原始输出（完整）：\n{r['raw_failed']}")
         print(f"回答：{r.get('answer')}\n未覆盖：{r.get('missing')}")
         for c in r.get("claims", []):
             print(f"  {'✓' if c['verified'] else '✗'} {c['source']} {c['unit']} {c['status']}：{c['quote'][:100]}")

@@ -254,6 +254,8 @@ def answer(question: str, as_of: date | None = None, use_scope: bool = True, use
                 add(u)
                 rec["scope"] = scope
             except llm.LLMError as e:
+                if e.usage:
+                    add(e.usage)
                 # 范围检查失败时放行（fail-open）：生成提示词的第 3 条规则仍会拒绝范围外的问题；
                 # 反过来"失败即拒答"会误拒本来答得了的问题
                 rec["scope"], scope = {"error": str(e), "in_scope": True}, {"in_scope": True}
@@ -291,6 +293,10 @@ def answer(question: str, as_of: date | None = None, use_scope: bool = True, use
             if schema_problem(data):
                 raise llm.LLMError(f"格式仍不正确：{schema_problem(data)}")
     except llm.LLMError as e:
+        if e.usage:
+            add(e.usage)
+        if e.raw:
+            rec["raw_failed"] = e.raw[:8000]           # 解析失败的完整输出（D58），与成功时的 raw 分开保存
         rec |= {"answer": "", "claims": [], "missing": f"生成失败：{e}"}
         return finish("abstained", "generation_error")
 
@@ -307,7 +313,9 @@ def answer(question: str, as_of: date | None = None, use_scope: bool = True, use
             if not schema_problem(data2) and sum(c["verified"] for c in checked2) >= sum(c["verified"] for c in checked):
                 data, checked = data2, checked2
             rec["retried"] = True
-        except llm.LLMError:
+        except llm.LLMError as e:
+            if e.usage:
+                add(e.usage)
             rec["retried"] = "failed"
     rec["ms"]["generation"] = round((time.perf_counter() - t) * 1000)
 
