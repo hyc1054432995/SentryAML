@@ -19,7 +19,9 @@ SentryAML - RAG 层 R4：评测问题集的校验与解析
 R6 的检索评测直接读这个文件。
 
 用法：
-    python scripts/rag_golden_check.py
+    python scripts/rag_golden_check.py                                  # v1
+    python scripts/rag_golden_check.py --golden config/rag_golden_v2.yaml --out reports/rag_golden_v2_resolved.json
+v2 起每题多一个 pattern 字段（检索一次答不好的情形），并会列出与 v1 gold 重合的条款。
 """
 
 from __future__ import annotations
@@ -38,6 +40,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 GOLDEN = PROJECT_ROOT / "config" / "rag_golden.yaml"
 OUT = PROJECT_ROOT / "reports" / "rag_golden_resolved.json"
 
+PATTERNS = ["bridge", "adjacent", "paraphrase", "two_part", "cross_doc", "version", "premise", "unanswerable"]
 TYPES = ["lookup", "definition", "exact_id", "typology", "str_filing", "multi_hop", "version", "unanswerable"]
 STOP = set("""a an the of to in on for and or is are be was were by with as at from that this which what when
 where who whom how why does do did can could should would must may might it its their there than then into
@@ -61,7 +64,13 @@ def tokens(s: str) -> set[str]:
 
 
 def main():
-    with open(GOLDEN, encoding="utf-8") as f:
+    import argparse
+    ap = argparse.ArgumentParser(description="评测问题集的校验与解析")
+    ap.add_argument("--golden", default=str(GOLDEN))
+    ap.add_argument("--out", default=str(OUT))
+    a = ap.parse_args()
+    golden, out_path = Path(a.golden), Path(a.out)
+    with open(golden, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
     default_as_of = cfg["default_as_of"]
     qs = cfg["questions"]
@@ -106,6 +115,8 @@ def main():
             E(f"未知语言 {q.get('lang')}")
         if q.get("split") not in ("dev", "test"):
             E(f"切分只能是 dev / test")
+        if "pattern" in q and q["pattern"] not in PATTERNS:
+            E(f"未知 pattern {q['pattern']}")
         as_of = q.get("as_of", default_as_of)
         if isinstance(as_of, str):
             as_of = date.fromisoformat(as_of)
@@ -170,7 +181,8 @@ def main():
         g_tok = set().union(*(tokens(units[(g["doc_id"], g["unit_id"])]) for g in gold)) if gold else set()
         overlap = round(len(q_tok & g_tok) / len(q_tok), 2) if q_tok and g_tok else None
 
-        resolved.append({"id": qid, "type": q.get("type"), "lang": q.get("lang"), "split": q.get("split"),
+        resolved.append({"id": qid, "type": q.get("type"), "pattern": q.get("pattern"), "lang": q.get("lang"),
+                         "split": q.get("split"),
                          "question": q["question"], "as_of": str(as_of), "answerable": answerable,
                          "gold": gold, "gold_chunks": gold_chunks, "also_ok": also_ok, "near_miss": near_miss,
                          "answer_keys": keys, "must_not": must_not, "lexical_overlap": overlap})
@@ -204,6 +216,18 @@ def main():
         print(f"  英文题与 gold 原文的词面重合度：" + "，".join(f"{k} {b[k]}" for k in ("低 <0.3", "中 0.3–0.6", "高 ≥0.6")))
         top = sorted(ov, key=lambda r: -r["lexical_overlap"])[:5]
         print("    重合度最高：" + "，".join(f"{r['id']}({r['lexical_overlap']})" for r in top))
+    if any(r.get("pattern") for r in resolved):
+        pt = Counter((r["pattern"], r["split"]) for r in resolved)
+        print("  按 pattern（dev/test）：" + "，".join(f"{p} {pt[(p, 'dev')]}/{pt[(p, 'test')]}" for p in PATTERNS
+                                                    if pt[(p, "dev")] + pt[(p, "test")]))
+    if golden.resolve() != GOLDEN.resolve() and GOLDEN.exists():
+        # 与 v1 的重合：v1 的条款在设计 R6/R7 时被反复使用，v2 用到它们时结果可能偏乐观
+        v1 = yaml.safe_load(open(GOLDEN, encoding="utf-8"))["questions"]
+        v1_gold = {(g["family"], str(g["unit_id"])): q1["split"] for q1 in v1 for g in q1.get("gold") or []}
+        hits = sorted({(g["family"], g["unit_id"], v1_gold[(g["family"], g["unit_id"])], r["id"])
+                       for r in resolved for g in r["gold"] if (g["family"], g["unit_id"]) in v1_gold})
+        print(f"  与 v1 gold 重合的条款：{len(hits)} 处" + ("" if not hits else "：" + "，".join(
+            f"{r} {f}:{u}（v1 {s}）" for f, u, s, r in hits)))
     multi_chunk = [r["id"] for r in resolved if any(len(c) > 1 for c in r["gold_chunks"])]
     if multi_chunk:
         print(f"  gold 单元被切成多块、且多块都含答案要点的题：{multi_chunk}")
@@ -217,10 +241,10 @@ def main():
         for e in errors:
             print(f"  ✗ {e}")
         raise SystemExit(1)
-    OUT.parent.mkdir(exist_ok=True)
-    with open(OUT, "w", encoding="utf-8") as f:
+    out_path.parent.mkdir(exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(resolved, f, ensure_ascii=False, indent=1)
-    print(f"\n校验通过：全部答案要点在调查日期有效的原文中逐字找到；已写出 {OUT.relative_to(PROJECT_ROOT)}")
+    print(f"\n校验通过：全部答案要点在调查日期有效的原文中逐字找到；已写出 {out_path}")
 
 
 if __name__ == "__main__":

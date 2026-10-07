@@ -16,7 +16,9 @@ SentryAML - RAG 层 R2d：交叉引用抽取
   查询时再按调查日期选出当时有效的那个版本（kb_documents_as_of），和检索保持同一套版本逻辑。
 
 用法：
-    python scripts/kb_xrefs.py            # 抽取全部文件，打印解析率与未解析样例
+    python scripts/kb_xrefs.py                        # 抽取全部文件，打印解析率与未解析样例
+    python scripts/kb_xrefs.py --rebuild-db           # 从数据库重建 kb_xrefs：先只比较差异
+    python scripts/kb_xrefs.py --rebuild-db --apply   # 确认后整表替换
 """
 
 from __future__ import annotations
@@ -39,7 +41,13 @@ ID_PLAIN = r"\d{1,2}[A-Z]?"                              # 6（整章）
 ID_RE = re.compile(rf"({ID_DOT}|{ID_HYPHEN}|{ID_PLAIN})((?:\([a-z0-9]{{1,4}}\))*)")
 SEP_RE = re.compile(r"\s*(,\s*(?:and|or)?|and|or|to|–|-)\s*")
 PARA_KW = re.compile(r"\b(sub)?paragraphs?\s+", re.I)
-TARGET_NOTICE = re.compile(r"^\s*(?:of|in|under)\s+(?:the\s+)?(?:MAS\s+)?Notice(?:\s+626)?\b", re.I)
+# "of the Notice" / "of MAS Notice 626" 指 Notice 626；但 "of MAS Notice FSM-N02"、"of MAS Notice TCA-N03" 是别的通知，
+# 不能匹配（D59：旧写法把 FSM-N02 的 4.1、5.1、6.5 解析成了 Notice 626 的同号条款）
+TARGET_NOTICE = re.compile(r"^\s*(?:of|in|under)\s+(?:the\s+)?(?:MAS\s+)?Notice"
+                           r"(?:\s+626\b|(?-i:(?!\s+(?:[A-Z]{2,}|\d{3,}))))", re.I)   # (?-i:…)：只有这一段区分大小写
+# 知识库之外的目标：其他 MAS 通知、法律的附表。只记录为 external，不解析
+TARGET_OTHER = re.compile(r"^\s*(?:of|in|under)\s+(?:the\s+)?((?:MAS\s+)?Notice\s+(?!626\b)[A-Z0-9][\w-]*\d"
+                          r"|(?:First|Second|Third|Fourth|Fifth)\s+Schedule(?:\s+to\s+the(?:\s+(?:[A-Z][\w()]*|and|of)){1,8}?\s+Act)?)")
 TARGET_GUIDE = re.compile(r"^\s*(?:of|in|under)\s+(?:these|the)\s+Guidelines\b|^\s*of\s+the\s+Guidelines\s+to\s+MAS\s+Notice", re.I)
 LABEL_RE = re.compile(r"\b(Box|Annex|Appendix|APPENDIX|Section|SECTION)\s+([A-Z]|\d{1,2}|[IVX]{1,5})\b")
 STATUTE_RE = re.compile(r"\b[Ss]ections?\s+(\d{1,3}[A-Z]{0,2}(?:\(\d+\))*)\s+of\s+(?:the\s+)?"
@@ -133,7 +141,14 @@ def extract(all_units: dict[str, list[dict]], family_map: dict[str, str] | None 
                 items, end = _parse_id_list(text, kw.end())
                 if not items:
                     continue
-                tail = text[end:end + 60]
+                tail = text[end:end + 80]
+                other = TARGET_OTHER.match(tail)
+                if other:
+                    for uid, _ in items:
+                        edges.append({**base, "raw": text[kw.start():end + other.end()].strip()[:200],
+                                      "kind": "external", "target_family": re.sub(r"\s+", " ", other.group(1)),
+                                      "target_unit_id": uid, "resolved": False})
+                    continue
                 if TARGET_NOTICE.match(tail):
                     tgt, kind = "mas_n626", "cross_doc"
                 elif TARGET_GUIDE.match(tail):
@@ -208,7 +223,63 @@ def report(edges: list[dict]) -> None:
             print(f"    {e['src_doc_id']}:{e['src_unit_id']} → {e['target_family']}:{e['target_unit_id']}  「{e['raw'][:70]}」")
 
 
+def load_units_db() -> tuple[dict[str, list[dict]], dict[str, str]]:
+    """从数据库读入已入库的结构单元（与 kb_load 写入的完全相同），按文件内顺序排列。"""
+    from db import connect
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT doc_id, family FROM kb_documents")
+        fam = dict(cur.fetchall())
+        cur.execute("SELECT doc_id, unit_id, kind, text FROM kb_units ORDER BY doc_id, ord")
+        units: dict[str, list[dict]] = defaultdict(list)
+        for d, u, k, t in cur.fetchall():
+            units[d].append({"unit_id": u, "kind": k, "text": t})
+    return dict(units), fam
+
+
+def rebuild_db(apply: bool) -> None:
+    """
+    只重建 kb_xrefs（D59）：从数据库里的结构单元重新抽取交叉引用，与现有的边比较，确认后整表替换。
+    不重新解析 PDF、不动 kb_units / kb_chunks（重跑 kb_load 会清空块上的上下文说明和索引状态）。
+    """
+    from db import connect
+    units, fam = load_units_db()
+    new = extract(units, fam)
+    key = lambda e: (e["src_doc_id"], e["src_unit_id"], e["kind"], e["target_family"], e["target_unit_id"])
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT src_doc_id, src_unit_id, kind, target_family, target_unit_id, raw, resolved FROM kb_xrefs")
+        cols = [d.name for d in cur.description]
+        old = [dict(zip(cols, r)) for r in cur.fetchall()]
+    ok, nk = {key(e): e for e in old}, {key(e): e for e in new}
+    removed = [ok[k] for k in ok.keys() - nk.keys()]
+    added = [nk[k] for k in nk.keys() - ok.keys()]
+    print(f"现有 {len(old)} 条，重新抽取 {len(new)} 条：删除 {len(removed)}，新增 {len(added)}")
+    for title, es in (("删除", removed), ("新增", added)):
+        for e in sorted(es, key=key)[:40]:
+            print(f"  {title} {e['src_doc_id']}:{e['src_unit_id']} → [{e['kind']}] {e['target_family']}:"
+                  f"{e['target_unit_id']}  「{e['raw'][:60]}」")
+    if not apply:
+        print("\n只比较、未写入；确认无误后加 --apply")
+        return
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("DELETE FROM kb_xrefs")
+        cur.executemany(
+            """INSERT INTO kb_xrefs (src_doc_id, src_unit_id, kind, target_family, target_unit_id, raw, resolved)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            [(e["src_doc_id"], e["src_unit_id"], e["kind"], e["target_family"], e["target_unit_id"],
+              e["raw"], e["resolved"]) for e in new])
+        conn.commit()
+    print(f"\n已整表替换为 {len(new)} 条")
+
+
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser(description="交叉引用抽取")
+    ap.add_argument("--rebuild-db", action="store_true", help="从数据库里的单元重建 kb_xrefs（先比较，--apply 才写入）")
+    ap.add_argument("--apply", action="store_true")
+    a = ap.parse_args()
+    if a.rebuild_db:
+        rebuild_db(a.apply)
+        raise SystemExit
     edges = extract(load_units())
     report(edges)
     cross = [e for e in edges if e["kind"] == "cross_doc"][:8]

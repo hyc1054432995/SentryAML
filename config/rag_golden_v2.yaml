@@ -1,0 +1,409 @@
+# ============================================================================
+# SentryAML - RAG 评测问题集 v2（R8c：检验多轮检索 / Agent）
+# ============================================================================
+# 为什么要 v2：v1 的开发集对"检索一次 vs 多轮检索"已经饱和（R7 只漏 3 道，D61），
+# 而 v1 测试集已用于报告、冻结。v2 专门收"检索一次答不好"的题，用来比较 R7、固定两轮、Agent。
+#
+# 与 v1 相同的字段和规则（rag_golden_check.py 核对）；新增一个字段：
+#   pattern  这道题考的是哪种"检索一次答不好"的情形：
+#            bridge     答案在被另一条款点名的条款里（"参见第 X 段"）
+#            adjacent   答案在已能检索到的条款的相邻条款里
+#            paraphrase 提问用业务口语，与条文措辞差距大（含中英配对）
+#            two_part   一个问题问两件不同的事
+#            cross_doc  需要组合不同文件（或同一文件的正文 + 脚注）
+#            version    答案随调查日期变化；含"那一天还没有这条规定"的无答案题
+#            premise    问题的前提与条文不符，应纠正前提再回答
+#            unanswerable 主题相关、看起来能答，但知识库没有答案
+#
+# 写题的纪律：
+#   1. 所有题在运行任何系统之前写好、核对、切分；运行后发现题目本身有错，只能记录，不能为了结果改题
+#   2. gold 尽量选 v1 没用过的条款（rag_golden_check.py 会列出与 v1 重合的条款）
+#   3. 避开工具说明里用作示例的编号和主题（D60：示例写成评测题的答案，等于把答案写进提示词）
+#   4. 切分按连通分量：共享 gold 条款或 group 的题必须在同一侧
+# ============================================================================
+default_as_of: '2026-09-30'
+questions:
+- id: v201
+  type: multi_hop
+  pattern: bridge
+  lang: en
+  split: test
+  question: A customer asks us to send money to another local bank through MEPS+. What originator details have to travel with that payment instruction?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 11-2}
+  - {family: mas_n626, unit_id: '11.7'}
+  answer_keys: [inter-bank transfers via the local MAS Electronic Payment System, the name of the wire transfer originator]
+  group: meps
+- id: v202
+  type: multi_hop
+  pattern: bridge
+  lang: en
+  split: test
+  question: At what point should payment instructions be screened, and against which lists must wire transfer originators and beneficiaries be checked?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 6-15-10}
+  - {family: mas_n626, unit_id: '6.41'}
+  answer_keys: [before the transaction is executed, against lists and information provided by the Authority]
+  group: screening
+- id: v203
+  type: multi_hop
+  pattern: bridge
+  lang: en
+  split: test
+  question: A prospective customer lives in a jurisdiction that the FATF has called on its members to apply countermeasures against. How must the bank treat the relationship, and where should it check which
+    jurisdictions are affected?
+  gold:
+  - {family: mas_n626, unit_id: '8.6'}
+  - {family: mas_n626_guidelines, unit_id: 8-6-3}
+  answer_keys: [shall treat any business relations with or transactions for any such customer as presenting a higher risk, Public Statements on High-Risk Jurisdictions subject to a Call for Action]
+- id: v204
+  type: multi_hop
+  pattern: bridge
+  lang: en
+  split: dev
+  question: Who has to sign off before we take on a foreign politically exposed person as a customer, and what other enhanced measures are required?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 8-5-3}
+  - {family: mas_n626, unit_id: '8.3'}
+  answer_keys: [the approval shall be obtained from senior management, source of wealth and source of funds of the customer]
+  group: pep_approval
+- id: v205
+  type: multi_hop
+  pattern: bridge
+  lang: en
+  split: dev
+  question: We opened an account before we had finished verifying the customer's identity. Under what conditions is that allowed, and how long do we have before we must suspend the relationship?
+  gold:
+  - {family: mas_n626, unit_id: '6.33'}
+  - {family: mas_n626_guidelines, unit_id: 6-13-2}
+  answer_keys: [essential in order not to interrupt the normal conduct of business operations, should not exceed 30 business days]
+- id: v206
+  type: multi_hop
+  pattern: bridge
+  lang: en
+  split: test
+  question: A walk-in customer with no account at our bank buys a S$15,000 cashier's order in the morning and another S$15,000 one for the same payee in the afternoon. Do we have to perform CDD?
+  gold:
+  - {family: mas_n626, unit_id: '6.3'}
+  - {family: mas_n626_guidelines, unit_id: 6-2-3}
+  also_ok:
+  - {family: mas_n626_guidelines, unit_id: 6-2-2}
+  answer_keys: ['exceeding S$20,000', deliberately restructure an otherwise single transaction]
+- id: v207
+  type: multi_hop
+  pattern: adjacent
+  lang: en
+  split: test
+  question: Under the rule that a bank must not continue business relations when it cannot complete CDD, what exactly counts as having completed the measures?
+  gold:
+  - {family: mas_n626, unit_id: '6.35'}
+  - {family: mas_n626, unit_id: '6.36'}
+  answer_keys: [shall not commence or continue business relations, received satisfactory responses to all inquiries]
+  group: cdd_complete
+- id: v208
+  type: multi_hop
+  pattern: adjacent
+  lang: zh
+  split: test
+  question: 规定说银行无法完成客户尽职调查时不得开始或继续业务关系，这里的“完成”具体指什么？
+  gold:
+  - {family: mas_n626, unit_id: '6.35'}
+  - {family: mas_n626, unit_id: '6.36'}
+  answer_keys: [shall not commence or continue business relations, received satisfactory responses to all inquiries]
+  group: cdd_complete
+- id: v209
+  type: multi_hop
+  pattern: bridge
+  lang: zh
+  split: dev
+  question: 要接纳一位外国政治公众人物（PEP）为客户，需要谁批准？还要做哪些强化尽职调查措施？
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 8-5-3}
+  - {family: mas_n626, unit_id: '8.3'}
+  answer_keys: [the approval shall be obtained from senior management, source of wealth and source of funds of the customer]
+  group: pep_approval
+- id: v210
+  type: lookup
+  pattern: adjacent
+  lang: en
+  split: dev
+  question: If a bank cannot corroborate one of a PEP customer's more material sources of wealth, what should it consider doing?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 8-5-7A}
+  also_ok:
+  - {family: mas_n626_guidelines, unit_id: 8-5-7C}
+  answer_keys: [whether the residual risks associated with not corroborating, obtaining senior management’s approval]
+- id: v211
+  type: lookup
+  pattern: adjacent
+  lang: en
+  split: dev
+  question: When our TM analysts rely on relationship managers to get explanations from customers about an alert, what should they watch out for?
+  gold:
+  - {family: mas_tm_guidance, unit_id: '2.21'}
+  answer_keys: [should not accept these at face value, generic reasons]
+- id: v212
+  type: lookup
+  pattern: paraphrase
+  lang: en
+  split: test
+  question: Two spouses open an account together. Is it enough to do due diligence on the main applicant only?
+  gold:
+  - {family: mas_n626, unit_id: '6.37'}
+  answer_keys: [perform CDD measures on all of the joint account holders]
+  group: joint
+- id: v213
+  type: lookup
+  pattern: paraphrase
+  lang: zh
+  split: test
+  question: 夫妻两人一起开联名账户，只对主申请人做尽职调查就够了吗？
+  gold:
+  - {family: mas_n626, unit_id: '6.37'}
+  answer_keys: [perform CDD measures on all of the joint account holders]
+  group: joint
+- id: v214
+  type: lookup
+  pattern: paraphrase
+  lang: en
+  split: dev
+  question: A new customer only gives us a P.O. box as their address. Can we accept that?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 6-4-1}
+  also_ok:
+  - {family: mas_n626, unit_id: '6.6'}
+  answer_keys: [should only be used for jurisdictions where the residential address]
+  group: pobox
+- id: v215
+  type: lookup
+  pattern: paraphrase
+  lang: zh
+  split: dev
+  question: 新客户只提供了邮政信箱作为地址，银行可以接受吗？
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 6-4-1}
+  also_ok:
+  - {family: mas_n626, unit_id: '6.6'}
+  answer_keys: [should only be used for jurisdictions where the residential address]
+  group: pobox
+- id: v216
+  type: multi_hop
+  pattern: paraphrase
+  lang: en
+  split: test
+  question: We are about to launch a mobile banking app. Does that count as a new delivery mechanism, and what has to be done before it goes live?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 5-3}
+  - {family: mas_n626, unit_id: '5.2'}
+  also_ok:
+  - {family: mas_n626, unit_id: '5.1'}
+  answer_keys: [mobile banking, prior to the launch or use of such products]
+- id: v217
+  type: lookup
+  pattern: paraphrase
+  lang: en
+  split: dev
+  question: We are replacing our transaction monitoring platform with a new vendor system. What should we do during the switchover?
+  gold:
+  - {family: mas_tm_guidance, unit_id: '2.12'}
+  answer_keys: [user acceptance testing, bridging measures]
+- id: v218
+  type: multi_hop
+  pattern: two_part
+  lang: en
+  split: test
+  question: What should transaction monitoring reports to senior management cover, and what should happen when something could weaken the bank's monitoring capability?
+  gold:
+  - {family: mas_tm_guidance, unit_id: '4.4'}
+  - {family: mas_tm_guidance, unit_id: '4.5'}
+  answer_keys: [timeliness and quality of the organisation’s TM alerts handling, promptly highlighted to senior management]
+- id: v219
+  type: multi_hop
+  pattern: two_part
+  lang: en
+  split: test
+  question: How much QA testing of alert handling should an FI do, and in which situations should it carry out post-mortem reviews?
+  gold:
+  - {family: mas_tm_guidance, unit_id: '2.30'}
+  - {family: mas_tm_guidance, unit_id: '2.31'}
+  answer_keys: [commensurate with the size of their business, pursuant to STR filings or production orders]
+- id: v220
+  type: multi_hop
+  pattern: two_part
+  lang: en
+  split: dev
+  question: For a former PEP, is the time since they left office enough on its own to decide how much influence they still have? And does the PEP definition cover junior officials?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 8-5-11}
+  - {family: mas_n626_guidelines, unit_id: 8-4-1}
+  answer_keys: [it should not be the sole determining factor, not intended to cover middle-ranking or more junior individuals]
+  group: expep
+- id: v221
+  type: multi_hop
+  pattern: cross_doc
+  lang: en
+  split: dev
+  question: Where should an FI get material from to keep the red flags used in transaction monitoring up to date?
+  gold:
+  - {family: mas_tm_guidance, unit_id: '2.27'}
+  - {family: mas_tm_guidance, unit_id: fn5}
+  answer_keys: [periodically update their ML/TF red flags, STRO’s red flag indicators on SONAR]
+- id: v222
+  type: multi_hop
+  pattern: cross_doc
+  lang: en
+  split: test
+  question: Does a bank's assessment of money laundering risk also have to cover proliferation financing?
+  gold:
+  - {family: mas_n626, unit_id: fn3}
+  - {family: mas_n626_guidelines, unit_id: fn3}
+  answer_keys: [money laundering risks include proliferation financing risks, include PF risks]
+- id: v223
+  type: lookup
+  pattern: cross_doc
+  lang: en
+  split: dev
+  question: If transactions look like they may be linked to tax crimes, what is expected of the FI on monitoring, keeping the customer, and reporting?
+  gold:
+  - {family: mas_tm_guidance, unit_id: '4.7'}
+  answer_keys: [conduct enhanced monitoring, approvals must be obtained from senior management, Suspected tax-illicit activities should be reported in STRs]
+- id: v224
+  type: version
+  pattern: version
+  lang: en
+  split: dev
+  question: Does a bank have to corroborate the source of wealth information of a PEP customer, or is that left to its discretion?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 8-5-7}
+  answer_keys: [a bank should corroborate the information regarding source of wealth]
+  must_not: [should consider whether the information]
+  group: sow_corrob
+- id: v225
+  type: version
+  pattern: version
+  lang: en
+  split: dev
+  as_of: '2025-03-01'
+  question: Does a bank have to corroborate the source of wealth information of a PEP customer, or is that left to its discretion?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 8-5-7}
+  answer_keys: ['should consider whether the information, regarding source of wealth and source of funds']
+  must_not: [a bank should corroborate the information regarding source of wealth]
+  group: sow_corrob
+- id: v226
+  type: version
+  pattern: version
+  lang: en
+  split: test
+  question: After freezing the funds of a designated person under the sanctions regulations, whom must the bank notify and how quickly must it file an STR?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: I-3-1}
+  answer_keys: [report the freeze to MAS, no later than 1 business day after suspicion was first established]
+  must_not: [file an STR in such cases]
+  group: freeze
+- id: v227
+  type: version
+  pattern: version
+  lang: en
+  split: test
+  as_of: '2025-03-01'
+  question: After freezing the funds of a designated person under the sanctions regulations, whom must the bank notify and how quickly must it file an STR?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: I-3-1}
+  answer_keys: [immediately freeze any funds, file an STR in such cases]
+  must_not: [no later than 1 business day]
+  group: freeze
+- id: v228
+  type: version
+  pattern: version
+  lang: en
+  split: dev
+  question: A customer has taken part in a Tax Amnesty Programme. What specific steps do the Guidelines set out for the bank in this situation?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: fn22}
+  also_ok:
+  - {family: mas_n626_guidelines, unit_id: B-9}
+  answer_keys: ['file an STR, indicating that the customer has participated in a TAP', risk-based approach to determine whether to conduct a review]
+  group: tap
+- id: v229
+  type: unanswerable
+  pattern: version
+  lang: en
+  split: dev
+  as_of: '2025-03-01'
+  question: A customer has taken part in a Tax Amnesty Programme. What specific steps do the Guidelines set out for the bank in this situation?
+  gold: []
+  near_miss:
+  - {family: mas_n626_guidelines, unit_id: B-9}
+  why: TAP 的专门指引（B-9 第 x 项、脚注 22）自 2025-07-01 起才有；2025-03-01 有效的 2024 版 B-9 只有 i–ix 项，没有 TAP
+  group: tap
+- id: v230
+  type: lookup
+  pattern: premise
+  lang: en
+  split: test
+  question: Above what transfer amount do wire transfer beneficiaries have to be screened against the authorities' lists?
+  gold:
+  - {family: mas_n626, unit_id: '6.41'}
+  answer_keys: [screen all wire transfer originators and wire transfer beneficiaries]
+  group: screening
+- id: v231
+  type: lookup
+  pattern: premise
+  lang: en
+  split: dev
+  question: Since a P.O. box address is never acceptable for a customer, what should we ask for instead?
+  gold:
+  - {family: mas_n626_guidelines, unit_id: 6-4-1}
+  answer_keys: [should only be used for jurisdictions where the residential address]
+  group: pobox
+- id: v232
+  type: unanswerable
+  pattern: unanswerable
+  lang: en
+  split: test
+  question: What is the maximum number of days a transaction monitoring alert may stay open before MAS requires it to be escalated?
+  gold: []
+  near_miss:
+  - {family: mas_tm_guidance, unit_id: '2.22'}
+  why: TM 指引 2.22 只要求机构自定内部时限并监控逾期告警，没有规定天数
+- id: v233
+  type: unanswerable
+  pattern: unanswerable
+  lang: en
+  split: dev
+  question: What penalty does a bank employee face for tipping off a customer that an STR has been filed?
+  gold: []
+  near_miss:
+  - {family: mas_n626, unit_id: fn14}
+  why: Notice 只提示注意 CDSA 第 57 条（tipping-off），罚则条文不在知识库里
+- id: v234
+  type: unanswerable
+  pattern: unanswerable
+  lang: en
+  split: dev
+  question: How many years after leaving office can a bank stop treating a former foreign PEP as a PEP?
+  gold: []
+  near_miss:
+  - {family: mas_n626_guidelines, unit_id: 8-5-11}
+  why: Guidelines 8-5-11 说离任时间只是因素之一，不是唯一决定因素；没有规定年限
+  group: expep
+- id: v235
+  type: unanswerable
+  pattern: unanswerable
+  lang: en
+  split: test
+  question: What is the CDD threshold for occasional transactions under the EU's Anti-Money Laundering Regulation?
+  gold: []
+  why: 欧盟规则不在知识库范围内
+- id: v236
+  type: unanswerable
+  pattern: unanswerable
+  lang: en
+  split: test
+  question: Which SWIFT or MEPS+ message type must Singapore banks use for domestic wire transfers?
+  gold: []
+  near_miss:
+  - {family: mas_n626_guidelines, unit_id: 11-2}
+  why: Guidelines 11-2 只举 MEPS+ 为境内电汇的例子，没有规定报文类型
+  group: meps

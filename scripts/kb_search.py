@@ -175,8 +175,12 @@ def rerank_texts(chunk_ids: list[str], variant: str) -> list[str]:
 def search(question: str, as_of: date | None = None, variant: str = "ctx", mode: str = "hybrid",
            k: int = 10, per_route: int = 50, rrf_k: int = 60, exact: bool = False,
            use_filter: bool = True, rerank: bool = False, pool: int = 30,
-           expand_graph: bool = False, expand_top: int = 5, collection: str | None = None) -> list[dict]:
+           expand_graph: bool = False, expand_top: int = 5, collection: str | None = None,
+           rerank_query: str | None = None) -> list[dict]:
     """
+    rerank_query（R8c）：检索用 question，重排和条款编号路由用 rerank_query（默认相同）。
+    HyDE 时 question 是模型写的假想段落，但"是否回答了问题"必须对照用户的原问题判断；
+    编号路由也只认原问题里写明的编号，不能认假想段落里模型自己编出来的编号。
     use_filter=False 只用于消融（量化"按日期过滤"本身的价值），正式检索永远按日期过滤。
     rerank=True 时第一阶段取 pool 个候选；expand_graph=True 时再沿交叉引用补入相邻的块。
     collection 默认是 kb_<variant>；正式检索用别名 kb_current（见 retrieve）。
@@ -210,7 +214,8 @@ def search(question: str, as_of: date | None = None, variant: str = "ctx", mode:
         raise ValueError(f"未知模式 {mode}")
     hits = [{"score": p.score, "route": mode, **p.payload} for p in res.points]
     if exact:
-        pinned = [{"score": None, "route": "exact", **p} for p in exact_lookup(question, as_of, collection, use_filter)]
+        pinned = [{"score": None, "route": "exact", **p}
+                  for p in exact_lookup(rerank_query or question, as_of, collection, use_filter)]
         seen = {h["chunk_id"] for h in pinned}
         hits = pinned + [h for h in hits if h["chunk_id"] not in seen]
     if not rerank:
@@ -226,7 +231,7 @@ def search(question: str, as_of: date | None = None, variant: str = "ctx", mode:
     # 整块文字和单条文字放进同一次重排请求（D51）：分两次请求会多一次网络往返，延迟几乎翻倍
     focus = [(h["chunk_id"], u) for h in hits for u in sorted(links.get(h["chunk_id"], ()))]
     docs = rerank_texts([h["chunk_id"] for h in hits], variant) + (unit_texts(focus) if focus else [])
-    all_scores = kb_rerank.rerank(question, docs, use_cache=CACHE)
+    all_scores = kb_rerank.rerank(rerank_query or question, docs, use_cache=CACHE)
     scores, focus_scores = all_scores[:len(hits)], dict(zip(focus, all_scores[len(hits):]))
     for i, (h, sc) in enumerate(zip(hits, scores)):
         h["first_stage_rank"] = i + 1          # 在候选列表里的位置（引用扩展补入的排在第一阶段候选之后）
@@ -248,9 +253,14 @@ CACHE = True          # 评测时 --cold 会关掉缓存读取，用来测真实
 FINAL = dict(variant="hdr", mode="hybrid", exact=True, rerank=True, expand_graph=True, pool=30, rrf_k=60)
 
 
-def retrieve(question: str, as_of: date | None = None, k: int = 8) -> list[dict]:
-    """Agent 检索工具调用的入口：最终配置，查询别名 kb_current（指向哪个集合由 kb_index.py --set-current 决定）。"""
-    return search(question, as_of, k=k, collection="kb_current", **FINAL)
+def retrieve(question: str, as_of: date | None = None, k: int = 8, query: str | None = None) -> list[dict]:
+    """
+    Agent 检索工具调用的入口：最终配置，查询别名 kb_current（指向哪个集合由 kb_index.py --set-current 决定）。
+    query（R8c 的 HyDE 消融）：用另一段文字去检索，重排和编号路由仍按 question。
+    """
+    if query is None:
+        return search(question, as_of, k=k, collection="kb_current", **FINAL)
+    return search(query, as_of, k=k, collection="kb_current", rerank_query=question, **FINAL)
 
 
 def smoke():

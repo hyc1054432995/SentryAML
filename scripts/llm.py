@@ -117,3 +117,71 @@ def chat_json(messages: list[dict], purpose: str, max_tokens: int = 4000, use_ca
 def cost_usd(usage: dict) -> float:
     miss = usage.get("prompt", 0) - usage.get("hit", 0)
     return (usage.get("hit", 0) * PRICE["hit"] + miss * PRICE["miss"] + usage.get("completion", 0) * PRICE["out"]) / 1e6
+
+
+# ---------------------------------------------------------------------------
+# 带工具的调用（R8b）
+# ---------------------------------------------------------------------------
+def _call_tools(messages: list[dict], tools: list[dict], max_tokens: int) -> tuple[dict, dict]:
+    resp = _get_client().chat.completions.create(
+        model=MODEL, messages=messages, tools=tools, temperature=0.0, max_tokens=max_tokens)
+    m = resp.choices[0].message
+    u = resp.usage
+    details = getattr(u, "completion_tokens_details", None)
+    # 思考模式下的思考内容。openai SDK 不认识这个字段，它放在 model_extra 里
+    reasoning = getattr(m, "reasoning_content", None) or (getattr(m, "model_extra", None) or {}).get(
+        "reasoning_content")
+    msg = {"content": m.content or "", "reasoning_content": reasoning or "",
+           "tool_calls": [{"id": tc.id, "name": tc.function.name, "arguments": tc.function.arguments}
+                          for tc in (m.tool_calls or [])]}
+    return msg, {"prompt": u.prompt_tokens, "completion": u.completion_tokens,
+                 "hit": getattr(u, "prompt_cache_hit_tokens", 0) or 0,
+                 "reasoning": (getattr(details, "reasoning_tokens", 0) or 0) if details else 0,
+                 "finish": resp.choices[0].finish_reason}
+
+
+def chat_tools(messages: list[dict], tools: list[dict], purpose: str, max_tokens: int = 8000,
+               use_cache: bool = True) -> tuple[dict, dict]:
+    """
+    带工具的一轮调用。返回 (消息, 用量)；消息 = {content, reasoning_content, tool_calls: [{id, name, arguments}]}。
+    缓存键包含完整的消息历史和工具定义：同一条调查路径重跑时每一轮都命中缓存，整条路径完全复现、零成本；
+    任何一步的工具结果变了（例如知识库更新），从那一步起自然失效。
+    """
+    key = hashlib.sha256(json.dumps([MODEL, messages, tools, max_tokens], ensure_ascii=False,
+                                    sort_keys=True).encode("utf-8")).hexdigest()
+    if use_cache:
+        with connect() as conn, conn.cursor() as cur:
+            cur.execute("SELECT response FROM llm_cache WHERE cache_key = %s", (key,))
+            row = cur.fetchone()
+        if row:
+            return json.loads(row[0]), {"prompt": 0, "completion": 0, "hit": 0, "reasoning": 0, "cached": True}
+    msg, usage = _call_tools(messages, tools, max_tokens)
+    if usage["finish"] == "length":
+        msg, u2 = _call_tools(messages, tools, min(max_tokens * 2, 16000))
+        usage = {k: usage[k] + u2[k] for k in ("prompt", "completion", "hit", "reasoning")} | {"finish": u2["finish"]}
+    if usage["finish"] == "length":
+        e = LLMError("输出被截断（finish_reason=length）")
+        e.raw, e.usage = json.dumps(msg, ensure_ascii=False), {**usage, "cached": False}
+        raise e
+    raw = json.dumps(msg, ensure_ascii=False)
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("""INSERT INTO llm_cache (cache_key, model, purpose, response, prompt_tokens, cache_hit_tokens,
+                                              completion_tokens, reasoning_tokens)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (cache_key) DO NOTHING""",
+                    (key, MODEL, purpose, raw, usage["prompt"], usage["hit"], usage["completion"], usage["reasoning"]))
+        conn.commit()
+    return msg, {**usage, "cached": False}
+
+
+def assistant_message(msg: dict) -> dict:
+    """
+    把模型的一轮输出转成可以放回消息历史的 assistant 消息。
+    DeepSeek 思考模式的硬性要求：带 tools 的多轮请求里，每一轮的 reasoning_content 都必须原样传回，
+    否则返回 400 错误（D60）。
+    """
+    out = {"role": "assistant", "content": msg["content"] or None, "reasoning_content": msg["reasoning_content"]}
+    if msg["tool_calls"]:
+        out["tool_calls"] = [{"id": tc["id"], "type": "function",
+                              "function": {"name": tc["name"], "arguments": tc["arguments"]}}
+                             for tc in msg["tool_calls"]]
+    return out

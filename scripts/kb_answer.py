@@ -185,6 +185,41 @@ def verify(claims: list[dict], sources: list[dict]) -> list[dict]:
     return out
 
 
+# 回答正文、"未覆盖"里加了引号的原文片段（D65）。逐字核验只管 claims；正文里的引号同样在告诉读者"这是原文"，
+# 所以也要能在看过的条款里逐字找到
+_PAIRS = [re.compile(r"“([^“”]*)”"), re.compile(r'"([^"]*)"')]
+
+
+def quoted_spans(text: str) -> list[str]:
+    """
+    取出成对引号里的英文原文片段（≥5 个英文词）。先按"成对"取，再按长度过滤：
+    先按长度过滤会让正则从一个闭引号开始、匹配到下一个开引号，把两段引文之间的叙述当成引文（D65 的评测代码错误）。
+    省略号两侧分段；中文译文、短词组不算原文引文。
+    """
+    out = []
+    for rx in _PAIRS:
+        for m in rx.finditer(text or ""):
+            for piece in re.split(r"\.\.\.|…", m.group(1)):
+                piece = piece.strip().strip(".,;: ")
+                latin = re.findall(r"[A-Za-z]+", piece)
+                if len(latin) >= 5 and sum(map(len, latin)) >= 0.7 * len(re.sub(r"\s", "", piece)):
+                    out.append(piece)
+    return out
+
+
+def unverified_quotes(fields: dict[str, str], texts: list[str]) -> list[str]:
+    """fields = {"answer": …, "missing": …}；texts = 本题看过的条款原文。返回找不到出处的引文片段。
+    法律文书常见的方括号改写（"[s]ubject to"）去掉方括号再比对。"""
+    normed = [norm(t) for t in texts]
+    bad = []
+    for name, text in fields.items():
+        for piece in quoted_spans(text):
+            p = norm(re.sub(r"\[(\w{1,3})\]", r"\1", piece))
+            if not any(p in t for t in normed):
+                bad.append(f"{name}: {piece[:80]}")
+    return bad
+
+
 def schema_problem(data: dict) -> str | None:
     """检查生成结果的格式；能安全纠正的（"true" 字符串）就地纠正，否则返回问题描述。"""
     a = data.get("answerable")
@@ -212,7 +247,7 @@ def retry_message(checked: list[dict]) -> str:
 # 入口
 # ---------------------------------------------------------------------------
 def answer(question: str, as_of: date | None = None, use_scope: bool = True, use_cache: bool = True,
-           log: bool = True) -> dict:
+           log: bool = True, hits: list[dict] | None = None) -> dict:
     as_of = as_of or date.today()
     t0 = time.perf_counter()
     rec = {"question": question, "as_of": str(as_of), "prompt_version": PROMPT_VERSION, "model": llm.MODEL,
@@ -246,7 +281,8 @@ def answer(question: str, as_of: date | None = None, use_scope: bool = True, use
         return r, round((time.perf_counter() - t) * 1000)
 
     with ThreadPoolExecutor(max_workers=2) as pool:
-        f_hits = pool.submit(timed, retrieve, question, as_of, K_SOURCES)
+        # hits 由调用方给出时（R8c 的"固定两轮"：第一轮来源 + 用"未覆盖"补检的段落）不再检索
+        f_hits = pool.submit(timed, (lambda *a: hits) if hits is not None else retrieve, question, as_of, K_SOURCES)
         f_scope = pool.submit(timed, scope_check, question, use_cache) if use_scope else None
         if f_scope is not None:
             try:
