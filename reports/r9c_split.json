@@ -1,0 +1,867 @@
+{
+ "seed": 20261008,
+ "links": "L2",
+ "quota": {
+  "T1/1": 10,
+  "T1/0": 10,
+  "T2/1": 20,
+  "T2/0": 20
+ },
+ "excluded_alerts": [
+  1,
+  2,
+  62,
+  696
+ ],
+ "dev": [
+  {
+   "alert_id": 3437,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 3437,
+   "m": 1
+  },
+  {
+   "alert_id": 1094,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 186,
+   "m": 1
+  },
+  {
+   "alert_id": 1978,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1978,
+   "m": 1
+  },
+  {
+   "alert_id": 1285,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1285,
+   "m": 1
+  },
+  {
+   "alert_id": 2611,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 561,
+   "m": 1
+  },
+  {
+   "alert_id": 1525,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1525,
+   "m": 1
+  },
+  {
+   "alert_id": 3435,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 3435,
+   "m": 1
+  },
+  {
+   "alert_id": 3087,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 3087,
+   "m": 1
+  },
+  {
+   "alert_id": 2101,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 177,
+   "m": 1
+  },
+  {
+   "alert_id": 3298,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 3298,
+   "m": 1
+  },
+  {
+   "alert_id": 1444,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1444,
+   "m": 1
+  },
+  {
+   "alert_id": 2415,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 166,
+   "m": 1
+  },
+  {
+   "alert_id": 4130,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 4130,
+   "m": 1
+  },
+  {
+   "alert_id": 2066,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 95,
+   "m": 2
+  },
+  {
+   "alert_id": 2063,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 24,
+   "m": 1
+  },
+  {
+   "alert_id": 1002,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1002,
+   "m": 1
+  },
+  {
+   "alert_id": 2699,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 16,
+   "m": 1
+  },
+  {
+   "alert_id": 3796,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 14,
+   "m": 2
+  },
+  {
+   "alert_id": 1221,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 104,
+   "m": 1
+  },
+  {
+   "alert_id": 2087,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 2087,
+   "m": 1
+  },
+  {
+   "alert_id": 689,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 689,
+   "m": 1
+  },
+  {
+   "alert_id": 567,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 567,
+   "m": 1
+  },
+  {
+   "alert_id": 381,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 381,
+   "m": 2
+  },
+  {
+   "alert_id": 705,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 705,
+   "m": 1
+  },
+  {
+   "alert_id": 594,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 594,
+   "m": 1
+  },
+  {
+   "alert_id": 232,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 232,
+   "m": 1
+  },
+  {
+   "alert_id": 709,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 709,
+   "m": 1
+  },
+  {
+   "alert_id": 787,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 787,
+   "m": 1
+  },
+  {
+   "alert_id": 531,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 531,
+   "m": 1
+  },
+  {
+   "alert_id": 621,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 621,
+   "m": 1
+  },
+  {
+   "alert_id": 620,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 620,
+   "m": 1
+  },
+  {
+   "alert_id": 280,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 280,
+   "m": 1
+  },
+  {
+   "alert_id": 391,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 162,
+   "m": 7
+  },
+  {
+   "alert_id": 458,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 211,
+   "m": 2
+  },
+  {
+   "alert_id": 18,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 12,
+   "m": 4
+  },
+  {
+   "alert_id": 59,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 59,
+   "m": 1
+  },
+  {
+   "alert_id": 141,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 39,
+   "m": 2
+  },
+  {
+   "alert_id": 123,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 123,
+   "m": 1
+  },
+  {
+   "alert_id": 165,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 165,
+   "m": 1
+  },
+  {
+   "alert_id": 154,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 73,
+   "m": 9
+  },
+  {
+   "alert_id": 2308,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2308,
+   "m": 1
+  },
+  {
+   "alert_id": 2356,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2356,
+   "m": 1
+  },
+  {
+   "alert_id": 3882,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3882,
+   "m": 1
+  },
+  {
+   "alert_id": 2378,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2378,
+   "m": 1
+  },
+  {
+   "alert_id": 2835,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2835,
+   "m": 1
+  },
+  {
+   "alert_id": 1190,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 1190,
+   "m": 2
+  },
+  {
+   "alert_id": 1058,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 1058,
+   "m": 1
+  },
+  {
+   "alert_id": 4220,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 4220,
+   "m": 1
+  },
+  {
+   "alert_id": 1584,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 1584,
+   "m": 1
+  },
+  {
+   "alert_id": 3813,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3813,
+   "m": 1
+  },
+  {
+   "alert_id": 2618,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2618,
+   "m": 1
+  },
+  {
+   "alert_id": 2605,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2605,
+   "m": 1
+  },
+  {
+   "alert_id": 1639,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 1639,
+   "m": 1
+  },
+  {
+   "alert_id": 3444,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3444,
+   "m": 1
+  },
+  {
+   "alert_id": 3586,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3586,
+   "m": 1
+  },
+  {
+   "alert_id": 3135,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3135,
+   "m": 1
+  },
+  {
+   "alert_id": 3034,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3034,
+   "m": 1
+  },
+  {
+   "alert_id": 3447,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3447,
+   "m": 1
+  },
+  {
+   "alert_id": 1678,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 1678,
+   "m": 1
+  },
+  {
+   "alert_id": 1673,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 1673,
+   "m": 1
+  }
+ ],
+ "test": [
+  {
+   "alert_id": 915,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 11,
+   "m": 7
+  },
+  {
+   "alert_id": 2510,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 812,
+   "m": 1
+  },
+  {
+   "alert_id": 2219,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 199,
+   "m": 3
+  },
+  {
+   "alert_id": 2764,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 2764,
+   "m": 1
+  },
+  {
+   "alert_id": 2024,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 78,
+   "m": 1
+  },
+  {
+   "alert_id": 3322,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 3322,
+   "m": 1
+  },
+  {
+   "alert_id": 2580,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 2580,
+   "m": 1
+  },
+  {
+   "alert_id": 1215,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1215,
+   "m": 1
+  },
+  {
+   "alert_id": 1298,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1298,
+   "m": 1
+  },
+  {
+   "alert_id": 2313,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 2074,
+   "m": 1
+  },
+  {
+   "alert_id": 3651,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 2012,
+   "m": 1
+  },
+  {
+   "alert_id": 1148,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 573,
+   "m": 1
+  },
+  {
+   "alert_id": 1161,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1161,
+   "m": 1
+  },
+  {
+   "alert_id": 2908,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 2908,
+   "m": 1
+  },
+  {
+   "alert_id": 3603,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 3603,
+   "m": 1
+  },
+  {
+   "alert_id": 1524,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1524,
+   "m": 1
+  },
+  {
+   "alert_id": 4170,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 4170,
+   "m": 1
+  },
+  {
+   "alert_id": 3980,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 3980,
+   "m": 1
+  },
+  {
+   "alert_id": 3504,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 3504,
+   "m": 1
+  },
+  {
+   "alert_id": 1382,
+   "tier": "T2",
+   "stratum": "T2/L",
+   "component": 1382,
+   "m": 1
+  },
+  {
+   "alert_id": 522,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 522,
+   "m": 1
+  },
+  {
+   "alert_id": 739,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 739,
+   "m": 1
+  },
+  {
+   "alert_id": 449,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 449,
+   "m": 1
+  },
+  {
+   "alert_id": 503,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 503,
+   "m": 1
+  },
+  {
+   "alert_id": 794,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 794,
+   "m": 1
+  },
+  {
+   "alert_id": 744,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 744,
+   "m": 1
+  },
+  {
+   "alert_id": 544,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 544,
+   "m": 1
+  },
+  {
+   "alert_id": 510,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 510,
+   "m": 1
+  },
+  {
+   "alert_id": 258,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 258,
+   "m": 1
+  },
+  {
+   "alert_id": 778,
+   "tier": "T1",
+   "stratum": "T1/N",
+   "component": 778,
+   "m": 1
+  },
+  {
+   "alert_id": 41,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 41,
+   "m": 4
+  },
+  {
+   "alert_id": 189,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 21,
+   "m": 11
+  },
+  {
+   "alert_id": 82,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 82,
+   "m": 1
+  },
+  {
+   "alert_id": 342,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 275,
+   "m": 7
+  },
+  {
+   "alert_id": 394,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 394,
+   "m": 1
+  },
+  {
+   "alert_id": 164,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 164,
+   "m": 2
+  },
+  {
+   "alert_id": 623,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 623,
+   "m": 1
+  },
+  {
+   "alert_id": 386,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 386,
+   "m": 1
+  },
+  {
+   "alert_id": 500,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 500,
+   "m": 1
+  },
+  {
+   "alert_id": 357,
+   "tier": "T1",
+   "stratum": "T1/L",
+   "component": 17,
+   "m": 4
+  },
+  {
+   "alert_id": 2280,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2280,
+   "m": 1
+  },
+  {
+   "alert_id": 3970,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3970,
+   "m": 2
+  },
+  {
+   "alert_id": 4104,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 4104,
+   "m": 1
+  },
+  {
+   "alert_id": 880,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 880,
+   "m": 1
+  },
+  {
+   "alert_id": 4129,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 380,
+   "m": 1
+  },
+  {
+   "alert_id": 1936,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 1936,
+   "m": 1
+  },
+  {
+   "alert_id": 3502,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3502,
+   "m": 1
+  },
+  {
+   "alert_id": 1209,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 1209,
+   "m": 1
+  },
+  {
+   "alert_id": 1510,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 1510,
+   "m": 1
+  },
+  {
+   "alert_id": 2209,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2209,
+   "m": 1
+  },
+  {
+   "alert_id": 2147,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2147,
+   "m": 1
+  },
+  {
+   "alert_id": 4161,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 4161,
+   "m": 1
+  },
+  {
+   "alert_id": 3538,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3538,
+   "m": 1
+  },
+  {
+   "alert_id": 2467,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2467,
+   "m": 1
+  },
+  {
+   "alert_id": 2135,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2135,
+   "m": 1
+  },
+  {
+   "alert_id": 3605,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3605,
+   "m": 1
+  },
+  {
+   "alert_id": 2919,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 2919,
+   "m": 1
+  },
+  {
+   "alert_id": 3724,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3724,
+   "m": 1
+  },
+  {
+   "alert_id": 3837,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 3837,
+   "m": 1
+  },
+  {
+   "alert_id": 988,
+   "tier": "T2",
+   "stratum": "T2/N",
+   "component": 988,
+   "m": 1
+  }
+ ],
+ "strata_population": {
+  "T1/L": 453,
+  "T1/N": 393,
+  "T2/N": 3206,
+  "T2/L": 174
+ },
+ "frozen": "test"
+}
