@@ -1,0 +1,8773 @@
+{
+ "3437": {
+  "alert_id": 3437,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "fe6e6cae-3112-4985-8862-353f05bf5aef",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 392,
+   "total": 533
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_first_contact"
+   ],
+   "top_typology": "bipartite"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 1,164.72 USD is a first contact (a_to_b.n = 0) but its amount is below the training-period laundering band of 2,154-24,075 USD (in_laundering_band = false). Neither the payer nor the payee has any confirmed case on record (n_cases = 0 in both). Every strong-pattern check came back negative: pass-through n_matches = 0, cycle n_cycles = 0, and two-hop common intermediaries n_gather_out = 0 and n_gather_in = 0. The payee received only this single inbound payment and shows no outbound activity (out_cnt = 0), so the funds are not layered onward. Only the weak first-contact signal remains, which is common in normal payments, so the alert is closed.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 1164.72
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cnt",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 2,
+  "cost_usd": 0.0
+ },
+ "18": {
+  "alert_id": 18,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "0db70b0b-f06f-4f1e-94c2-4c1b5b58642c",
+  "usage": {
+   "calls": 1,
+   "cached_calls": 1,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 465,
+   "total": 495
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp",
+    "s_first_contact",
+    "s_known_launderer",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 1,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "fan_out",
+  "confidence": "high",
+  "rationale": "The payer 210431:809BFD6B0 has a confirmed money-laundering case on record before the alert, with the FAN-OUT pattern across 12 transactions. The pass_through check found 7 matches where funds received by the payer were sent onward in similar amounts (diffs 0.4%-8.1%, lags of 2-43 hours). The payer received from only 2 counterparties but sent to 14 in the 72-hour window, consistent with a fan-out distribution. The alerted payment of 15,784.68 USD is a first contact in both directions, so it is not a regular payer-payee pattern, and the amount falls inside the laundering band. This is strong evidence, so the alert is escalated.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "FAN-OUT"
+    ]
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 7
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 14
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 2
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 15784.68
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 0,
+  "cost_usd": 0.0
+ },
+ "59": {
+  "alert_id": 59,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "5aedcfe4-b7b5-4087-94bd-28a9c45f88c2",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "case_history",
+    "args": "{\"account\": \"22164:801A1E020\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"22164:801A1E020\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"115249:805ED9330\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 455,
+   "total": 583
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_fan_in_cp",
+    "s_first_contact",
+    "s_known_launderer",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "stack",
+  "confidence": "high",
+  "rationale": "The payer 210261:80C48F890 already has 1 confirmed laundering case with pattern STACK before the alert, and the account that funded it, 22164:801A1E020, also has 1 confirmed STACK case. The alerted payment of 14080.57 is a pass-through: 13470.37 was received from 22164:801A1E020 on 2022-09-07 and forwarded 52.6 hours later with only 4.5% difference, forming a stacked layering chain through two known launderer accounts. The payer shows fan-in from 3 counterparties in the 72-hour window, and the payer-payee pair had 0 prior transactions, so this is not a regular payment relationship. This is strong evidence of confirmed laundering activity, not a weak first-contact-only alert.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "STACK"
+    ]
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 1
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 13470.37
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 14080.57
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].lag_hours",
+    "value": 52.6
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 12,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 12,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "STACK"
+    ]
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 3
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "123": {
+  "alert_id": 123,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "30a203af-4b2e-4fbf-8576-52ca6be1d00a",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 348,
+   "total": 458
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_in_cp",
+    "s_fan_out_cp",
+    "s_first_contact",
+    "s_known_launderer",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "gather_scatter",
+  "confidence": "high",
+  "rationale": "Both parties to the alerted 16,479.04 USD payment are confirmed money-laundering accounts, each with n_cases = 1 and pattern CYCLE confirmed before the alert. The payment is a first contact (a_to_b.n = 0) between them. The payer's outgoing 16,479.04 USD matches three earlier incoming payments (15,315.27 and two of 17,666.28 USD) within 10% at lags of 37.9-56.3 hours, a clear pass-through (n_matches = 3). The payer also shows fan-in from 3 counterparties and fan-out to 4, consistent with gathering funds and passing them onward.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "CYCLE"
+    ]
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "CYCLE"
+    ]
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 3
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 15315.27
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 16479.04
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 3
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 4
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 2,
+  "cost_usd": 0.0
+ },
+ "141": {
+  "alert_id": 141,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "1029c325-3be9-4be3-91b8-e0686448f6a9",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"15:803D8E3A0\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"15:803D8E3A0\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"15:803D8E3A0\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"27:80C508720\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "counterparty_history",
+    "args": "{\"account_a\": \"15:803D8E3A0\", \"account_b\": \"29467:80450A2A0\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "case_history",
+    "args": "{\"account\": \"27:80C508720\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 354,
+   "total": 601
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "gather_scatter",
+  "confidence": "medium",
+  "rationale": "The payer 33759:80CB230F0 received 15,580.31 from 27:80C508720 and sent it straight on to the alert payee 15:803D8E3A0 in a matching 15,486.54 (0.6% difference), and this pass-through repeats across 4 matches, the most recent with a lag of 2.6 hours. The transaction is a first contact (0 prior payments either direction), so it is not a regular payer-payee pattern, and the 15,486.54 amount sits inside the training laundering band of 2,154-24,075 USD. Upstream, 27:80C508720 moves large volumes (2,652,882.24 out to 3 counterparties), while the payer takes in from a single counterparty (in_cp 1). No cycles (0) or two-hop convergence were found and neither account has a confirmed case, but the confirmed pass-through of funds through a first-contact pair is strong evidence and justifies escalation.",
+  "not_checked": "Nothing material was refused or timed out; the payee's second account (29467:80450A2A0) was not separately profiled.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 4
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_from",
+    "value": "27:80C508720"
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 15580.31
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 15486.54
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].diff_pct",
+    "value": 0.6
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 14,
+    "path": "result.out_amt",
+    "value": 2652882.24
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 1
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.0
+ },
+ "154": {
+  "alert_id": 154,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "f1dbdc5e-fa77-45ea-a27e-8d82de2ef1ba",
+  "usage": {
+   "calls": 1,
+   "cached_calls": 1,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 438,
+   "total": 485
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_in_cp",
+    "s_known_launderer",
+    "s_round_trip_2hop"
+   ],
+   "top_typology": "fan_in"
+  },
+  "first_pass": {
+   "facts": 9,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "turns": 1,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "known_launderer_integration",
+  "confidence": "high",
+  "rationale": "Both counterparties are confirmed launderers before the alert: the payer 23691:8021353D0 has 2 confirmed cases and the payee 15231:80266F880 has 2 confirmed cases, with pattern types including BIPARTITE, CYCLE, FAN-OUT, GATHER-SCATTER, SCATTER-GATHER and STACK. The pair is not a first contact and moves money in both directions, 18 payments payer-to-payee totaling 176,303.63 USD and 22 payments payee-to-payer totaling 203,129.10 USD, with 5 two-hop round-trip cycles detected between them. The alerted amount of 10,705.59 USD falls inside the training laundering band of 2,154-24,075 USD. This confirms integration with known launderers, so the alert is escalated.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 2
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 2
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "BIPARTITE",
+     "CYCLE",
+     "FAN-OUT",
+     "GATHER-SCATTER",
+     "RANDOM",
+     "SCATTER-GATHER",
+     "STACK"
+    ]
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 18
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 176303.63
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 22
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.amt",
+    "value": 203129.1
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 5
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 0,
+  "cost_usd": 0.0
+ },
+ "1002": {
+  "alert_id": 1002,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "0bf2e5a2-5d6e-4e95-a4dd-a86fbfdc1464",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 168}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 651,
+   "total": 840
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_dormant_reactivation",
+    "s_first_contact"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alert is a single 9,705.32 USD payment and is the payer's first transaction with this payee (0 prior payments in either direction). The amount is in the laundering band, but both accounts have 0 confirmed cases, and pass-through, cycle and gather checks on both sides all returned 0 matches. The payer's account showed 0 transactions on every earlier day of the 7-day window and only the alert-day outgoing, i.e., a dormant account making one payment. Every strong pattern (pass-through, 3+ hop cycle, several intermediaries to one endpoint, known launderer) was checked and ruled out, leaving only weak signals (first contact, amount in band, a single outflow), so the alert is closed.",
+  "not_checked": "The payee's owning entity lists 2,254 accounts at 425 banks; those other accounts were not individually traceable, though the alerted account's own fan, pass-through, cycle and two-hop flows were all checked and clear.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 6,
+    "path": "txns_earlier_days",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 13,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 14,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 15,
+    "path": "n_gather_in",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "1058": {
+  "alert_id": 1058,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "05c2154b-794e-41e1-8894-83b375cd2e27",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "rejected",
+    "failed": 1,
+    "ungrounded": 0
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 407,
+   "total": 616
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_dormant_reactivation",
+    "s_fan_in_cp",
+    "s_first_contact",
+    "s_known_launderer"
+   ],
+   "top_typology": "fan_in"
+  },
+  "first_pass": {
+   "facts": 8,
+   "verified": 7,
+   "ungrounded": 0
+  },
+  "retried": true,
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "fan_in",
+  "confidence": "high",
+  "rationale": "The payer account 17174:812DAA970 has a confirmed laundering case on record before the alert (1 case), which is strong evidence. It also shows a sharp fan-in: 12 distinct counterparties sent 370192.67 USD, with 0 transactions on earlier days and the activity concentrated on 2022-09-08, followed by a single 3082.06 USD outbound to a first-time counterparty (a_to_b.n 0). Pass-through (0 matches), cycle (0) and two-hop (0 gather-in/out) checks were negative, but that does not clear a confirmed launderer. The payee (0 cases) received only 2 payments, so it looks like a destination rather than an intermediary.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 12
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_amt",
+    "value": 370192.67
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 6,
+    "path": "txns_earlier_days",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 3082.06
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "232": {
+  "alert_id": 232,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "a1607ebd-313a-48b0-9471-56d845d4b07c",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 332,
+   "total": 479
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_dormant_reactivation",
+    "s_first_contact"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 7,
+   "verified": 7,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "dormant_activation",
+  "confidence": "medium",
+  "rationale": "The payer (10581:8043FC340) was dormant, with 0 transactions in the earlier days of the 7-day window, then received 9,905.55 and sent 9,295.85 to a counterparty it had never paid before (0 prior payments between the pair). The destination account belongs to a Sole Proprietorship that controls 92 accounts across 70 banks, a footprint consistent with a layering network rather than normal commerce. Although pass-through, cycle and two-hop checks returned 0 matches, the combination of a freshly reactivated sender funneling nearly all received funds to a first-contact, multi-account, multi-bank entity is not explained by the weak signals alone and warrants full investigation.",
+  "not_checked": "Transactions of the payee entity's other accounts and its wider counterparty network were not traced.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 13,
+    "path": "result.n_accounts",
+    "value": 92
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 13,
+    "path": "result.n_banks",
+    "value": 70
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_amt",
+    "value": 9905.55
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_amt",
+    "value": 9295.85
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 6,
+    "path": "txns_earlier_days",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "1094": {
+  "alert_id": 1094,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "62db0dad-b187-4930-ab4a-498523416d65",
+  "usage": {
+   "calls": 4,
+   "cached_calls": 4,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "rejected",
+    "failed": 1,
+    "ungrounded": 0
+   },
+   {
+    "step": 18,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 363,
+   "total": 869
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "retried": true,
+  "turns": 4,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 14,522.24 USD from payer 11974:803C66270 to payee 27755:80A2DF610 is a first contact (a_to_b.n = 0) and the amount sits in the laundering band, but these are only weak signals. Neither account has a confirmed laundering case (n_cases = 0 on both), and no pass-through was found on either side (n_matches = 0 for payer and payee), no 2-hop round trip between the pair, no cycle of 3+ hops (n_cycles = 0 for payer and payee), and no common intermediaries (n_gather_in = 0 for the payee). The payee shows only a single modest fan-in (in_cp = 5 with no outgoing), which is weak evidence on its own. All the checks that matter were run and returned negative, so the alert fits a normal new-counterparty payment rather than a laundering pattern.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 5
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 15,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 16,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.0
+ },
+ "1190": {
+  "alert_id": 1190,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "18aa34dc-4fa6-4a3d-a8fa-7e5d5432b2e0",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 357,
+   "total": 792
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_dormant_reactivation",
+    "s_first_contact"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted transaction is 1,526.91 USD, below the training-period laundering band of 2,154-24,075 USD (step 1), and it is a first contact with 0 prior payments in either direction between payer and payee (step 2). The payer has 0 confirmed cases, 0 pass-through matches, 0 cycles and 0 common intermediaries (steps 3, 7, 8, 9), and is a single-account corporation. The payee shows a fan-in of 5 distinct counterparties totaling 11,271.38 USD in 72 hours with no outgoing payments (step 11), but a single fan-in count is weak evidence and the payee also has 0 confirmed cases (step 4). Since every strong-evidence check was run and found nothing, and no strong pattern could not be ruled out, the alert is closed.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 5
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 14,
+    "path": "result.n_accounts",
+    "value": 3057
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 5,
+  "cost_usd": 0.0
+ },
+ "381": {
+  "alert_id": 381,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "7e46f274-ec9c-4e6e-b71e-9610557f36e0",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 168}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 399,
+   "total": 630
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted 11,331.73 USD payment is a first contact (0 prior payments in either direction) with an amount inside the laundering band, but every structural check on the payer came back negative: 0 pass-through matches, 0 cycles up to 12 hops, 0 two-hop gather in or out, and 0 confirmed cases on either account. The payee takes in heavily (294,490.99 USD from 5 counterparties within 72h) yet shows 0 outgoing, and its own pass-through and two-hop gather are both 0, so this is only a single fan-in count, which is weak evidence. No strong evidence (no pass-through, no cycle, no multi-intermediary endpoint, no known launderer) was found, and the accounts' regular small inflows are not a valid basis either since a first contact is never a regular pattern.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 11331.73
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 5
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cnt",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 5,
+  "cost_usd": 0.0
+ },
+ "1221": {
+  "alert_id": 1221,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "f5804730-cedf-480d-90eb-4282aea38812",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "case_history",
+    "args": "{\"account\": \"9665:804234190\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"9665:804234190\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"4:80DB2EFC0\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"9665:804234190\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 391,
+   "total": 573
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 9,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "known_launderer_integration",
+  "confidence": "high",
+  "rationale": "Payer 15010:80362C640 received 15849.65 USD from 9665:804234190 at 06:48 and forwarded exactly 15849.65 USD to 4:80DB2EFC0 at 12:20, a 5.5-hour pass-through with 0.0% difference. The funding account 9665:804234190 carries 1 confirmed money-laundering case before the alert (pattern RANDOM), so the alerted payment channels a known launderer's funds onward through the payer. The pair is a first contact (0 prior transactions) and the amount falls in the laundering band. No cycle (0) or common-intermediary gather structure (0) was found, but the confirmed pass-through from a known launderer is strong evidence and warrants escalation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 15849.65
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 15849.65
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].lag_hours",
+    "value": 5.5
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].diff_pct",
+    "value": 0.0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 12,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 12,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "RANDOM"
+    ]
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "1584": {
+  "alert_id": 1584,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "cbfa3e8a-28c9-4559-b5bd-2471c493e2a9",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 168}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 14}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 423,
+   "total": 624
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alert's 15,648.66 USD is inside the laundering amount band (step 1) and the payer shows a fan-out of 7 distinct counterparties with 0 incoming over 72 hours (step 5), but these are weak signals on their own. Every strong check was run and found nothing: 0 confirmed cases on the payer and payee (steps 3-4), 0 pass-through matches for the payer (step 7) and 0 for the payee (step 11), 0 cycles (step 8) and 0 gather-in/gather-out (step 9). The pair had already exchanged the identical 15,648.66 USD on 2022-09-02 (step 2), and the payer's seven-day activity is a recurring stream of similar daily outgoing payments (step 6). The alerted transfer therefore fits a regular payment relationship rather than layering, so I close the alert.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 15648.66
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 7
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "531": {
+  "alert_id": 531,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "f38a09e1-4759-4342-b08c-f6a20fd29b28",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "case_history",
+    "args": "{\"account\": \"15:802F93B80\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"15:802F93B80\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"15:802F93B80\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"29467:8038547E0\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 437,
+   "total": 612
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp",
+    "s_first_contact",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "fan_out",
+  "confidence": "high",
+  "rationale": "The payer received funds from a single counterparty (in_cp 1) and forwarded them to 7 counterparties (out_cp 7), with 6 confirmed pass-through matches in which money in from 15:802F93B80 was sent on in matching amounts within hours (e.g. lag_hours 19.7 to 29467:803870E40). The funding source 15:802F93B80 belongs to an entity holding 770 accounts across 196 banks, indicating a large layered network feeding this dispersal account. The alerted 4909.58 USD payment is a first contact (a_to_b.n 0) and falls in the laundering band. This pass-through layering is strong evidence of laundering, so the alert is escalated.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 6
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_from",
+    "value": "15:802F93B80"
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_to",
+    "value": "29467:803870E40"
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].lag_hours",
+    "value": 19.7
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 1
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 7
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 12,
+    "path": "result.n_accounts",
+    "value": 770
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 12,
+    "path": "result.n_banks",
+    "value": 196
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "1285": {
+  "alert_id": 1285,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "e0141d10-585b-4f55-9ce3-31dd98ece792",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 364,
+   "total": 652
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_dormant_reactivation",
+    "s_first_contact"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "Neither account has a confirmed laundering case on record (payer and payee n_cases 0). The alerted payment is a first contact (0 prior transactions in either direction) and its amount of 11,052,916.62 USD is far outside the training-period laundering band of 2,154-24,075 USD. Pass-through (0 matches on both accounts), cycles (0 on both accounts) and common-intermediary structures (0 gather_in and gather_out) were all checked and found negative. Fan counts are small (payer out_cp 1, payee in_cp 3), and the only lit signals — first contact and a payer quiet on the preceding days — are weak and common in normal payments, so nothing beyond weak evidence was found.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 13,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 15,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 16,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.0
+ },
+ "1639": {
+  "alert_id": 1639,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "9901d6cd-615a-4ba8-923c-88fcf4e005fb",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 405,
+   "total": 522
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 4327.97 USD falls in the laundering band and is a first contact, with 0 prior transactions in either direction between payer and payee. However, both accounts have 0 confirmed cases, and the payer shows no pass-through (0 matches), no cycles (0), and no gather-out or gather-in (0 each). The payer also had 10 transactions on earlier days, so this is not a dormant reactivation, and the payee shows only 2 incoming counterparties with no pass-through (0 matches). The only lit signals are the amount band and first contact, which are weak on their own, so nothing beyond weak evidence supports escalation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 6,
+    "path": "txns_earlier_days",
+    "value": 10
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 2,
+  "cost_usd": 0.0
+ },
+ "567": {
+  "alert_id": 567,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "8a88ec92-2488-4366-ad35-5243d778b129",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payer\", \"days\": 14}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 501,
+   "total": 592
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_dormant_reactivation"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alert amount of 14,028.52 USD sits in the laundering band, but that is only weak evidence. The payer had already paid the same payee the identical 14,028.52 USD on 2022-09-02, and those two payments are the payer's only outbound transfers over 14 days, so this fits a recurring same-amount pair rather than a one-off layering move. Every strong-evidence check was negative: no confirmed case on either account (0), no pass-through on payer (0) or payee (0), no 3-hop cycle (0) and no common-intermediary gather-in or gather-out (0). With only the weak amount-band and low-activity signals and no strong pattern, the alert should be closed.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 14028.52
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 14028.52
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 11,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 12,
+    "path": "days[6].out_amt",
+    "value": 14028.52
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 2,
+  "cost_usd": 0.0
+ },
+ "1444": {
+  "alert_id": 1444,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "d18d295b-8a97-46fc-83cc-ad0dfc67a7f1",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "submit_triage",
+    "status": "rejected",
+    "failed": 1,
+    "ungrounded": 0
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 368,
+   "total": 492
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "retried": true,
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alert is a first-contact payment of 4,555.77 USD (a_to_b.n = 0) in the laundering band, but every strong-evidence check came back negative. Neither the payer nor the payee has a confirmed laundering case (n_cases = 0 on both), the payer shows no pass-through (0 matches), no cycle (0 cycles) and no common intermediaries, and the payer has only 1 outgoing counterparty with no fan-in. The payee receives from just 2 distinct counterparties with no onward pass-through (0 matches), which is a weak fan-in signal, not a scheme. With only weak indicators (first contact, amount band, small single-party counts) and no strong pattern left un-ruled-out, this closes as not suspicious.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 4555.77
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 1
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 2
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 2,
+  "cost_usd": 0.0
+ },
+ "1673": {
+  "alert_id": 1673,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "77943002-d213-4067-a15c-f2d43fba02a2",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 168}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 168}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 14}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 168}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 355,
+   "total": 631
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_fan_out_cp",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "gather_scatter",
+  "confidence": "medium",
+  "rationale": "The alerted payment is 3,916,121.5 USD (T2, 99.8 percentile) from 222:811B6EEF0 to 119:811BBE850, far above the training laundering band of 2,154-24,075 USD, and the payer had already sent the payee a near-identical 3,916,120.25 USD before the alert. The payer shows confirmed pass-through/layering activity: 7 matches in which incoming funds were forwarded within roughly 6-31 hours in amounts matching to within 3-9%, alongside a fan-out to 4 counterparties. The payee, in turn, received 3,916,635.15 USD on both 2022-09-02 and the alert day and distributes funds outward daily, consistent with a collect-and-distribute scheme. No confirmed case, no cycle (0) and no common-intermediary structure (0) were found, but the confirmed pass-through is strong evidence that warrants escalation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 3916121.5
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 0,
+    "path": "result.score_percentile",
+    "value": 99.802
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 3916120.25
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 4
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 7
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_amt",
+    "value": 3919209.65
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 13,
+    "path": "days[6].in_amt",
+    "value": 3916635.15
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.0
+ },
+ "594": {
+  "alert_id": 594,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "508b67d5-2d95-4339-bcb3-01032c86c939",
+  "usage": {
+   "calls": 4,
+   "cached_calls": 4,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "rejected",
+    "failed": 8,
+    "ungrounded": 0
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 677,
+   "total": 871
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 2,
+   "ungrounded": 0
+  },
+  "retried": true,
+  "turns": 4,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 6,927.97 USD sits in the training laundering band (2,154-24,075), but every strong-evidence check came back negative: no confirmed case on either account (0 and 0), no pass-through match (0), no cycle (0), and no common-intermediary gather (0). The payer 118:80DBC69C0 had already sent the payee 116:80DC07200 the same 6,927.97 USD once before (a_to_b.n = 1) with no return payment (b_to_a.n = 0), so this is a repeated same-amount pair payment rather than a first contact. The only elevated feature is a fan-out to 6 counterparties, a single weak count, and both accounts run steady daily business-like activity. No strong pattern could be established and no key check was left unrun.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 6927.97
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 6
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "1525": {
+  "alert_id": 1525,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "53f72217-5031-4528-95e2-6de48600f18f",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 393,
+   "total": 605
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_dormant_reactivation",
+    "s_first_contact"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 63,026,446.56 USD is a first contact (0 prior payments in either direction between payer and payee) and its amount is far above the training-period laundering band of 2,154-24,075 USD. The payer had no incoming counterparties and made no other payments in the 7 days before the alert, and no pass-through, 3-plus-hop cycle, or common-intermediary structure was found on the payer. The payee only received (out_cp 0, no outgoing) and likewise showed no pass-through and no confirmed case. Neither account has any confirmed laundering case, and both accounts are single-bank/non-clearing. Every key check was run and came back negative, so only weak evidence (first contact and dormancy) remains and the alert should be closed.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 6,
+    "path": "txns_earlier_days",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cp",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "1678": {
+  "alert_id": 1678,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "52b1e4d5-6539-4bd9-9dc8-bec26fdeccdb",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 450,
+   "total": 605
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted 13689.16 USD payment falls in the laundering band, but it is not a first contact: the payer had already sent the payee the same 13689.16 USD once before (2022-09-02), so this is a recurring same-amount payment between the pair. Both accounts have zero confirmed laundering cases, and every strong-evidence check came back empty: 0 pass-through matches on the payer and 0 on the payee, 0 cycles, and 0 gather-in paths. Both sides show only low counterparty fan (payer 2 in / 2 out counterparties, payee 2 in / 0 out), which is weak evidence at most. With no confirmed case, no pass-through, no cycle and no common-intermediary structure, nothing beyond weak evidence supports escalation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 13689.16
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 2
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 2
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "165": {
+  "alert_id": 165,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "5fff49bd-a249-4b0e-aae6-071ed7f90833",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "case_history",
+    "args": "{\"account\": \"29992:8047DE090\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"29992:8047DE090\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"22:8046778F0\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 338,
+   "total": 459
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_in_cp",
+    "s_first_contact",
+    "s_known_launderer",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "known_launderer_integration",
+  "confidence": "high",
+  "rationale": "The alerted payer 24515:80254C330 has a confirmed laundering case with pattern STACK, confirmed 2022-09-09 00:00, before the alert. The account that funded the outgoing payment, 29992:8047DE090, also has a confirmed STACK case, so the alerted transaction links two known-launderer accounts. The payer received 10,880.77 and passed it on as the alerted 11,626.01 within 13.9 hours (6.8% difference), a pass-through of the incoming funds. With additional fan-in from 3 counterparties, this is strong evidence of layering, not a normal payment.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "STACK"
+    ]
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].confirmed_at",
+    "value": "2022-09-09 00:00"
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 11,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 11,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "STACK"
+    ]
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 1
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 10880.77
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 11626.01
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].lag_hours",
+    "value": 13.9
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 3
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "621": {
+  "alert_id": 621,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "514c95b4-1016-40c5-b040-b7c6e05b0c05",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 423,
+   "total": 541
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_fan_out_cp",
+    "s_first_contact",
+    "s_round_trip_2hop"
+   ],
+   "top_typology": "cycle"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "Neither account has a confirmed laundering case (step 3 n_cases 0; step 4 n_cases 0), and the alerted amount of 1991.15 USD falls below the laundering band. The payer is clean on every strong-evidence check: pass-through n_matches 0, trace_cycle n_cycles 0, and two_hop gather_out 0 with gather_in 0. The payee's own pass-through also returned 0 matches. The only lit signals are weak: a first contact from payer to payee (a_to_b.n 0), 2 earlier reverse payments (b_to_a.n 2, a 2-hop round trip rather than a 3-plus-hop cycle), and a payer fan-out of 3 counterparties.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 2
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 3
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "1978": {
+  "alert_id": 1978,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "423061ac-78c3-4465-8093-c59254282829",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 351,
+   "total": 595
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_dormant_reactivation",
+    "s_first_contact"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "fan_in",
+  "confidence": "medium",
+  "rationale": "The alerted payment is 3,658.64 USD between a pair with no prior contact (a_to_b.n = 0), and its amount sits inside the training laundering band of 2,154-24,075 USD. The payee had been inactive (txns_earlier_days = 0) yet received 6 payments from 6 distinct senders totaling 15,627.68 USD on the alert day alone. Its owner is a corporation holding 8 accounts at 8 different banks, a layering structure. No pass-through (0 matches), no 3-hop cycle (0) and no gather-in (0) were found, so the fan-in collection structure cannot be ruled out and warrants full investigation.",
+  "not_checked": "The payee's other 5 senders and its 7 other accounts at other banks were not traced, and any onward movement after the alert time is not visible, so consolidation or distribution of the collected funds is unconfirmed.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 3658.64
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 6
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_amt",
+    "value": 15627.68
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 12,
+    "path": "txns_earlier_days",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 16,
+    "path": "result.n_accounts",
+    "value": 8
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 16,
+    "path": "result.n_banks",
+    "value": 8
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 13,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 14,
+    "path": "n_gather_in",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.0
+ },
+ "2308": {
+  "alert_id": 2308,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "61eaca55-0df8-4998-a160-0738859ba5bc",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 417,
+   "total": 556
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_fan_out_cp"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 9,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment is 512.17 USD, below the training laundering band of 2,154-24,075 USD. The payer had already sent the payee the identical 512.17 USD on 2022-09-02, so this is a recurring regular payment rather than a fresh first contact. Neither account has a confirmed laundering case, and pass-through (payer and payee), 3+ hop cycles and common-intermediary checks all returned zero. The only lit signal is a fan-out to 3 counterparties, which is weak and appears in normal activity.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 512.17
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 512.17
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "280": {
+  "alert_id": 280,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "16a456ab-73aa-4fc6-aad7-c307d5176859",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "case_history",
+    "args": "{\"account\": \"23:800167090\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"20:80022F920\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "submit_triage",
+    "status": "rejected",
+    "failed": 1,
+    "ungrounded": 0
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 687,
+   "total": 823
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp",
+    "s_first_contact",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "retried": true,
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "fan_out",
+  "confidence": "high",
+  "rationale": "The alerted 2,860.08 USD payment from 11:8001FD490 to 20:80022F920 is a first contact (a_to_b.n = 0) and falls in the laundering amount band, and the payer account shows strong pass-through behaviour: 5 incoming payments from 23:800167090 were forwarded within hours to 110836:805B3AF00 and 122342:80B94FF50 in near-identical amounts (3,679.26 in to 3,718.22 out). Over 72 hours the payer receives from a single counterparty (in_cp = 1) and fans out to 10 counterparties (out_cp = 10), consistent with a distribution/layering node. Cycle and two-hop checks were negative (n_cycles = 0), and neither the alert accounts nor the pass-through source has a confirmed case. Because pass-through is strong evidence and the alerted payment is a first contact (never a regular pattern), the alert is escalated.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 2860.08
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 1
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 10
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 5
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_from",
+    "value": "23:800167090"
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_to",
+    "value": "110836:805B3AF00"
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 12,
+    "path": "result.out_cp",
+    "value": 7
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 2,
+  "cost_usd": 0.0
+ },
+ "689": {
+  "alert_id": 689,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "21bad5a5-6c0f-4ffa-8759-27e099aafa0f",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 398,
+   "total": 563
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The 2399.93 USD alert is a first contact (payer-to-payee prior count 0), and the payer shows only 3 outgoing counterparties in 72h, both weak signals. Every strong-evidence check was negative: no pass-through match (0), no cycle (0), no shared intermediaries (gather_out 0, gather_in 0), and no confirmed case on either account (0). The payee's 72h flow is 55844.81 USD in versus only 4123.74 USD out, i.e. net accumulation rather than onward routing. With only weak signals remaining and all decisive checks run and clean, the alert is closed.",
+  "not_checked": "The payee's own downstream routing (pass-through, cycle, two-hop) was not traced; however its 72h profile of 55844.81 USD in versus 4123.74 USD out shows accumulation, so it is unlikely to change the decision.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 3
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_amt",
+    "value": 55844.81
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_amt",
+    "value": 4123.74
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "2063": {
+  "alert_id": 2063,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "a0d2337e-145e-40b6-ae17-b6289b86b9fe",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"13554:8018BB080\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 416,
+   "total": 555
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp",
+    "s_first_contact",
+    "s_known_launderer",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "known_launderer_integration",
+  "confidence": "high",
+  "rationale": "The payee 908:801A655B0 is a confirmed money launderer: 1 case on record as payee with pattern SCATTER-GATHER, confirmed before the alert, and it is currently collecting from 6 distinct counterparties. The alerted payment of 4,000.42 is a first contact (no prior payer-to-payee transactions) in the laundering band. The payer is a pass-through conduit, having received 3,782.75 and forwarded 4,000.42, 5.8% more, to the payee within 4.7 hours, while fanning out to 8 counterparties. This is money being layered through a conduit into a known launderer, so escalate for full investigation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 4,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "SCATTER-GATHER"
+    ]
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 4,
+    "path": "cases[0].role",
+    "value": "payee"
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 1
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 3782.75
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 4000.42
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].lag_hours",
+    "value": 4.7
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 8
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 6
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "2356": {
+  "alert_id": 2356,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "1c55a435-ee5d-4d53-aa4f-b68c79694c23",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"28183:807B538A0\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"28183:807B538A0\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"15010:802963820\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "case_history",
+    "args": "{\"account\": \"15010:802963820\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"28183:807B538A0\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "counterparty_history",
+    "args": "{\"account_a\": \"15010:802963820\", \"account_b\": \"24811:807B53850\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 392,
+   "total": 691
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_first_contact",
+    "s_pass_through",
+    "s_round_trip_2hop"
+   ],
+   "top_typology": "cycle"
+  },
+  "first_pass": {
+   "facts": 9,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "unclear",
+  "confidence": "medium",
+  "rationale": "The alert is a 497.97 USD first-contact payment from the payer to the payee (a_to_b.n = 0), while the payee had previously sent the payer money (b_to_a.n = 2). The payer received 537.05 USD from 15010:802963820 and sent 497.97 USD on to the payee, matching twice (n_matches = 2) with lags of 33.6 and 5.2 hours and a 7.3% difference, i.e. a pass-through of received funds. The payee is a corporation that took in 5,035,482.21 USD in 72 hours from 2 counterparties with no outgoing, and the source 15010:802963820 had sent the payer 14 payments before. No 3+ hop cycle, no common intermediaries, and no confirmed case on either account were found, so no specific network typology fits, but the pass-through is strong evidence and the payer-payee pair has no prior payment pattern.",
+  "not_checked": "The payee's second account (15055:80BA5DB50, same corporation) and any onward movement from the payee beyond the visible window were not examined; they could reveal further layering.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 497.97
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 2
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 2
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_from",
+    "value": "15010:802963820"
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_amt",
+    "value": 5035482.21
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cnt",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 16,
+    "path": "a_to_b.n",
+    "value": 14
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.0
+ },
+ "391": {
+  "alert_id": 391,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "daeae1f6-f31c-4627-8cdb-da5a7661ac95",
+  "usage": {
+   "calls": 1,
+   "cached_calls": 1,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 419,
+   "total": 464
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp",
+    "s_first_contact",
+    "s_known_launderer",
+    "s_round_trip_2hop"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 9,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "turns": 1,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "fan_out",
+  "confidence": "high",
+  "rationale": "The payer 21611:808D6F2D0 has a confirmed money-laundering case as payer with the FAN-OUT pattern, confirmed at 2022-09-09 00:00, one hour before this alert. The alerted payment of 11230.07 USD is a first contact with a new payee (a_to_b.n = 0 and b_to_a.n = 0) and falls inside the laundering amount band. Within 72 hours the payer sent 3 outgoing payments to 3 distinct counterparties with 0 incoming, matching continued fan-out behaviour. Pass-through and two-hop checks found nothing, and the only round trip is 2 hops, which is weak on its own; the confirmed FAN-OUT case makes escalation warranted.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "FAN-OUT"
+    ]
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].confirmed_at",
+    "value": "2022-09-09 00:00"
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 3
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 1
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 0,
+  "cost_usd": 0.0
+ },
+ "705": {
+  "alert_id": 705,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "8814c3e1-a9bb-4bbd-8f67-c6a81f2b78bf",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "counterparty_history",
+    "args": "{\"account_a\": \"payee\", \"account_b\": \"22:8020B5370\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 168}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 341,
+   "total": 570
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_first_contact"
+   ],
+   "top_typology": "bipartite"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment is 998.66 USD, below the training-period laundering band of 2,154-24,075 USD, and it is a first contact: 0 payments in either direction between payer and payee before the alert. Neither account has a confirmed laundering case, and the payer's pass-through (0 matches), cycle (0 cycles) and common-intermediary (0) checks were all negative, as were the payee's pass-through (0 matches) and common-intermediary (0) checks. The payee's owner is a corporation with 27 accounts at 25 banks, but no transfer between the payee and a sibling account was found, so no same-owner layering is confirmed. With only the weak first-contact signal lit and all strong-evidence checks negative, the alert is not suspicious.",
+  "not_checked": "The single counterparty sending the payer's large daily inflows (about 2,735,088 USD per day) could not be identified from the tool results, so its source of funds was not traced; most of the payee's other accounts were not individually examined.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 13,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 16,
+    "path": "n_gather_out",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.0
+ },
+ "2066": {
+  "alert_id": 2066,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "82e06b3b-f31d-491d-a92b-5a44377bbbe9",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"223:811B86440\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"10:8005F0660\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"223:811B86440\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"10:8005F0660\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "account_activity",
+    "args": "{\"account\": \"10:8005F0660\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 413,
+   "total": 687
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_dormant_reactivation",
+    "s_first_contact",
+    "s_pass_through"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "dormant_activation",
+  "confidence": "high",
+  "rationale": "The payer received 7,225.51 USD from 10:8005F0660 and forwarded 7,079.07 USD on to the payee only 2.8 hours later, a single pass-through match with a 2.0% difference (step 7). This was the payer's first contact with the payee (a_to_b.n = 0) and it came after zero transactions on the six prior days (txns_earlier_days = 0), with the payer receiving 7,564.96 USD across 2 transactions and sending 7,079.07 the same day (step 5). The amount sits inside the training laundering band (step 1), while no confirmed case, cycle, or gather/scatter structure was found. A dormant account suddenly activated to pass a matching amount onward is strong layering evidence, so the alert is escalated.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 7079.07
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 6,
+    "path": "txns_earlier_days",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 1
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 1
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 7225.51
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 7079.07
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].lag_hours",
+    "value": 2.8
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].diff_pct",
+    "value": 2.0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 5,
+  "cost_usd": 0.0
+ },
+ "2378": {
+  "alert_id": 2378,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "63e5d02e-b331-4793-9fc8-5eabcf66dbe5",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 370,
+   "total": 589
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 2,566.69 USD falls in the training laundering band (2,154-24,075) and is a first contact (0 earlier payments between the payer and payee in either direction). However, neither the payer nor the payee has any confirmed case, and pass-through matched 0 on the payer and 0 on the payee. Cycle traces found 0 cycles on both accounts and two-hop analysis found 0 gather-in and 0 gather-out structures. The payee's 4 incoming payments from 4 counterparties over 72 hours is only weak fan-in, and its single outgoing amount (3,473.06) does not match the alert, so no laundering pattern holds. The checks that matter were run on both parties and found nothing beyond weak evidence.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 4
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 13,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "458": {
+  "alert_id": 458,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "983a29aa-132a-41c6-bbcc-e4217b3451a3",
+  "usage": {
+   "calls": 1,
+   "cached_calls": 1,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 388,
+   "total": 423
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact",
+    "s_known_launderer",
+    "s_pass_through"
+   ],
+   "top_typology": "known_launderer_integration"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 1,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "known_launderer_integration",
+  "confidence": "high",
+  "rationale": "The payer 22758:802716DD0 has a confirmed laundering case on record before the alert, with pattern SCATTER-GATHER confirmed 2022-09-09. It received 8466.33 from 15040:8111CA220 and sent 8225.24 on to the payee 45.2 hours later, a difference of only 2.8%, which is a classic pass-through. The payer and payee had no prior contact (0 earlier payments), so this is not a regular payment relationship, and the 8225.24 amount sits inside the laundering band. This is strong evidence, so the alert is escalated.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "SCATTER-GATHER"
+    ]
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].confirmed_at",
+    "value": "2022-09-09 00:00"
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 1
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 8466.33
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 8225.24
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].lag_hours",
+    "value": 45.2
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].diff_pct",
+    "value": 2.8
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 0,
+  "cost_usd": 0.0
+ },
+ "709": {
+  "alert_id": 709,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "ee323d67-9438-4a23-9e0e-37979d227b80",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 2,
+   "prompt": 37558,
+   "hit": 37120,
+   "completion": 20126,
+   "reasoning": 19399
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "case_history",
+    "args": "{\"account\": \"24:803A207A0\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 461,
+   "total": 90309
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "unclear",
+  "confidence": "medium",
+  "rationale": "The alerting payment of 9,075.28 USD sits inside the training-period laundering band (2,154-24,075 USD), and the pair had only one earlier payment (a_to_b.n = 1, amount 9,075.28), so this is not a repeated regular pattern that could be closed. The payer's pass-through check returned 2 matches, in which money received was forwarded in a matching amount within hours (110.53 USD received, forwarded as 110.12 USD), the strongest layering indicator found. The payer also fans out to 5 counterparties while receiving from only 1, yet neither account has a confirmed case and no cycle or common-endpoint gather structure was found. Because a specific strong indicator is present and no executed check cleared the account, the alert should be escalated for full investigation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 9075.28
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 1
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 5
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 2
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 110.53
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 110.12
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.02451
+ },
+ "2087": {
+  "alert_id": 2087,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "c3f1e0b2-4ec5-4745-a51d-6231e2287ce8",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 398,
+   "total": 621
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_dormant_reactivation",
+    "s_first_contact"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "fan_in",
+  "confidence": "medium",
+  "rationale": "The alerted payment is a first contact (0 prior payer-to-payee transactions) of 596.33 USD, below the laundering amount band, so the payer side alone looks weak. However, the payee received 18 payments from 18 distinct counterparties totaling 47,959.30 USD in 72 hours, all on the alert day, while sending out only 1 payment, which is a strong fan-in aggregation. That payee is owned by a Sole Proprietorship entity with 3,743 accounts at 800 banks, a structure consistent with a mule collection network rather than legitimate business. The payee also had 0 transactions on the six earlier days, so this burst of 18 incoming payments is a sudden activation. This fan-in collector pattern cannot be explained as normal activity and warrants full investigation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 596.33
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cnt",
+    "value": 18
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 18
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_amt",
+    "value": 47959.3
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cnt",
+    "value": 1
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 12,
+    "path": "txns_last_2_days",
+    "value": 19
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 12,
+    "path": "txns_earlier_days",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 14,
+    "path": "result.n_accounts",
+    "value": 3743
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 14,
+    "path": "result.n_banks",
+    "value": 800
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "2605": {
+  "alert_id": 2605,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "d10975ae-baf3-471a-8980-5da081fa6c80",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"122086:808636370\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"122086:808636370\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"122086:808636370\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 620,
+   "total": 770
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted transaction is a 13,759.73 USD payment from 12:80025A740 to 122086:808636370, and the same pair had already paid the identical amount 13,759.73 USD once before on 2022-09-02 (return flow b_to_a n=0), a recurring same-amount payment rather than a one-off. All strong-evidence checks were run and negative: no confirmed cases on either account (0 and 0), no pass-through on the payer (0 matches) or payee (0 matches), no cycles (0) and no scatter-gather intermediaries (gather-out 0). The only lit signals are weak on their own: the amount sits in the laundering band and the payer shows a single fan-out count of 6 counterparties. The payee receives but sends nothing on (out_cnt 0), so no laundering pattern could be substantiated.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 13759.73
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 6
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cnt",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "620": {
+  "alert_id": 620,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "d39ab442-d263-4f31-b9ae-5a4d3412e5dd",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 477,
+   "total": 765
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 10519.12 USD is a first contact (0 prior transfers in either direction) and falls in the training-period laundering band, but both are weak, common signals. Neither account has a confirmed laundering case, the pass-through checks found 0 matching in/out pairs for the payer and 0 for the payee, and there are 0 cycles and 0 common-intermediary structures on the payer. The payer is also not dormant (22 transactions on earlier days). The payee's only notable feature is a modest fan-in (3 counterparties, 18886.99 USD in 72h) with no outgoing payments, which alone is weak evidence and is not accompanied by any forwarding or cycle.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 10519.12
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 11,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 12,
+    "path": "result.in_cp",
+    "value": 3
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 15,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 5,
+  "cost_usd": 0.0
+ },
+ "787": {
+  "alert_id": 787,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "f74fffea-35e8-482b-9eb5-5173fcd70cb9",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 449,
+   "total": 689
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "unclear",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 13,905.54 USD falls inside the 2,154-24,075 USD laundering band (steps 0-1). Both accounts show extreme one-sided flows: payer 19:80A1048B0 sent 2,353,338.14 USD against only 2,016.20 USD received over 72h, and payee 15:80A112730 sent 982,103.46 USD against 14,438.68 USD received. The payee is confirmed forwarding funds on: 2 pass-through matches where 252.22 USD received was sent on as 256.63 USD. The payer's own pass-through, cycle and gather checks all returned 0 and neither account has a confirmed case, so the exact scheme is unclear, but the confirmed pass-through on the payee plus the extreme one-sided outflows warrant escalation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 2
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 12,
+    "path": "matches[0].in_amt",
+    "value": 252.22
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 12,
+    "path": "matches[0].out_amt",
+    "value": 256.63
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_amt",
+    "value": 2353338.14
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_amt",
+    "value": 2016.2
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_amt",
+    "value": 982103.46
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_amt",
+    "value": 14438.68
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.0
+ },
+ "2101": {
+  "alert_id": 2101,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "ee1a1287-7c55-4a05-99e9-e4c5d8421ab5",
+  "usage": {
+   "calls": 1,
+   "cached_calls": 1,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 399,
+   "total": 430
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_fan_out_cp",
+    "s_first_contact",
+    "s_known_launderer"
+   ],
+   "top_typology": "known_launderer_integration"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 1,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "known_launderer_integration",
+  "confidence": "high",
+  "rationale": "The payer 11128:8045F4500 has a confirmed money-laundering case on record before the alert, with pattern FAN-OUT and confirmed on 2022-09-09. The alerted payment of 295519.28 USD is a first contact between the two accounts (0 prior payments in either direction) and falls above the training laundering band of 2,154-24,075 USD. The payer sent to 7 distinct counterparties totalling 321057.83 USD in 72 hours with no incoming, and its entity holds 35 accounts across 29 banks. Although no pass-through, cycle, or gather/scatter structure was found and the payee is clean, the confirmed case on the payer is strong evidence requiring escalation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "FAN-OUT"
+    ]
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].role",
+    "value": "payer"
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 295519.28
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 7
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_amt",
+    "value": 321057.83
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 10,
+    "path": "result.n_accounts",
+    "value": 35
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 0,
+  "cost_usd": 0.0
+ },
+ "2415": {
+  "alert_id": 2415,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "bc5298a8-8470-4bb7-b856-92d22cbd14a9",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "case_history",
+    "args": "{\"account\": \"10709:80692A790\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "submit_triage",
+    "status": "rejected",
+    "failed": 1,
+    "ungrounded": 0
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 469,
+   "total": 671
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_dormant_reactivation",
+    "s_first_contact",
+    "s_pass_through"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "retried": true,
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "dormant_activation",
+  "confidence": "medium",
+  "rationale": "The payer account 18819:805B9B260 received 5,840.05 USD and sent 5,372.23 USD onward to 1665:8005A25A0 only 15.1 hours later (8.0% difference), a matched pass-through consistent with layering. The payer had 0 transactions in the six days before the alert day (dormant_reactivation), so a previously dormant account was suddenly activated to move funds. This was the pair's first contact (a_to_b n = 0), so it is not a regular payment pattern, and the amount falls in the laundering band. The payee side is not a conduit (0 pass-through matches) and shows a routine outflow of 2312.34 per day, leaving the payer as the suspicious link.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].in_amt",
+    "value": 5840.05
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].out_amt",
+    "value": 5372.23
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].lag_hours",
+    "value": 15.1
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "matches[0].diff_pct",
+    "value": 8.0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 6,
+    "path": "txns_earlier_days",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 15,
+    "path": "days[5].out_amt",
+    "value": 2312.34
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "2611": {
+  "alert_id": 2611,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "b909788c-b65c-438e-aa08-7987b05cbe06",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"26024:802B7F0F0\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 410,
+   "total": 587
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_in_cp",
+    "s_first_contact",
+    "s_pass_through"
+   ],
+   "top_typology": "gather_scatter"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "gather_scatter",
+  "confidence": "high",
+  "rationale": "The payer's pass-through check matched 3 pairs, including the alerted transaction, in which 2,418.51 USD received was forwarded as 2,656.67 USD just 5.8 hours later (9.8% difference) to a first-contact payee (prior payments 0). Over 72 hours the payer gathered funds from 3 counterparties and sent out to 2, while the payee is a sole proprietorship holding 10 accounts at 10 banks. No confirmed case, cycle, or common intermediary was found, so the matched pass-through layering is the strongest evidence and the alerted payment is not a regular payer-payee pattern. This warrants escalation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 3
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 7,
+    "path": "matches[2].in_amt",
+    "value": 2418.51
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 7,
+    "path": "matches[2].out_amt",
+    "value": 2656.67
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "matches[2].lag_hours",
+    "value": 5.8
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "matches[2].diff_pct",
+    "value": 9.8
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 3
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 2
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cp",
+    "value": 1
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 13,
+    "path": "result.n_accounts",
+    "value": 10
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "2618": {
+  "alert_id": 2618,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "bc21fcb0-9c99-467f-aef4-c9dc2fb7e1da",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 366,
+   "total": 466
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_fan_in_cp",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_in"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted $2,487.96 payment is a first contact, with 0 prior transactions in either direction between payer and payee. Neither account has a confirmed laundering case (0 cases each), and every strong-pattern check came back empty: 0 pass-through matches, 0 cycles, and 0 gather-in/gather-out on both the payer and the payee. The only lit signals are the amount in the laundering band and modest fan-in of 4 distinct incoming counterparties on each side, which are weak on their own and appear in many normal alerts. The payee is a pure receiver (0 outgoing) and the payer's activity is a steady recurring pattern, so nothing beyond weak evidence supports escalation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 12,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 4
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 4
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 2,
+  "cost_usd": 0.0
+ },
+ "2699": {
+  "alert_id": 2699,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "ebb8ccb1-50d5-4a18-b269-a1b6e8c90cb7",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "two_hop",
+    "args": "{\"account\": \"29685:80F576BB0\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"29685:80F576BB0\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"29685:80F576BB0\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 421,
+   "total": 603
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_fan_in_cp",
+    "s_first_contact",
+    "s_known_launderer"
+   ],
+   "top_typology": "fan_in"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "known_launderer_integration",
+  "confidence": "high",
+  "rationale": "The alerted payment of 3632.19 USD from 19:80911C350 to payee 29685:80F576BB0 is a first contact (a_to_b.n = 0) and sits inside the laundering amount band. The payee is a confirmed launderer: it has 1 confirmed case on record with pattern GATHER-SCATTER, confirmed on 2022-09-09, before the alert. The payee also shows clear fan-in with 11 distinct inbound counterparties in 72h and a matched pass-through (16008.34 USD received, 16118.03 USD forwarded 11.2h later, 0.7% difference). A confirmed laundering case on the counterparty combined with a matched pass-through is strong evidence, so the alert is escalated; the payer-side checks (no case, no cycle, no pass-through, no gather) do not rebut it.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 3632.19
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "GATHER-SCATTER"
+    ]
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 4,
+    "path": "cases[0].confirmed_at",
+    "value": "2022-09-09 00:00"
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 11
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 13,
+    "path": "n_matches",
+    "value": 1
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 13,
+    "path": "matches[0].lag_hours",
+    "value": 11.2
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 13,
+    "path": "matches[0].diff_pct",
+    "value": 0.7
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "2835": {
+  "alert_id": 2835,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "276aa775-db4a-433c-b502-f107bf74b162",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 1654,
+   "total": 1803
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted 16,100.09 USD payment repeats an identical prior payment the payer made to the same payee on 2022-09-02 (a_to_b.n=1, amt 16,100.09), so it is not a first contact and fits a recurring same-amount pattern. Strong-evidence checks are all negative: no confirmed case on either account, no pass-through match on the payer or the payee, no 3+ hop cycle, and no gather-out/gather-in structure. The only elevated signal is the payer's fan-out (14 outgoing counterparties with 0 inbound), which is weak on its own. The payee received 158,369.12 and sent out only 745.16, so it is not forwarding the funds.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 16100.09
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 14
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "3034": {
+  "alert_id": 3034,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "a989ceb8-533f-4e5c-85b4-b0406553177e",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "counterparty_history",
+    "args": "{\"account_a\": \"1362:80075BC80\", \"account_b\": \"21611:80170FAC0\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 396,
+   "total": 645
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_out_cp"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "random_walk",
+  "confidence": "medium",
+  "rationale": "The alerted 3,049.58 USD payment falls inside the training laundering band of 2,154-24,075 USD. The payee account 21611:80170FAC0 behaves as a pass-through: it received 8,887.98 from 1362:80075BC80 and sent 8,882.37 to 120438:80CEEF280 within 5.4 hours at a 0.1% difference, and this match occurred twice. The upstream feeder 1362:80075BC80 sent 27 prior payments totalling 195,461.1 USD into the payee, which itself only faces 2 incoming counterparties. Payer-side checks (no case history, 0 cycles, 0 pass-through, 0 two-hop) were clean, but the confirmed pass-through layering at the payee is strong evidence warranting a full investigation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 3049.58
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 0,
+    "path": "result.payee",
+    "value": "21611:80170FAC0"
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 11,
+    "path": "n_matches",
+    "value": 2
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 11,
+    "path": "matches[0].in_amt",
+    "value": 8887.98
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 11,
+    "path": "matches[0].out_amt",
+    "value": 8882.37
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 11,
+    "path": "matches[0].lag_hours",
+    "value": 5.4
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 16,
+    "path": "a_to_b.n",
+    "value": 27
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 16,
+    "path": "a_to_b.amt",
+    "value": 195461.1
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 12,
+    "path": "result.in_cp",
+    "value": 2
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.0
+ },
+ "3087": {
+  "alert_id": 3087,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "81560445-cfa8-4934-81be-91a99bd99009",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 313,
+   "total": 519
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_dormant_reactivation",
+    "s_first_contact"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "fan_in",
+  "confidence": "medium",
+  "rationale": "The alerted payment is 4,335.92 USD, a first contact between payer and payee (a_to_b.n = 0), inside the training laundering band (2,154-24,075 USD). The payer account was dormant before the alert (txns_earlier_days = 0), and its counterparty the payee shows a fan-in collection structure: 8 incoming payments from 8 distinct counterparties totalling 21,475.54 USD in the last 72 hours with 0 outgoing, all on the alert day and none earlier. The payee's owner is a sole proprietorship holding 7 accounts at 7 banks, consistent with a multi-bank layering/mule setup. Payer-side checks were negative (pass_through n_matches = 0, cycles n_cycles = 0), so the escalation rests on the payee's fan-in into a newly active, multi-bank entity rather than on the payer alone.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 0,
+    "path": "result.amount_usd",
+    "value": 4335.92
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cnt",
+    "value": 8
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 8
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_amt",
+    "value": 21475.54
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cnt",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 12,
+    "path": "txns_earlier_days",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 14,
+    "path": "result.n_accounts",
+    "value": 7
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 14,
+    "path": "result.n_banks",
+    "value": 7
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "3135": {
+  "alert_id": 3135,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "08be0c17-2d11-447b-b810-15f4125cabcf",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 403,
+   "total": 722
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alert is a 2436.77 USD first-contact payment (0 prior payments in either direction) in the laundering amount band, but the payer has no confirmed case, no pass-through match, no cycle and no gather structure. The payee shows only a modest fan-in of 5 distinct counterparties over 72 hours with 0 outgoing, and its own pass-through, cycle and two-hop checks all return 0. Every strong-evidence check was run on both parties and none lit, so the alert rests on weak signals only (first contact, amount band, a single fan-in count), consistent with normal payment activity.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 12,
+    "path": "result.in_cp",
+    "value": 5
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 12,
+    "path": "result.out_cp",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 13,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 16,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 5,
+  "cost_usd": 0.0
+ },
+ "3298": {
+  "alert_id": 3298,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "74a9c876-2d8e-495f-9aab-e98f2507ad12",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 168}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 390,
+   "total": 519
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_first_contact"
+   ],
+   "top_typology": "bipartite"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alert is a first-contact payment of 1,993.4 USD from payer 29794:80746E5E0 to payee 11:80746EED0 (step 2, a_to_b.n = 0), with an amount below the training-period laundering band of 2,154-24,075 USD (step 1). No confirmed laundering case exists on either account (steps 3 and 4), and the payer shows no pass-through (step 7, n_matches = 0), no 3+ hop cycle (step 8, n_cycles = 0) and no common intermediaries (step 9, n_gather_out = 0, n_gather_in = 0). The payer was consistently active (7 of 7 days, 21 earlier transactions) with only 2 outgoing counterparties in 72h, ruling out dormant reactivation and strong fan-out (steps 5 and 6), while the payee merely received 6,996.29 USD from 3 counterparties with no pass-through (steps 11 and 14). Every candidate pattern's missing signals were checked and found negative, leaving only the weak first-contact flag.",
+  "not_checked": "A forward multi-hop chain (s_multi_hop_chain) could not be traced directly — only the forward cycle search (0 cycles) and two-hop check (0) were available; the payee's second account at another bank (8539:812A0A890) was also not examined for same-owner fund movement.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 2
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 6,
+    "path": "txns_earlier_days",
+    "value": 21
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 3
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "3435": {
+  "alert_id": 3435,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "b8e468db-22ee-42e9-b992-3cb3cd106588",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 12,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 431,
+   "total": 566
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 11,
+   "lit": [
+    "s_amount_band",
+    "s_first_contact"
+   ],
+   "top_typology": "fan_out"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 4,071.69 USD is in the training-period laundering band (2,154-24,075 USD) and is a first contact between the two accounts (a_to_b.n = 0, b_to_a.n = 0), but both are only weak signals. Neither account has a confirmed laundering case before the alert (n_cases = 0 for payer and payee), and the payer's pass-through, cycle and common-intermediary checks all returned nothing (n_matches = 0, n_cycles = 0, n_gather_out = 0, n_gather_in = 0). The payee is a low-activity account (cp_total_before = 2) that received the funds and sent nothing onward, and its own pass-through check was also negative (n_matches = 0). The payer has been continuously active with a stable daily pattern (25 transactions in earlier days), so beyond the amount band and first contact no strong evidence supports escalation.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_in",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 13,
+    "path": "n_matches",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ },
+ "3444": {
+  "alert_id": 3444,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "4eed68dd-792f-4fce-9de8-abdb8f8e2d5b",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 14}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 383,
+   "total": 622
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_dormant_reactivation",
+    "s_first_contact"
+   ],
+   "top_typology": "dormant_activation"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "fan_in",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 3,690.97 USD is a first contact between the two accounts (a_to_b.n = 0) and falls inside the training-period laundering band of 2,154-24,075 USD. The counterparty payee is a fan-in collection hub: within 72 hours it received 6 payments from 6 distinct counterparties totalling 13,197.43 USD, 5 of them on the alert day, with zero outgoing. That payee is a Partnership holding 5 accounts across 5 banks, while the payer was dormant and sent only this single payment. This consolidation of many senders into a multi-bank entity account fits a fan-in laundering pattern, and the first-round checks only cleared the payer side, not this counterparty structure.",
+  "not_checked": "The payee's four other accounts at other banks (210:8090C0680, 3232:800139E50, 18679:80E381910, 122916:80A3A54C0) were not examined for onward movement, and any activity after the alert time is invisible to the tools.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.amount_usd",
+    "value": 3690.97
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 6
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_amt",
+    "value": 13197.43
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cnt",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 12,
+    "path": "days[6].in_cnt",
+    "value": 5
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 13,
+    "path": "result.entity_type",
+    "value": "Partnership"
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 13,
+    "path": "result.n_accounts",
+    "value": 5
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 13,
+    "path": "result.n_banks",
+    "value": 5
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 5,
+  "cost_usd": 0.0
+ },
+ "3447": {
+  "alert_id": 3447,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "4391ed76-3ef8-499a-a787-81ecd6c72198",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payer\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payer\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "submit_triage",
+    "status": "rejected",
+    "failed": 1,
+    "ungrounded": 0
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 496,
+   "total": 4356
+  },
+  "seed": {
+   "focus": "payee",
+   "calls": 10,
+   "lit": [
+    "s_amount_band",
+    "s_fan_in_cp",
+    "s_known_launderer"
+   ],
+   "top_typology": "fan_in"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 9,
+   "ungrounded": 0
+  },
+  "retried": true,
+  "turns": 3,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "known_launderer_integration",
+  "confidence": "high",
+  "rationale": "The alerted payment of 15,612.49 USD (within the training laundering band) went from payer 70:100428660 to payee 5836:803559620, a pair with only 1 prior payment of the same amount. The payer is a confirmed money-launderer: 1 case on record involving 197 transactions, and it operates as a clearing-layer account with 57,884 outgoing transactions and 10,195 distinct outgoing counterparties in 72 hours. The payee was checked and showed 0 pass-through matches, 0 cycles and no two-hop intermediary structure, leaving only a weak fan-in count of 3. Because strong evidence — a confirmed laundering case on the payer — is present, the alert is escalated.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].role",
+    "value": "payer"
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].n_txns",
+    "value": 197
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.in_cp",
+    "value": 3
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 11,
+    "path": "result.clearing_layer",
+    "value": true
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cp",
+    "value": 10195
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 2,
+  "cost_usd": 0.0
+ },
+ "3586": {
+  "alert_id": 3586,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "0e9879f2-3383-4ef9-ad81-f1598e34b4f4",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 2,
+   "prompt": 14007,
+   "hit": 13824,
+   "completion": 4679,
+   "reasoning": 3909
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 17,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 380,
+   "total": 19099
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_fan_out_cp"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The payer had already sent the payee a matching 169,868.71 on 2022-09-02, so the alerted 169,868.64 payment repeats the same amount to the same counterparty and is not a first contact. No confirmed laundering case exists on either account (0 cases each), and the payer shows no pass-through (0 matches), no cycle (0) and no intermediary convergence (0 gather-out). The amount is outside the training laundering band (2,154-24,075 USD), and the only lit signal is a weak fan-out count of 3. The payee's 3 pass-through matches are small recurring amounts (2,654.62 in, 2,531.80 out), not the alerted funds, and the payee also shows 0 cycles; the decisive checks were all run and found nothing beyond weak evidence.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 169868.71
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 14,
+    "path": "n_matches",
+    "value": 3
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 16,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 6,
+  "cost_usd": 0.00575
+ },
+ "3796": {
+  "alert_id": 3796,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "6e7dca90-ae70-4663-99e2-96c57f76764a",
+  "usage": {
+   "calls": 1,
+   "cached_calls": 1,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 327,
+   "total": 367
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_fan_out_cp",
+    "s_first_contact",
+    "s_known_launderer"
+   ],
+   "top_typology": "known_launderer_integration"
+  },
+  "first_pass": {
+   "facts": 8,
+   "verified": 8,
+   "ungrounded": 0
+  },
+  "turns": 1,
+  "status": "done",
+  "decision": "escalate",
+  "typology": "known_launderer_integration",
+  "confidence": "high",
+  "rationale": "The payer 2591:800AEAC00 has a confirmed money-laundering case on record before the alert (1 case, SCATTER-GATHER, confirmed 2022-09-09 00:00), which is strong evidence on its own. In the 72 hours before the alert the payer sent out 547,210.97 USD to 9 distinct counterparties, including 539,389.07 USD on 2022-09-08 alone. The alerted payment of 359.14 USD is a first contact (0 prior payments in either direction) and falls below the laundering band, with no pass-through, cycles, or gather-scatter found in the payer's own flows. The confirmed launderer status of the payer makes escalation necessary.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 1
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].pattern_types",
+    "value": [
+     "SCATTER-GATHER"
+    ]
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "cases[0].confirmed_at",
+    "value": "2022-09-09 00:00"
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 9
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_amt",
+    "value": 547210.97
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 6,
+    "path": "days[5].out_amt",
+    "value": 539389.07
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 0,
+  "cost_usd": 0.0
+ },
+ "3813": {
+  "alert_id": 3813,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "d2fa184d-39e9-430a-b53b-39440870dbca",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "trace_cycle",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 362,
+   "total": 581
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_first_contact"
+   ],
+   "top_typology": "bipartite"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 1,186.68 USD is below the training-period laundering band of 2,154-24,075 USD and is a first contact between payer and payee (a_to_b.n = 0), the only lit signal. The checks that matter were run and came back negative: no confirmed case on either account (n_cases = 0 for both), no pass-through on the payer (n_matches = 0) or on the payee (n_matches = 0), no 3+ hop cycles (n_cycles = 0 on both), and no common intermediaries (n_gather_out = 0). The payee received from 3 distinct counterparties in the window, a modest fan-in rather than a strong gathering or scatter structure, and the payer's repeated 273.46 USD inflows from a single counterparty look like ordinary low-value activity. With only weak evidence (a first contact) and no strong pattern confirmed, the alert should be closed.",
+  "not_checked": "The random-walk signal s_multi_hop_chain (a forward chain that does not return to the account) was not directly confirmed; trace_cycle (up to 12 hops) and two_hop found no cycles or common intermediaries.",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 0
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 3
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 12,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 15,
+    "path": "n_cycles",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 5,
+  "cost_usd": 0.0
+ },
+ "3882": {
+  "alert_id": 3882,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "075d59db-b86b-42c6-a9eb-de381fe39571",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payer\", \"days\": 14}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "pass_through",
+    "args": "{\"account\": \"payer\", \"hours\": 168}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 383,
+   "total": 605
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [],
+   "top_typology": null
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment of 7,192,176.26 USD is not in the laundering amount band, and it is not a first contact: the payer had already paid the payee once (a_to_b.n = 1), the same amount on 2022-09-02, which fits a recurring payment rather than layering. Neither account has any confirmed laundering case (n_cases = 0 for both). Every specific strong pattern was checked and found nothing: no pass-through match (n_matches = 0), no cycle (n_cycles = 0), and no common intermediaries to a single endpoint (n_gather_out = 0, n_gather_in = 0). The payer's fan profile is small (out_cp = 2), so only weak signals remain and the alert can be closed.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 1,
+    "path": "result.amount_usd",
+    "value": 7192176.26
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 2
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_in",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 4,
+  "cost_usd": 0.0
+ },
+ "4130": {
+  "alert_id": 4130,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "fffa4427-bbd5-43db-ac51-9491d0c3fe9d",
+  "usage": {
+   "calls": 3,
+   "cached_calls": 3,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "two_hop",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 15,
+    "tool": "account_activity",
+    "args": "{\"account\": \"332255:80C0CD1C0\"}",
+    "error": null
+   },
+   {
+    "step": 16,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 371,
+   "total": 558
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [],
+   "top_typology": null
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 3,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alert is a 1,488.58 USD payment, below the training-period laundering band of 2,154-24,075, and is only the second payment from this payer to this payee (the earlier one 4,366.44 on 2022-09-06). The payer has no incoming counterparties and only 1 outgoing counterparty in 72h, with no pass-through matches (0), no cycles (0), and neither account has a confirmed laundering case (0 and 0). The payee collects from 3 counterparties with no outgoing, but there is no intermediary structure around it (two-hop gather-in 0). All strong-evidence checks are negative, leaving only weak signals such as the small amount, low counts and a multi-bank payee.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": false
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 4366.44
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 5,
+    "path": "result.out_cp",
+    "value": 1
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 11,
+    "path": "result.in_cp",
+    "value": 3
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 14,
+    "path": "n_gather_in",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 5,
+  "cost_usd": 0.0
+ },
+ "4220": {
+  "alert_id": 4220,
+  "prompt_version": "triage-v2.1",
+  "model": "deepseek-flash",
+  "run_id": "f6261dec-6283-479e-a7af-3338f619b5e1",
+  "usage": {
+   "calls": 2,
+   "cached_calls": 2,
+   "prompt": 0,
+   "hit": 0,
+   "completion": 0,
+   "reasoning": 0
+  },
+  "trace": [
+   {
+    "step": 11,
+    "tool": "fan_profile",
+    "args": "{\"account\": \"payee\", \"hours\": 72}",
+    "error": null
+   },
+   {
+    "step": 12,
+    "tool": "account_activity",
+    "args": "{\"account\": \"payee\", \"days\": 7}",
+    "error": null
+   },
+   {
+    "step": 13,
+    "tool": "entity_profile",
+    "args": "{\"account\": \"payee\"}",
+    "error": null
+   },
+   {
+    "step": 14,
+    "tool": "submit_triage",
+    "status": "accepted",
+    "failed": 0,
+    "ungrounded": 0
+   }
+  ],
+  "ms": {
+   "seed": 350,
+   "total": 480
+  },
+  "seed": {
+   "focus": "payer",
+   "calls": 10,
+   "lit": [
+    "s_amount_band"
+   ],
+   "top_typology": "structuring"
+  },
+  "first_pass": {
+   "facts": 10,
+   "verified": 10,
+   "ungrounded": 0
+  },
+  "turns": 2,
+  "status": "done",
+  "decision": "close",
+  "typology": "none",
+  "confidence": "medium",
+  "rationale": "The alerted payment is 16,059.78 USD, inside the training-period laundering band (2,154-24,075 USD), but the payer had already sent the payee the identical 16,059.78 USD on 2022-09-02, so this pair shows a repeated, equal-sized payment rather than an unprecedented transfer. No strong evidence of laundering was found: the payer shows no pass-through (0 matches), no cycles (0), and no common intermediaries (0 gather-out/0 gather-in), and neither account has a confirmed case (0 each). The payee received 17,148.71 USD over 72 hours and sent nothing out (0 outgoing), so it is not functioning as a pass-through either. Beyond the amount band and low one-directional fan counts, every check that matters was run and returned nothing.",
+  "not_checked": "",
+  "facts": [
+   {
+    "fact": 1,
+    "verified": true,
+    "step": 1,
+    "path": "result.in_laundering_band",
+    "value": true
+   },
+   {
+    "fact": 2,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.n",
+    "value": 1
+   },
+   {
+    "fact": 3,
+    "verified": true,
+    "step": 2,
+    "path": "a_to_b.amt",
+    "value": 16059.78
+   },
+   {
+    "fact": 4,
+    "verified": true,
+    "step": 2,
+    "path": "b_to_a.n",
+    "value": 0
+   },
+   {
+    "fact": 5,
+    "verified": true,
+    "step": 3,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 6,
+    "verified": true,
+    "step": 4,
+    "path": "n_cases",
+    "value": 0
+   },
+   {
+    "fact": 7,
+    "verified": true,
+    "step": 7,
+    "path": "n_matches",
+    "value": 0
+   },
+   {
+    "fact": 8,
+    "verified": true,
+    "step": 8,
+    "path": "n_cycles",
+    "value": 0
+   },
+   {
+    "fact": 9,
+    "verified": true,
+    "step": 9,
+    "path": "n_gather_out",
+    "value": 0
+   },
+   {
+    "fact": 10,
+    "verified": true,
+    "step": 11,
+    "path": "result.out_cnt",
+    "value": 0
+   }
+  ],
+  "ungrounded_numbers": [],
+  "verified": true,
+  "tool_calls": 3,
+  "cost_usd": 0.0
+ }
+}
