@@ -21,6 +21,8 @@ R8 让模型自己决定"再查一次"或"按编号去取"。这一层只定义�
   4. 每次调用写入 agent_tool_calls（019），记录模型看到的原样结果，用于调试、审计和评测。
   5. 本次调查看过的每一条条款原文都收进 ToolContext.evidence。最终回答只能引用这里面的条款，
      核验也对照这里的全文（R8b 复用 R7 的逐字核验）。
+  R9b-1 起，第 2–4 条的通用实现（Tool、运行上下文、统一调用入口、留痕）移到 agent_core.py，与分诊 Agent 共用；
+  这里只保留法规特有的部分：两个工具、文件清单、ToolContext 里的检索块与证据池。
 
 用法：
     python scripts/kb_tools.py --schemas      # 打印模型看到的工具定义
@@ -33,14 +35,16 @@ from __future__ import annotations
 import json
 import re
 import time
-import uuid
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field
 
+import agent_core
+from agent_core import RunContext, Tool
+from agent_core import log_call as _log           # 旧名字保留：kb_agent 和下面的 seed_search 用的是 _log
 from db import connect
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -69,39 +73,19 @@ assert set(DocumentName.__args__) == set(DOCUMENTS)      # 两处列表必须一
 
 
 # ---------------------------------------------------------------------------
-# 运行上下文：一次调查共享的状态
+# 运行上下文：一次调查共享的状态（通用部分在 agent_core.RunContext，R9b-1 抽出）
 # ---------------------------------------------------------------------------
 @dataclass
-class ToolContext:
-    question: str
-    as_of: date
+class ToolContext(RunContext):
     kind: str = "research"
     max_calls: int = DEFAULT_MAX_CALLS
-    log: bool = True
-    run_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    step: int = 0                                             # 已记录的步数（含系统发起的首轮检索）
-    model_calls: int = 0                                      # 模型发起的工具调用次数：预算按它计算
     seen_chunks: set[str] = field(default_factory=set)        # 检索已返回过的块：再次检索时跳过
     evidence: dict[str, dict] = field(default_factory=dict)   # ref → 条款全文与出处；最终回答只能引用这些
-    calls: dict[str, int] = field(default_factory=dict)       # 调用指纹 → 第几步：识别重复调用
+    budget_note: str = "Answer now with the evidence you have, and state what is missing."
+    duplicate_hint: str = "Change the query or fetch a different clause."
 
-    def start(self) -> "ToolContext":
-        if self.log:
-            with connect() as conn, conn.cursor() as cur:
-                cur.execute("INSERT INTO agent_runs (run_id, kind, question, as_of) VALUES (%s, %s, %s, %s)",
-                            (self.run_id, self.kind, self.question, self.as_of))
-                conn.commit()
-        return self
-
-    def finish(self, status: str, summary: dict | None = None) -> None:
-        if self.log:
-            with connect() as conn, conn.cursor() as cur:
-                cur.execute("""UPDATE agent_runs SET status = %s, finished_at = now(), summary = %s
-                               WHERE run_id = %s""",
-                            (status, json.dumps({"tool_calls": self.step, "evidence": len(self.evidence),
-                                                 **(summary or {})}, ensure_ascii=False, default=str),
-                             self.run_id))
-                conn.commit()
+    def summary_extra(self) -> dict:
+        return {"evidence": len(self.evidence)}
 
 
 def _ref(family: str, unit_id: str) -> str:
@@ -287,29 +271,6 @@ def _not_found(cur, family: str, uid: str, as_of: date, doc_id: str) -> dict:
 # ---------------------------------------------------------------------------
 # 工具登记表与统一调用入口
 # ---------------------------------------------------------------------------
-@dataclass(frozen=True)
-class Tool:
-    name: str
-    description: str
-    args_model: type[BaseModel]
-    fn: Callable[[ToolContext, BaseModel], dict]
-
-    def schema(self) -> dict:
-        """OpenAI 兼容的 function calling 格式（DeepSeek 使用同一格式）。"""
-        return {"type": "function", "function": {
-            "name": self.name, "description": self.description,
-            "parameters": _strip_titles(self.args_model.model_json_schema())}}
-
-
-def _strip_titles(s):
-    """pydantic 生成的 schema 里每个字段都带 title，对模型没有信息量，只占 token。"""
-    if isinstance(s, dict):
-        return {k: _strip_titles(v) for k, v in s.items() if k != "title"}
-    if isinstance(s, list):
-        return [_strip_titles(v) for v in s]
-    return s
-
-
 # 说明是写给模型的：它完全依靠这几句话决定"什么时候用哪个工具"，所以要写清楚适用和不适用的情形。
 # 示例刻意选了评测集里没有的主题（依赖第三方做 CDD）：示例写成某道评测题的答案，就等于把答案写进了提示词
 TOOLS = {t.name: t for t in [
@@ -338,50 +299,8 @@ def tool_schemas() -> list[dict]:
 
 
 def call_tool(ctx: ToolContext, name: str, raw_args: str | dict) -> dict:
-    """
-    执行一次工具调用并记录。raw_args 是模型给出的参数（function calling 返回的是 JSON 字符串）。
-    返回给模型的内容永远是一个 dict；可以预期的错误放在 "error" 里，由模型决定怎么改正。
-    """
-    ctx.step += 1
-    ctx.model_calls += 1
-    t0 = time.perf_counter()
-    result: dict
-    error = None
-    try:
-        args = json.loads(raw_args) if isinstance(raw_args, str) else dict(raw_args)
-    except json.JSONDecodeError as e:
-        args, result, error = {"_raw": str(raw_args)[:500]}, {"error": f"arguments are not valid JSON: {e.msg}"}, \
-            "bad_json"
-    else:
-        fp = json.dumps([name, args], sort_keys=True, ensure_ascii=False)
-        tool = TOOLS.get(name)
-        if tool is None:
-            result, error = {"error": f"unknown tool '{name}'. Available: {', '.join(TOOLS)}"}, "unknown_tool"
-        elif ctx.model_calls > ctx.max_calls:
-            result, error = {"error": f"tool budget of {ctx.max_calls} calls is used up. "
-                                      "Answer now with the evidence you have, and state what is missing."}, "budget"
-        elif fp in ctx.calls:
-            # 完全相同的调用：不再执行，提醒模型（防止原地打转）
-            result, error = {"error": f"duplicate of call #{ctx.calls[fp]}; the result has not changed. "
-                                      "Change the query or fetch a different clause."}, "duplicate"
-        else:
-            try:
-                parsed = tool.args_model.model_validate(args)
-            except ValidationError as e:
-                result = {"error": "invalid arguments",
-                          "details": [f"{'.'.join(map(str, d['loc'])) or '(root)'}: {d['msg']}" for d in e.errors()]}
-                error = "invalid_args"
-            else:
-                ctx.calls[fp] = ctx.step
-                try:
-                    result = tool.fn(ctx, parsed)
-                except Exception as e:                 # 不可预期的错误：先记录，再抛出
-                    _log(ctx, name, args, {"error": f"{type(e).__name__}: {e}"}, "exception", t0)
-                    raise
-                if "error" in result:
-                    error = "tool_error"
-    _log(ctx, name, args, result, error, t0)
-    return result
+    """执行一次模型发起的工具调用并记录（校验、预算、重复调用、留痕的逻辑在 agent_core.call_tool）。"""
+    return agent_core.call_tool(ctx, TOOLS, name, raw_args)
 
 
 def seed_search(ctx: ToolContext, question: str, k: int = 8) -> dict:
@@ -395,18 +314,6 @@ def seed_search(ctx: ToolContext, question: str, k: int = 8) -> dict:
     result = _search(ctx, question, k)
     _log(ctx, "seed_search", {"query": question, "k": k}, result, None, t0)
     return result
-
-
-def _log(ctx: ToolContext, name: str, args: dict, result: dict, error: str | None, t0: float) -> None:
-    if not ctx.log:
-        return
-    with connect() as conn, conn.cursor() as cur:
-        cur.execute("""INSERT INTO agent_tool_calls (run_id, step, tool, args, ok, error, result, ms)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-                    (ctx.run_id, ctx.step, name, json.dumps(args, ensure_ascii=False), error is None, error,
-                     json.dumps(result, ensure_ascii=False, default=str),
-                     round((time.perf_counter() - t0) * 1000)))
-        conn.commit()
 
 
 # ---------------------------------------------------------------------------

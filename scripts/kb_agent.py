@@ -14,6 +14,8 @@ research(question, as_of) 回答一个法规问题，和 R7 的 answer() 返回�
   3. 模型调用 submit_answer 时，用 R7 的逐字核验检查每条论断（只能引用本次调查看过的条款，即证据池）。
      有论断没通过 → 把核验结果作为这次工具调用的返回值交给模型，允许改正一次（可以再去查）。
   4. 结束条件（任一满足即停）：提交并通过核验 / 第二次提交 / 模型调用次数达到 MAX_TURNS / 工具预算用完后仍不提交。
+  R9b-1 起，循环、工具调用入口、用量记账移到 agent_core.py，与分诊 Agent 共用；这里只保留法规特有的部分
+  （提示词、提交格式与逐字核验、状态判定）。抽取前后发给模型的内容逐字节相同，由 agent_regress.py 用缓存回放证明。
 
 为什么"提交回答"也做成一个工具：
   回答的格式（answerable、answer、claims、missing）由工具的参数格式规定并由 pydantic 校验，和其他工具走同一条路径；
@@ -35,6 +37,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 import llm
+from agent_core import add_usage, inline_schema, new_usage, run_loop
 from db import connect
 from kb_answer import (MAX_QUOTE_WORDS, MIN_QUOTE_WORDS, _PAIRS, quoted_spans, render, scope_check,
                        unverified_quotes, verify)
@@ -70,28 +73,13 @@ class SubmitArgs(BaseModel):
                                      "Required whenever answerable is false.")
 
 
-def _inline(schema: dict) -> dict:
-    """把 pydantic 生成的 $defs / $ref 展开成内联结构，并去掉 title：不依赖 API 对 $ref 的支持，模型读起来也更直接。"""
-    defs = schema.pop("$defs", {})
-
-    def walk(x):
-        if isinstance(x, dict):
-            if "$ref" in x:
-                return walk(dict(defs[x["$ref"].split("/")[-1]]))
-            return {k: walk(v) for k, v in x.items() if k != "title"}
-        if isinstance(x, list):
-            return [walk(v) for v in x]
-        return x
-    return walk(schema)
-
-
 SUBMIT_TOOL = {"type": "function", "function": {
     "name": "submit_answer",
     "description": "Submit the final answer and finish the investigation. Each claim is checked automatically: "
                    "its quote must appear word for word in the cited clause, and only clauses returned by the tools "
                    "in this investigation can be cited. If some claims fail, the result lists them and you may "
                    "correct and resubmit once.",
-    "parameters": _inline(SubmitArgs.model_json_schema())}}
+    "parameters": inline_schema(SubmitArgs.model_json_schema())}}
 
 
 # ---------------------------------------------------------------------------
@@ -170,15 +158,10 @@ def research(question: str, as_of: date | None = None, use_scope: bool = True, u
     t0 = time.perf_counter()
     ctx = ToolContext(question, as_of, kind="research", max_calls=max_tool_calls, log=log).start()
     rec = {"question": question, "as_of": str(as_of), "prompt_version": AGENT_VERSION, "model": llm.MODEL,
-           "seed": seed,
-           "run_id": ctx.run_id, "usage": {"calls": 0, "cached_calls": 0, "prompt": 0, "hit": 0, "completion": 0,
-                                           "reasoning": 0}, "ms": {}, "trace": []}
+           "seed": seed, "run_id": ctx.run_id, "usage": new_usage(), "ms": {}, "trace": []}
 
     def add(u):
-        rec["usage"]["calls"] += 1
-        rec["usage"]["cached_calls"] += int(u.get("cached", False))
-        for k in ("prompt", "hit", "completion", "reasoning"):
-            rec["usage"][k] += u.get(k, 0)
+        add_usage(rec["usage"], u)
 
     def finish(status, reason=None):
         rec.update(status=status, abstain_reason=reason)
@@ -228,49 +211,32 @@ def research(question: str, as_of: date | None = None, use_scope: bool = True, u
     user = (AGENT_USER.format(as_of=as_of, question=question, seed=json.dumps(seed_res, ensure_ascii=False, indent=1))
             if seed else AGENT_USER_NOSEED.format(as_of=as_of, question=question))
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-    submits, nudges, final, turn = 0, 0, None, 0
+
+    def run_tool(name: str, raw_args: str) -> dict:
+        result = call_tool(ctx, name, raw_args)
+        rec["trace"].append({"step": ctx.step, "tool": name, "args": raw_args, "error": result.get("error"),
+                             "refs": [x for r in result.get("results", [])
+                                      for x in r.get("refs", [r.get("ref")]) if x]})
+        return result
+
+    # 循环本身在 agent_core.run_loop（R9b-1 抽出，与分诊 Agent 共用）
     try:
-        for turn in range(1, MAX_TURNS + 1):
-            msg, u = llm.chat_tools(messages, tools, purpose="agent", max_tokens=8000, use_cache=use_cache)
-            add(u)
-            messages.append(llm.assistant_message(msg))
-            if not msg["tool_calls"]:
-                nudges += 1
-                if nudges > MAX_NUDGES:
-                    break
-                messages.append({"role": "user", "content": NUDGE})
-                continue
-            # 同一轮里有多个调用时，先执行检索类工具，提交放在最后：模型可能"查一下、顺便提交"
-            calls = sorted(msg["tool_calls"], key=lambda tc: tc["name"] == "submit_answer")
-            for tc in calls:
-                if tc["name"] == "submit_answer":
-                    result, final = _submit(ctx, rec, tc["arguments"], submits)
-                    submits += 1
-                else:
-                    result = call_tool(ctx, tc["name"], tc["arguments"])
-                    rec["trace"].append({"step": ctx.step, "tool": tc["name"], "args": tc["arguments"],
-                                         "error": result.get("error"),
-                                         "refs": [x for r in result.get("results", [])
-                                                  for x in r.get("refs", [r.get("ref")]) if x]})
-                messages.append({"role": "tool", "tool_call_id": tc["id"],
-                                 "content": json.dumps(result, ensure_ascii=False)})
-            if final is not None:
-                break
-    except llm.LLMError as e:
-        if e.usage:
-            add(e.usage)
+        out = run_loop(messages, tools, run_tool=run_tool, submit_name="submit_answer",
+                       on_submit=lambda raw, n: _submit(ctx, rec, raw, n), usage=rec["usage"], use_cache=use_cache,
+                       max_turns=MAX_TURNS, max_nudges=MAX_NUDGES, nudge=NUDGE)
+    except llm.LLMError as e:                       # 失败调用的用量已在 run_loop 里记入
         if e.raw:
             rec["raw_failed"] = e.raw[:8000]
-        rec |= {"answer": "", "claims": [], "missing": f"生成失败：{e}", "turns": turn}
+        rec |= {"answer": "", "claims": [], "missing": f"生成失败：{e}", "turns": getattr(e, "turn", 0)}
         return finish("abstained", "generation_error")
 
-    rec["turns"] = turn
-    if final is None:
-        rec |= {"answer": "", "claims": [], "missing": f"在 {turn} 轮内没有提交回答（提醒 {nudges} 次）"}
+    rec["turns"] = out.turns
+    if out.final is None:
+        rec |= {"answer": "", "claims": [], "missing": f"在 {out.turns} 轮内没有提交回答（提醒 {out.nudges} 次）"}
         return finish("abstained", "loop_limit")        # 兜底拒答（D58 的分类），单独命名便于统计
 
     # 3. 判定状态（与 R7 相同的规则）
-    data, checked = final
+    data, checked = out.final
     rec["answer"], rec["missing"], rec["claims"] = data.answer, data.missing, checked
     if not data.answerable:
         # D64 修改 D56 的判定：拒答时附带说明缺口的论断是允许的（v1 q079 那样的诚实拒答）。
