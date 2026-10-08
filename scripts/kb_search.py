@@ -33,6 +33,15 @@ search(question, as_of, variant, mode) 是之后 R6 评测、R8 Agent 工具共�
   "paragraph 12.5"的 12.3 排在了真正的 12.5 前面，按编号查的题 MRR 从 1.0 跌到 0.39。
   重排模型判断的是正文语义，而条款编号存在于元数据里，不在正文中。
 
+同分的确定性（D70，R9b-1 回归测试中发现）：
+  RRF 只看名次，不同的名次组合常常算出完全相同的分数（"只在向量第 20 名"与"只在 BM25 第 20 名"）。
+  同分块的先后由 Qdrant 内部决定，每次请求可能不同；同分跨在候选池截断线（第 30 名）上时，
+  进入候选池的块时而是这个、时而是那个，同一个问题的检索结果因此不可复现（dev 上 72 题中 15 题的候选池会变）。
+  修正：每一步截断都由我们自己按"分数降序、同分按块编号升序"排序后再截，向 Qdrant 多要 TIE_MARGIN 个候选
+  保证截断线附近的同分块都拿得到；重排之后的排序、引用扩展补入的顺序也使用同样的规则。
+  剩余风险：向量 / BM25 两路各取前 per_route 个是在 Qdrant 内部完成的，那里的同分无法从外部决定；
+  dev 72 题 × 3 次的扫描中两路都没有出现不稳定，记录在案。
+
 用法：
     python scripts/kb_search.py                      # 用 R4 评测集里的 8 道题做冒烟测试
     python scripts/kb_search.py "What is COSMIC?"    # 查一个问题（默认调查日期为今天，完整两阶段）
@@ -56,6 +65,17 @@ from kb_index import point_id, qdrant, variant_text
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _client, _embedder = None, None
+TIE_MARGIN = 20      # 第一阶段多要的候选数：截断线附近的同分块都拿到手，再由我们按确定的规则截断（D70）
+
+
+def _cut(points: list, limit: int, fetched: int) -> list:
+    """按（分数降序，块编号升序）排序后取前 limit 个。同分时由块编号决定先后，而不是由 Qdrant 的处理顺序决定。
+    如果同分一直延续到多要的最后一个，说明 TIE_MARGIN 不够，截断仍可能不确定：发出警告而不是悄悄继续。"""
+    pts = sorted(points, key=lambda p: (-p.score, p.payload["chunk_id"]))
+    if len(pts) >= fetched > limit and pts[limit - 1].score == pts[-1].score:
+        import warnings
+        warnings.warn(f"同分块从第 {limit} 名一直延续到第 {fetched} 名：TIE_MARGIN 不够，候选池截断可能不确定")
+    return pts[:limit]
 
 
 _lock = threading.Lock()
@@ -147,6 +167,8 @@ def expand(hits: list[dict], as_of: date, collection: str, top: int = 5, cap: in
         return [], links
     client, _ = _clients()
     pts = client.retrieve(collection, ids=[point_id(c) for c in new], with_payload=True)
+    order = {c: i for i, c in enumerate(new)}          # Qdrant 按 id 取点时不保证返回顺序：按补入的先后排好（D70）
+    pts = sorted(pts, key=lambda p: order[p.payload["chunk_id"]])
     return [{"score": None, "route": new[p.payload["chunk_id"]], **p.payload} for p in pts], links
 
 
@@ -195,13 +217,14 @@ def search(question: str, as_of: date | None = None, variant: str = "ctx", mode:
 
     if mode == "bm25" and sparse is None:
         return []                                        # 中文问题切不出英文词，BM25 这一路为空
+    fetch = first_k + TIE_MARGIN
     if mode == "dense" or (mode == "hybrid" and sparse is None):
         dense = embedder.embed([question], use_cache=CACHE)[0]
         res = client.query_points(collection, query=dense, using="dense", query_filter=flt,
-                                  limit=first_k, with_payload=True)
+                                  limit=fetch, with_payload=True)
     elif mode == "bm25":
         res = client.query_points(collection, query=sparse, using="bm25", query_filter=flt,
-                                  limit=first_k, with_payload=True)
+                                  limit=fetch, with_payload=True)
     elif mode == "hybrid":
         dense = embedder.embed([question], use_cache=CACHE)[0]
         res = client.query_points(
@@ -209,10 +232,10 @@ def search(question: str, as_of: date | None = None, variant: str = "ctx", mode:
             prefetch=[models.Prefetch(query=dense, using="dense", filter=flt, limit=per_route),
                       models.Prefetch(query=sparse, using="bm25", filter=flt, limit=per_route)],
             query=models.RrfQuery(rrf=models.Rrf(k=rrf_k)),
-            query_filter=flt, limit=first_k, with_payload=True)
+            query_filter=flt, limit=fetch, with_payload=True)
     else:
         raise ValueError(f"未知模式 {mode}")
-    hits = [{"score": p.score, "route": mode, **p.payload} for p in res.points]
+    hits = [{"score": p.score, "route": mode, **p.payload} for p in _cut(res.points, first_k, fetch)]
     if exact:
         pinned = [{"score": None, "route": "exact", **p}
                   for p in exact_lookup(rerank_query or question, as_of, collection, use_filter)]
@@ -242,7 +265,7 @@ def search(question: str, as_of: date | None = None, variant: str = "ctx", mode:
     # 编号路由命中的块固定在最前（D50）：重排模型判断的是文字语义，条款编号不在正文里；
     # 实测把"Subject to paragraph 12.5 …"（12.3）排到了真正的 12.5 前面
     pinned = [h for h in hits if h["route"] == "exact"]
-    rest = sorted((h for h in hits if h["route"] != "exact"), key=lambda h: -h["score"])
+    rest = sorted((h for h in hits if h["route"] != "exact"), key=lambda h: (-h["score"], h["chunk_id"]))
     return [{"rank": i + 1, **h} for i, h in enumerate((pinned + rest)[:k])]
 
 

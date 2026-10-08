@@ -17,13 +17,20 @@ R9b-1 把法规研究 Agent 的循环、工具调用入口、用量记账抽到�
 它证明不了什么：只覆盖这些运行实际走过的路径。脚本最后会列出这些运行触发过哪些分支（重新提交、引号被去掉、
 预算用完、重复调用……），没出现过的分支由离线的脚本化测试覆盖（见 D70）。
 
+基准（D70）：默认与 reports/r8_answer_dev.json（R8c 的那次运行）比较；如果存在 reports/regress_baseline_dev.json，
+就改为与它比较。有意改变行为之后（例如 D70 修正检索的同分规则），用 --record 重新录一份基准：
+  --record 允许缓存未命中时真正调用 API（只有行为变了的题会产生费用），把新记录写进基准文件；
+  之后不带参数再跑一遍，应当全部命中缓存、逐字段相同——这同时证明修正后的整条链路是可复现的。
+
 用法：
     python scripts/agent_regress.py
+    python scripts/agent_regress.py --record      # 有意改变行为后重录基准（会产生少量 API 费用）
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from collections import Counter
 from datetime import date
 from pathlib import Path
@@ -33,6 +40,7 @@ from kb_agent import research
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SAVED = PROJECT_ROOT / "reports" / "r8_answer_dev.json"
+BASELINE = PROJECT_ROOT / "reports" / "regress_baseline_dev.json"
 RESOLVED = PROJECT_ROOT / "reports" / "rag_golden_v2_resolved.json"
 CONFIGS = {"agent": True, "agent_noseed": False}          # 配置名 → seed
 FIELDS = ["status", "abstain_reason", "answer", "missing", "claims", "turns", "tool_calls", "trace", "scope",
@@ -47,13 +55,36 @@ def _forbid(*args, **kwargs):
     raise CacheMiss("请求没有命中缓存：发给模型的内容与 R8c 运行时不同")
 
 
+def record():
+    """重录基准：允许调用 API，记录写进 BASELINE。"""
+    qs = [q for q in json.loads(RESOLVED.read_text(encoding="utf-8")) if q["split"] == "dev"]
+    out, cost, fresh = {}, 0.0, 0
+    for config, seed in CONFIGS.items():
+        out[config] = {}
+        for q in qs:
+            rec = research(q["question"], date.fromisoformat(q["as_of"]), use_cache=True, log=False, seed=seed)
+            out[config][q["id"]] = json.loads(json.dumps(rec, ensure_ascii=False, default=str))
+            n_new = rec["usage"]["calls"] - rec["usage"]["cached_calls"]
+            fresh += n_new
+            cost += rec["cost_usd"]
+            print(f"  {config:<13}{q['id']}  {rec['status']:<10}" + (f"新调用 {n_new} 次" if n_new else "全部命中缓存"))
+    BASELINE.write_text(json.dumps({"records": out}, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"\n基准已写到 {BASELINE.relative_to(PROJECT_ROOT)}；新调用 {fresh} 次，费用 ${cost:.4f}")
+    print("现在不带参数再跑一遍：应当全部命中缓存、逐字段相同")
+
+
 def main():
+    if "--record" in sys.argv:
+        record()
+        return
     llm._call = _forbid              # chat_json（范围检查）真正调用 API 的函数
     llm._call_tools = _forbid        # chat_tools（循环每一轮）真正调用 API 的函数
 
-    saved = json.loads(SAVED.read_text(encoding="utf-8"))["records"]
+    src = BASELINE if BASELINE.exists() else SAVED
+    saved = json.loads(src.read_text(encoding="utf-8"))["records"]
     qs = [q for q in json.loads(RESOLVED.read_text(encoding="utf-8")) if q["split"] == "dev"]
-    print(f"回放 dev2 {len(qs)} 题 × {len(CONFIGS)} 种配置；任何一次请求未命中缓存都算失败（不会调用 API）\n")
+    print(f"回放 dev2 {len(qs)} 题 × {len(CONFIGS)} 种配置，基准 {src.relative_to(PROJECT_ROOT)}；"
+          f"任何一次请求未命中缓存都算失败（不会调用 API）\n")
 
     fails, branches, n = [], Counter(), 0
     for config, seed in CONFIGS.items():
