@@ -3,10 +3,12 @@ SentryAML - 数据库连接helper
 ============================
 所有需要连数据库的脚本都从这里拿连接，避免每个文件重复写连接逻辑。
 
-两种连接（R9a 起）：
-  connect()        主连接（DATABASE_URL，库的所有者）。建表、写数据、评测脚本读标签都用它。
-  connect_agent()  调查工具专用（AGENT_DATABASE_URL，最小权限角色 sentry_agent，020_investigation.sql 创建）。
-                   这个角色读不到 txn_norm、alert_labels 等含标签的表，也不能写任何表。
+三种连接：
+  connect()         主连接（DATABASE_URL，库的所有者）。建表、写数据、评测脚本读标签都用它。
+  connect_agent()   调查工具专用（AGENT_DATABASE_URL，最小权限角色 sentry_agent，020_investigation.sql 创建）。
+                    这个角色读不到 txn_norm、alert_labels 等含标签的表，也不能写任何表。
+  connect_review()  复核操作专用（REVIEW_DATABASE_URL，最小权限角色 sentry_review，025_review.sql 创建，R10a）。
+                    只能读告警、Agent 记录和复核表，只能往 review_events 里追加；读不到标签。
 """
 
 import os
@@ -74,6 +76,31 @@ def connect_agent(statement_timeout_ms: int = 15000, autocommit: bool = True) ->
         conn.close()
         raise RuntimeError(f"AGENT_DATABASE_URL 连上的是超级用户 {user}：调查工具必须用 sentry_agent 这类最小权限角色")
     return conn
+
+
+def _connect_restricted(env_var: str, role_hint: str, sql_file: str, **kwargs) -> psycopg.Connection:
+    """最小权限连接的共同检查：变量必须存在、不能等于主连接、连上的不能是超级用户。理由见 connect_agent。"""
+    dsn = os.getenv(env_var)
+    if not dsn:
+        raise RuntimeError(
+            f"读不到 {env_var}。这里必须用最小权限角色连接，不会退回主账号。"
+            f"在 .env 里加一行：{env_var}=postgresql://{role_hint}:{role_hint}_dev@localhost:端口/库名"
+            f"（角色由 sql/{sql_file} 创建）")
+    if dsn == os.getenv("DATABASE_URL"):
+        raise RuntimeError(f"{env_var} 和 DATABASE_URL 相同：不能用主账号连接")
+    conn = psycopg.connect(dsn, **kwargs)
+    with conn.cursor() as cur:
+        cur.execute("SELECT current_user, rolsuper FROM pg_roles WHERE rolname = current_user")
+        user, is_super = cur.fetchone()
+    if is_super:
+        conn.close()
+        raise RuntimeError(f"{env_var} 连上的是超级用户 {user}：必须用 {role_hint} 这类最小权限角色")
+    return conn
+
+
+def connect_review() -> psycopg.Connection:
+    """复核操作专用连接（R10a）。每个复核动作是一个独立事务：写入成功就提交，被规则拒绝就整体回滚。"""
+    return _connect_restricted("REVIEW_DATABASE_URL", "sentry_review", "025_review.sql")
 
 
 def check_connection() -> None:
