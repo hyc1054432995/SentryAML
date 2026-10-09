@@ -134,9 +134,15 @@ def cmd_show(a) -> None:
         if run_id:
             cur.execute("SELECT step, tool FROM agent_tool_calls WHERE run_id = %s", (run_id,))
             tools = dict(cur.fetchall())
-        cur.execute("""SELECT seq, actor, action, from_state, to_state, overrides_agent, reason, created_at
+        cur.execute("""SELECT seq, actor, action, from_state, to_state, overrides_agent, reason, created_at, payload
                        FROM review_events WHERE case_id = %s ORDER BY seq""", (cid,))
         events = cur.fetchall()
+        cur.execute("SELECT to_regclass('str_drafts') IS NOT NULL")
+        drafts = []
+        if cur.fetchone()[0]:
+            cur.execute("""SELECT version, created_by, generator ->> 'kind', created_at FROM str_drafts
+                           WHERE case_id = %s ORDER BY version""", (cid,))
+            drafts = cur.fetchall()
     print(f"案件 {cid}  告警 #{aid}  当前状态：{state}  来源：{route}")
     print(f"  {ts:%Y-%m-%d %H:%M}  {fb}:{fa} → {tb}:{ta}  {float(amt):,.2f} USD  {tier}（分位 {pct:.3f}）")
     # 先给证据，再给结论：复核员先看到查到了什么，再看到 Agent 怎么判（自动化偏差，D78）
@@ -156,9 +162,13 @@ def cmd_show(a) -> None:
         print(f"  Agent 结论：{result['decision']}  手法 {result.get('typology')}  把握 {result.get('confidence')}")
         print(f"  理由：{result.get('rationale')}")
     print("  复核记录：")
-    for seq, actor, action, fs, ts2, ov, reason, at in events:
+    for seq, actor, action, fs, ts2, ov, reason, at, payload in events:
+        extra = {k: v for k, v in (payload or {}).items() if k in ("typology", "draft_version")}
         print(f"    {seq}. {at:%m-%d %H:%M:%S} {actor:<7}{action:<20}{fs} → {ts2}"
-              + ("  [推翻 Agent]" if ov else "") + (f"\n         理由：{reason}" if reason else ""))
+              + ("  [推翻 Agent]" if ov else "") + (f"  {extra}" if extra else "")
+              + (f"\n         理由：{reason}" if reason else ""))
+    if drafts:
+        print("  STR 草稿：" + "；".join(f"第 {v} 版 {who} [{kind}] {at:%m-%d %H:%M}" for v, who, kind, at in drafts))
 
 
 def act(cur, case_id: int, action: str, actor: str, reason: str | None = None, seen: str | None = None,
@@ -185,16 +195,35 @@ def explain(e: psycopg.Error) -> str:
              "review_reason": "这个动作必须写理由",
              "review_four_eyes": "双人复核：确认可疑或写过草稿的人不能批准",
              "review_actor": "没有这个复核员",
-             "review_immutable": "复核记录只能追加，不能修改或删除"}
+             "review_immutable": "复核记录只能追加，不能修改或删除",
+             "str_typology": "确认可疑时必须选定手法（--typology，知识图谱里的手法）",
+             "str_no_draft": "还没有草稿：先运行 str_draft.py build",
+             "str_version": "草稿版本不对：批准或记录的必须是最新版本",
+             "str_author": "这个草稿版本不是你写的",
+             "str_narrative": "草稿的理由（自由文本）还没写，不能批准",
+             "str_invalid": "草稿没有通过数据库检查"}
     code = msg.split(":", 1)[0]
     return f"{hints.get(code, '数据库拒绝')}（{msg}）"
 
 
 def cmd_act(a) -> None:
+    payload = json.loads(a.payload) if a.payload else {}
     with connect_review() as conn, conn.cursor() as cur:
+        if a.action == "confirm_suspicious":
+            # STR 的可疑类别由手法决定，手法由复核员选定（D79）。不指定时用 Agent 给出的手法，并明确告诉复核员
+            typ = a.typology
+            if typ is None:
+                cur.execute("SELECT agent_result ->> 'typology' FROM review_cases WHERE case_id = %s", (a.case_id,))
+                r = cur.fetchone()
+                typ = r[0] if r and r[0] not in (None, "none", "unclear") else None
+                if typ:
+                    print(f"未指定 --typology，使用 Agent 给出的手法：{typ}")
+            if typ:
+                payload["typology"] = typ
+        if a.draft_version is not None:
+            payload["draft_version"] = a.draft_version
         try:
-            seq, to_state = act(cur, a.case_id, a.action, a.actor, a.reason, a.seen,
-                                json.loads(a.payload) if a.payload else None)
+            seq, to_state = act(cur, a.case_id, a.action, a.actor, a.reason, a.seen, payload or None)
             conn.commit()
         except psycopg.Error as e:
             conn.rollback()
@@ -260,6 +289,13 @@ def cmd_smoke(a) -> None:
             act(cur, cid, "open", "system")
             return cid
 
+        # 026（R10b）在复核事件上加了第二个触发器，要求草稿真实存在、确认时选定手法。这里测的是 025 的通用规则，
+        # 在本事务里暂时停用它（ALTER TABLE 也随回滚撤销）；026 的规则由 str_draft.py selftest 单独测试。
+        # 代价：本事务持有 review_events 的排他锁，测试的这一两秒里其他复核操作会等待
+        cur.execute("SELECT 1 FROM pg_trigger WHERE tgname = 'review_event_guard_str'")
+        if cur.fetchone():
+            cur.execute("ALTER TABLE review_events DISABLE TRIGGER review_event_guard_str")
+            print("  （本事务内停用 026 的触发器 review_event_guard_str，回滚时恢复）")
         c_esc = new_case(ids[0], "agent_escalate", "escalate")
         c_qa = new_case(ids[1], "qa_sample", "close")
         c_t1 = new_case(ids[2], "tier1", None)
@@ -378,6 +414,9 @@ def main():
     p.add_argument("--as", dest="actor", required=True)
     p.add_argument("--reason")
     p.add_argument("--seen", help="你看到的状态（默认取当前状态）")
+    p.add_argument("--typology", help="confirm_suspicious 时选定的手法（R10b，D79）；不给时使用 Agent 的手法")
+    p.add_argument("--draft-version", type=int,
+                   help="approve_str：你审阅并批准的草稿版本（必须是最新版本，D79）")
     p.add_argument("--payload")
     sub.add_parser("smoke")
     a = ap.parse_args()
