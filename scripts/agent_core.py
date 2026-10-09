@@ -212,6 +212,7 @@ class LoopOutcome:
     final: Any = None        # on_submit 返回的最终结果；None = 没有完成提交（触发了停止条件）
     turns: int = 0           # 调用模型的轮数
     nudges: int = 0          # 模型既没调用工具也没提交、被提醒的次数
+    length_nudged: bool = False   # 是否因输出截断被提醒过一次（length_nudge）
 
 
 def run_loop(messages: list[dict], tools: list[dict], *,
@@ -224,7 +225,8 @@ def run_loop(messages: list[dict], tools: list[dict], *,
              max_nudges: int = 2,
              nudge: str = "Continue: call a tool, or submit to finish.",
              purpose: str = "agent",
-             max_tokens: int = 8000) -> LoopOutcome:
+             max_tokens: int = 8000,
+             length_nudge: str | None = None) -> LoopOutcome:
     """
     循环（消息历史只追加、从不修改，所以每一轮的前缀都与上一轮相同，服务端前缀缓存命中前面全部内容）：
       1. 把消息历史和工具清单发给模型
@@ -237,11 +239,26 @@ def run_loop(messages: list[dict], tools: list[dict], *,
 
     模型调用失败（llm.LLMError）时：把这次失败调用的用量记入 usage（失败同样计费），
     在异常上附带 .turn（失败发生在第几轮），然后原样抛出，由调用方决定如何记录。
+
+    length_nudge（D75，分诊 Agent 使用）：模型的思考过程过长、输出被截断（加倍上限重试后仍截断）时，
+      不立刻判失败，而是在消息末尾追加这段提醒、再给一次机会（只给一次）。截断的那一轮没有可用的输出，
+      不追加到消息历史里。默认 None：行为与 R8 完全相同（法规 Agent 不传这个参数，回归测试保证逐字节不变）。
     """
     submits, nudges, final, turn = 0, 0, None, 0
+    length_nudged = False
     try:
         for turn in range(1, max_turns + 1):
-            msg, u = llm.chat_tools(messages, tools, purpose=purpose, max_tokens=max_tokens, use_cache=use_cache)
+            try:
+                msg, u = llm.chat_tools(messages, tools, purpose=purpose, max_tokens=max_tokens,
+                                        use_cache=use_cache)
+            except llm.LLMError as e:
+                if length_nudge is None or length_nudged or "finish_reason=length" not in str(e):
+                    raise
+                if e.usage:
+                    add_usage(usage, e.usage)
+                length_nudged = True
+                messages.append({"role": "user", "content": length_nudge})
+                continue
             add_usage(usage, u)
             messages.append(llm.assistant_message(msg))
             if not msg["tool_calls"]:
@@ -266,4 +283,4 @@ def run_loop(messages: list[dict], tools: list[dict], *,
             add_usage(usage, e.usage)
         e.turn = turn
         raise
-    return LoopOutcome(final=final, turns=turn, nudges=nudges)
+    return LoopOutcome(final=final, turns=turn, nudges=nudges, length_nudged=length_nudged)
