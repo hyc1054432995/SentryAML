@@ -394,6 +394,49 @@ def explain_str(e: psycopg.Error) -> str:
 # ---------------------------------------------------------------------------
 # 自检
 # ---------------------------------------------------------------------------
+def fixture_case(cur, label: str) -> dict:
+    """测试用案件（以库的所有者身份、在调用方的事务里创建）：一条还没有案件的真实告警，配一次假的分诊运行——
+    第 7 步过桥查询找到 1 个匹配：付款方先收到一笔（库里真实的交易），再付出告警这一笔。
+    str_draft 和 str_narrative 的自检共用它；调用方负责回滚。"""
+    cur.execute("""SELECT a.alert_id, a.txn_id, a.txn_ts, a.from_bank, a.from_account, a.amount_usd,
+                          (SELECT i.txn_id FROM inv_txn i WHERE i.to_bank = a.from_bank
+                             AND i.to_account = a.from_account AND i.txn_ts < a.txn_ts
+                           ORDER BY i.txn_ts DESC LIMIT 1)
+                   FROM alerts a
+                   WHERE NOT EXISTS (SELECT 1 FROM review_cases c WHERE c.alert_id = a.alert_id)
+                     AND NOT inv_is_clearing(a.from_bank, a.from_account)
+                   ORDER BY a.alert_id DESC LIMIT 200""")
+    pick = next((r for r in cur.fetchall() if r[6] is not None), None)
+    if pick is None:
+        raise SystemExit("找不到付款方此前收过钱的告警，无法搭建测试案件")
+    aid, txn, ts, fb, fa, amt, in_txn = pick
+    cur.execute("""SELECT txn_ts, from_bank || ':' || from_account, round(amount_usd, 2)
+                   FROM inv_txn WHERE txn_id = %s""", (in_txn,))
+    in_ts, in_from, in_amt = cur.fetchone()
+    payer = f"{fb}:{fa}"
+    run_id = str(uuid.uuid4())
+    cur.execute("""INSERT INTO agent_runs (run_id, kind, question, as_of, alert_id, status)
+                   VALUES (%s, 'triage', %s, %s, %s, 'done')""", (run_id, label, ts, aid))
+    match = {"in_txn": in_txn, "in_ts": in_ts.strftime("%Y-%m-%d %H:%M"), "in_from": in_from,
+             "in_amt": float(in_amt), "out_txn": txn, "out_ts": ts.strftime("%Y-%m-%d %H:%M"),
+             "out_amt": round(float(amt), 2), "lag_hours": round((ts - in_ts).total_seconds() / 3600, 1)}
+    result = {"step": 7, "tool": "pass_through", "account": payer, "n_matches": 1, "matches": [match]}
+    cur.execute("""INSERT INTO agent_tool_calls (run_id, step, tool, args, ok, result, ms)
+                   VALUES (%s, 7, 'seed:pass_through', '{}', true, %s, 0)""", (run_id, json.dumps(result)))
+    snap = {"status": "done", "decision": "escalate", "typology": "gather_scatter",
+            "rationale": "TRIAGE-RATIONALE-MARKER: weak signals only on the payee side.", "facts": [
+        {"fact": 1, "verified": True, "step": 0, "path": "result.amount_usd", "value": round(float(amt), 2)},
+        {"fact": 2, "verified": True, "step": 7, "path": "matches[0].in_amt", "value": float(in_amt)},
+        {"fact": 3, "verified": False, "step": 9, "path": "x", "value": 1}]}
+    cur.execute("""INSERT INTO review_cases (alert_id, route, agent_run_id, agent_decision, agent_result)
+                   VALUES (%s, 'agent_escalate', %s, 'escalate', %s) RETURNING case_id""",
+                (aid, run_id, json.dumps(snap)))
+    cid = cur.fetchone()[0]
+    act(cur, cid, "open", "system")
+    return {"aid": aid, "cid": cid, "txn": txn, "in_txn": in_txn, "in_from": in_from, "payer": payer,
+            "amt": round(float(amt), 2), "in_amt": float(in_amt), "run_id": run_id, "match": match}
+
+
 def cmd_selftest(a) -> None:
     """在一个事务里搭一个完整的案件：一条真实告警 + 一次假的分诊运行（过桥：先收一笔、再付出告警这一笔，
     两笔都是库里真实的交易），然后以复核员身份走完 确认 → 组装 → 修改 → 批准，并逐项篡改草稿，确认数据库能拦下。
@@ -418,40 +461,8 @@ def cmd_selftest(a) -> None:
 
     with connect() as conn, conn.cursor() as cur:
         print("[1] 搭建测试案件（事务内）")
-        cur.execute("""SELECT a.alert_id, a.txn_id, a.txn_ts, a.from_bank, a.from_account, a.amount_usd,
-                              (SELECT i.txn_id FROM inv_txn i WHERE i.to_bank = a.from_bank
-                                 AND i.to_account = a.from_account AND i.txn_ts < a.txn_ts
-                               ORDER BY i.txn_ts DESC LIMIT 1)
-                       FROM alerts a
-                       WHERE NOT EXISTS (SELECT 1 FROM review_cases c WHERE c.alert_id = a.alert_id)
-                         AND NOT inv_is_clearing(a.from_bank, a.from_account)
-                       ORDER BY a.alert_id DESC LIMIT 200""")
-        pick = next((r for r in cur.fetchall() if r[6] is not None), None)
-        if pick is None:
-            raise SystemExit("找不到付款方此前收过钱的告警，无法搭建测试案件")
-        aid, txn, ts, fb, fa, amt, in_txn = pick
-        cur.execute("""SELECT txn_ts, from_bank || ':' || from_account, round(amount_usd, 2)
-                       FROM inv_txn WHERE txn_id = %s""", (in_txn,))
-        in_ts, in_from, in_amt = cur.fetchone()
-        payer = f"{fb}:{fa}"
-        run_id = str(uuid.uuid4())
-        cur.execute("""INSERT INTO agent_runs (run_id, kind, question, as_of, alert_id, status)
-                       VALUES (%s, 'triage', 'str_draft selftest', %s, %s, 'done')""", (run_id, ts, aid))
-        match = {"in_txn": in_txn, "in_ts": in_ts.strftime("%Y-%m-%d %H:%M"), "in_from": in_from,
-                 "in_amt": float(in_amt), "out_txn": txn, "out_ts": ts.strftime("%Y-%m-%d %H:%M"),
-                 "out_amt": round(float(amt), 2)}
-        result = {"step": 7, "tool": "pass_through", "account": payer, "n_matches": 1, "matches": [match]}
-        cur.execute("""INSERT INTO agent_tool_calls (run_id, step, tool, args, ok, result, ms)
-                       VALUES (%s, 7, 'seed:pass_through', '{}', true, %s, 0)""", (run_id, json.dumps(result)))
-        snap = {"status": "done", "decision": "escalate", "typology": "gather_scatter", "facts": [
-            {"fact": 1, "verified": True, "step": 0, "path": "result.amount_usd", "value": round(float(amt), 2)},
-            {"fact": 2, "verified": True, "step": 7, "path": "matches[0].in_amt", "value": float(in_amt)},
-            {"fact": 3, "verified": False, "step": 9, "path": "x", "value": 1}]}
-        cur.execute("""INSERT INTO review_cases (alert_id, route, agent_run_id, agent_decision, agent_result)
-                       VALUES (%s, 'agent_escalate', %s, 'escalate', %s) RETURNING case_id""",
-                    (aid, run_id, json.dumps(snap)))
-        cid = cur.fetchone()[0]
-        act(cur, cid, "open", "system")
+        fx = fixture_case(cur, "str_draft selftest")
+        aid, cid, txn, in_txn, in_from, payer = (fx[k] for k in ("aid", "cid", "txn", "in_txn", "in_from", "payer"))
         print(f"  告警 #{aid}，案件 {cid}；证据：过桥 {in_from} → {payer}（#{in_txn}）→ 告警这一笔（#{txn}）")
 
         cur.execute("SET LOCAL ROLE sentry_review")
