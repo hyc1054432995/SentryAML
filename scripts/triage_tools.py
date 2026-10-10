@@ -263,7 +263,11 @@ def account_activity(ctx: TriageContext, a: ActivityArgs) -> dict:
     def body(bank, acct):
         days = _rows(ctx, "SELECT * FROM inv_account_activity(%s, %s, %s, %s)", (bank, acct, ctx.as_of, a.days))
         active = sum(1 for d in days if d["in_cnt"] or d["out_cnt"])
-        return {"window_days": a.days, "active_days": active, "days": days}
+        # 两个汇总数：最近 2 天（含告警当天）与更早的天数里的收付笔数，用来判断"休眠后突然启用"，可被直接引用
+        recent = sum(d["in_cnt"] + d["out_cnt"] for d in days[-2:])
+        earlier = sum(d["in_cnt"] + d["out_cnt"] for d in days[:-2])
+        return {"window_days": a.days, "active_days": active, "txns_last_2_days": recent,
+                "txns_earlier_days": earlier, "days": days}
     return _run(ctx, "account_activity", a.account, body)
 
 
@@ -307,11 +311,10 @@ def trace_cycle(ctx: TriageContext, a: AccountArgs) -> dict:
 def two_hop(ctx: TriageContext, a: WindowArgs) -> dict:
     def body(bank, acct):
         rows = _rows(ctx, "SELECT * FROM inv_two_hop(%s, %s, %s, %s)", (bank, acct, ctx.as_of, a.hours))
-        return {"window_hours": a.hours,
-                "gather_out": [{k: v for k, v in r.items() if k != "direction"} for r in rows
-                               if r["direction"] == "gather_out"],
-                "gather_in": [{k: v for k, v in r.items() if k != "direction"} for r in rows
-                              if r["direction"] == "gather_in"]}
+        go = [{k: v for k, v in r.items() if k != "direction"} for r in rows if r["direction"] == "gather_out"]
+        gi = [{k: v for k, v in r.items() if k != "direction"} for r in rows if r["direction"] == "gather_in"]
+        return {"window_hours": a.hours, "n_gather_out": len(go), "n_gather_in": len(gi),
+                "gather_out": go, "gather_in": gi}
     return _run(ctx, "two_hop", a.account, body)
 
 

@@ -40,7 +40,7 @@ import psycopg
 from db import connect, connect_review
 from review import act, explain
 
-BUILDER = "str-builder-v1"
+BUILDER = "str-builder-v1.1"   # v1.1：同一步的多条事实合并成一条来源说明
 SGT = ZoneInfo("Asia/Singapore")
 MAX_ROWS = 40                                  # 表格里账户、交易各最多 40 个（D79）
 ACCT_RE = re.compile(r"^\d+:[0-9A-Za-z]+$")
@@ -115,26 +115,33 @@ def _scan(obj, txns: list[int], accts: list[str]) -> None:
 
 
 def evidence(case: dict, results: dict) -> tuple[dict[int, list[str]], dict[str, list[str]]]:
-    """从核验通过的事实里取出交易和账户，并记下每一项为什么被列入。"""
-    txns: dict[int, list[str]] = {case["txn_id"]: ["alerted transaction"]}
-    accts: dict[str, list[str]] = {case["payer"]: ["payer of the alerted transaction"],
-                                   case["payee"]: ["payee of the alerted transaction"]}
+    """从核验通过的事实里取出交易和账户，并记下每一项为什么被列入。
+
+    同一步的多条事实合并成一句："evidence: step 7 pass_through (n_matches, matches[0].in_amt, ...)"，
+    否则同一笔交易后面会重复出现五六遍同样的来源（v1.1，D79）。"""
+    txns: dict[int, dict] = {case["txn_id"]: {"alerted transaction": None}}
+    accts: dict[str, dict] = {case["payer"]: {"payer of the alerted transaction": None},
+                              case["payee"]: {"payee of the alerted transaction": None}}
     facts = (case["agent_result"] or {}).get("facts") or []
     for f in facts:
         if not f.get("verified") or f.get("step") in (None, 0) or f["step"] not in results:
             continue
         tool, res = results[f["step"]]
-        why = f"evidence: step {f['step']} {tool} ({f['path']})"
+        key = f"evidence: step {f['step']} {tool}"
         t: list[int] = []
         a: list[str] = []
         _scan(_container(res, f["path"]), t, a)
         if res.get("account"):
             a.insert(0, res["account"])
-        for x in t:
-            txns.setdefault(x, []).append(why)
-        for x in a:
-            accts.setdefault(x, []).append(why)
-    return txns, accts
+        for store, items in ((txns, t), (accts, a)):
+            for x in items:
+                paths = store.setdefault(x, {}).setdefault(key, [])
+                if f["path"] not in paths:
+                    paths.append(f["path"])
+
+    def fmt(d: dict) -> list[str]:
+        return [k if p is None else f"{k} ({', '.join(p)})" for k, p in d.items()]
+    return {k: fmt(v) for k, v in txns.items()}, {k: fmt(v) for k, v in accts.items()}
 
 
 # ---------------------------------------------------------------------------
