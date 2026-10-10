@@ -32,7 +32,7 @@ import yaml
 import str_narrative as narr
 from db import connect
 from review import act, snapshot
-from str_draft import BUILDER, build_body, insert_draft, load_case
+from str_draft import BUILDER, build_body, insert_draft, latest, load_case
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SPLIT = PROJECT_ROOT / "reports" / "r9c_split.json"
@@ -136,6 +136,10 @@ def run(split: str) -> dict:
                 print(f"  #{p['alert_id']:<5} 草稿被拒绝：{row['error'][:100]}")
                 continue
             r = narr.write(cid, ANALYST, cur=cur)
+            if r["status"] == "verified":
+                # 每句话里的数字出自哪一步哪个字段：写进评分表，评分的人不必自己去翻工具结果（D82）
+                results, _ = narr.materials(cur, load_case(cur, cid), latest(cur, cid))
+                row["sentence_sources"] = [narr.number_sources(sx, results) for sx in sentences(r["narrative"])]
             row.update(narrative=r["status"], attempts=len(r["attempts"]),
                        first_pass=bool(r["attempts"]) and bool(r["attempts"][0].get("ok")),
                        problems=[sorted({p_["problem"] for p_ in at.get("problems", [])}) for at in r["attempts"]],
@@ -185,18 +189,29 @@ def write_rubric(res: dict) -> Path:
     pick = sorted(random.Random(SEED).sample(ver, min(N_RUBRIC, len(ver))), key=lambda r: r["alert_id"])
     items = []
     for r in pick:
+        src = r.get("sentence_sources") or []
         items.append({
             "alert_id": r["alert_id"], "typology": r["typology"],
             "facts": [f"step {f['step']} {f['path']} = {f['value']}" for f in r["facts"]],
-            "sentences": [{"n": i, "text": s, "supported": None, "note": ""}
+            "sentences": [{"n": i, "text": s,
+                           "numbers": [f"{x['number']} <- {', '.join(x['sources'])}" for x in
+                                       (src[i - 1] if i - 1 < len(src) else [])],
+                           "supported": None, "note": ""}
                           for i, s in enumerate(sentences(r["text"]), 1)],
-            "flow_of_funds_clear": None, "why_suspicious_explained": None, "weak_signal_as_strong": None,
+            "flow_of_funds_clear": None, "why_suspicious_explained": None, "weak_signals_not_overstated": None,
             "comment": ""})
-    doc = {"instructions": (
-        "For each sentence set supported: true if every claim in it follows from the listed facts (or from the "
-        "structured draft: accounts and transactions); false if it says more than the facts show (e.g. 'no funds "
-        "were retained' when only one matched pair was checked). Then answer the three yes/no questions "
-        "(true/false). Do not change the text."), "split": res["split"], "prompt_version": res["prompt_version"],
+    doc = {"instructions": [
+        "supported: true only if EVERY claim in the sentence follows from the evidence. 'numbers' shows where each "
+        "number comes from, but a sentence can have correct numbers and still say too much.",
+        "Mark supported: false when the sentence adds a conclusion that nothing measured, e.g. 'no funds were "
+        "retained' (only one matched pair was checked), 'not explained by the business type' (no business type "
+        "is recorded), 'purpose-built relationship', or a count read from a truncated list.",
+        "Write the reason in note for every false.",
+        "The three questions per item: true = good. flow_of_funds_clear: a reader can follow where the money came "
+        "from and went. why_suspicious_explained: the text says why this is unusual, not only what happened. "
+        "weak_signals_not_overstated: weak signals (first contact alone, one fan count, amount size) are not "
+        "presented as proof.",
+        "Do not change the text."], "split": res["split"], "prompt_version": res["prompt_version"],
         "seed": SEED, "items": items}
     p = rubric_path(res["split"])
     if p.exists():
@@ -213,12 +228,17 @@ def write_rubric(res: dict) -> Path:
     return p
 
 
-def score(split: str) -> None:
-    doc = yaml.safe_load(rubric_path(split).read_text(encoding="utf-8"))
+def score(split: str, path: Path | None = None) -> None:
+    doc = yaml.safe_load((path or rubric_path(split)).read_text(encoding="utf-8"))
     sent = [s for it in doc["items"] for s in it["sentences"]]
-    todo = [s for s in sent if s["supported"] is None] + \
-        [it for it in doc["items"] for k in ("flow_of_funds_clear", "why_suspicious_explained", "weak_signal_as_strong")
-         if it[k] is None]
+    # v2 的评分表用的是反向问题 weak_signal_as_strong（true = 有问题），容易填反；v3 起改成正向的
+    # weak_signals_not_overstated（三项都是 true = 好）。读旧表时换算过来
+    for it in doc["items"]:
+        if "weak_signal_as_strong" in it and "weak_signals_not_overstated" not in it:
+            v = it.pop("weak_signal_as_strong")
+            it["weak_signals_not_overstated"] = None if v is None else not v
+    keys = ("flow_of_funds_clear", "why_suspicious_explained", "weak_signals_not_overstated")
+    todo = [s for s in sent if s["supported"] is None] + [it for it in doc["items"] for k in keys if it[k] is None]
     if todo:
         raise SystemExit(f"评分表还有 {len(todo)} 处没有填写")
     unsup = [s for s in sent if not s["supported"]]
@@ -227,7 +247,7 @@ def score(split: str) -> None:
           f"至少有一句的理由：{sum(any(not s['supported'] for s in it['sentences']) for it in doc['items'])}/"
           f"{len(doc['items'])}")
     for k, label in (("flow_of_funds_clear", "资金流向讲清楚"), ("why_suspicious_explained", "解释了为什么可疑"),
-                     ("weak_signal_as_strong", "把弱信号写成强证据")):
+                     ("weak_signals_not_overstated", "没有把弱信号写成强证据")):
         print(f"  {label}：{sum(it[k] for it in doc['items'])}/{len(doc['items'])}")
     for it in doc["items"]:
         for s in it["sentences"]:
@@ -239,9 +259,10 @@ def main():
     ap = argparse.ArgumentParser(description="R10d：STR 草稿的成批评测")
     ap.add_argument("--split", choices=["dev", "test"], required=True)
     ap.add_argument("--score", action="store_true", help="汇总人工评分")
+    ap.add_argument("--rubric", help="汇总指定的评分表（例如存档的旧版本）")
     a = ap.parse_args()
     if a.score:
-        score(a.split)
+        score(a.split, Path(a.rubric) if a.rubric else None)
         return
     if a.split == "test":
         if out_path("test").exists():

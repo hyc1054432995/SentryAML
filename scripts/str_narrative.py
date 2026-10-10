@@ -47,13 +47,18 @@ from triage_agent import FactArg, check_facts, number_pool, ungrounded_numbers
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNS = PROJECT_ROOT / "reports" / "r10_narrative_runs.json"
-PROMPT_VERSION = "str-narrative-v2"
+PROMPT_VERSION = "str-narrative-v3"
 # v2（D80，dev 案件 26 的第一份真实理由之后）：
 #   1. 材料里去掉模型内部的统计量：告警的分数分位和档位（第 0 步），以及金额画像（amount_profile）——
 #      "训练期洗钱金额区间"是我们模型训练数据的统计，不是可以写进 STR 的"洗钱常见特征"（v1 的理由就这样写了）
 #   2. 新增规则 8：只陈述证据显示的事实，不推出证据之外的结论（v1 写了"账户里没有留下任何资金""这组关系是专门
 #      为这笔转账建立的"，两句都没有证据）
+# v3（D82，dev 成批评测之后）：
+#   1. 证据改为逐行 "路径 = 值" 的形式交给模型（之前是整段 JSON）。dev 上 14 份理由有 11 份第一次被退回，
+#      全部是事实路径写错（例如漏了 "result."）；逐行列出后，路径可以原样照抄
+#   2. 材料里去掉主体名下的其他账户（other_accounts）：它只列前 10 个，模型据此写出"其中 10 个在他行"
 INTERNAL_TOOLS = {"amount_profile"}
+HIDDEN_KEYS = {"other_accounts"}
 INTERNAL_ALERT_FIELDS = {"score_percentile", "tier"}
 MAX_ATTEMPTS = 2
 COPY_WORDS = 8
@@ -79,8 +84,9 @@ explain the facts instead.
 
 Return JSON only:
 {"narrative": "<the text>", "facts": [{"step": <int>, "path": "<field path>", "value": <value copied exactly>}]}
-"facts" lists 2 to 12 facts the narrative relies on, each pointing to a field of a numbered evidence item \
-(step 0 is the alert itself), e.g. {"step": 7, "path": "matches[0].lag_hours", "value": 5.5}."""
+"facts" lists 2 to 12 facts the narrative relies on. Each EVIDENCE line has the form \
+"step N | path = value": copy N, the path and the value exactly as shown, e.g. {"step": 7, "path": \
+"matches[0].lag_hours", "value": 5.5} for the line "step 7 | matches[0].lag_hours = 5.5"."""
 
 
 # ---------------------------------------------------------------------------
@@ -118,10 +124,46 @@ def materials(cur, case: dict, draft: dict) -> tuple[dict[int, dict], str]:
         parts.append(f"- txn {t['txn_id']}: {t['time']} {t['from']} -> {t['to']} {t['amount_usd']:.2f} USD")
     parts += ["", "CATEGORIES OF SUSPICION ALREADY SELECTED (do not copy this wording)"]
     parts += [f"- {c['quote']}" for c in r["categories"]]
-    parts += ["", "EVIDENCE (numbered tool results from the investigation; cite them in \"facts\")"]
+    parts += ["", "EVIDENCE (tool results from the investigation, one field per line; cite them in \"facts\")"]
     for s, res in results.items():
-        parts.append(f"[step {s}] {json.dumps(res, ensure_ascii=False, default=str)}")
+        parts.append(f"-- step {s}: {res.get('tool', '')}" + (f" on {res['account']}" if res.get("account") else ""))
+        parts += [f"step {s} | {path} = {json.dumps(v, ensure_ascii=False, default=str)}" for path, v in flatten(res)]
     return results, "\n".join(parts)
+
+
+def flatten(obj, prefix: str = "") -> list[tuple[str, object]]:
+    """把一个工具结果展开成 (路径, 值)，路径的写法与核验用的 resolve_path 完全一致：
+    字典用 "."，列表用 "[i]"。step、tool 是外壳字段，不展开；主体名下的其他账户不交给模型（v3）。"""
+    out: list[tuple[str, object]] = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if not prefix and k in ("step", "tool"):
+                continue
+            if k in HIDDEN_KEYS:
+                continue
+            out += flatten(v, f"{prefix}.{k}" if prefix else k)
+    elif isinstance(obj, list) and obj and all(isinstance(x, (dict, list)) for x in obj):
+        for i, v in enumerate(obj):
+            out += flatten(v, f"{prefix}[{i}]")
+    else:
+        out.append((prefix, obj))
+    return out
+
+
+def number_sources(text: str, results: dict[int, dict], limit: int = 3) -> list[dict]:
+    """理由里每个数字出自哪里：给人工复核和评分用（R10d 的评分表、以后 R11 的逐句对照界面）。
+    匹配规则与 ungrounded_numbers 相同：按写出的精度四舍五入相等。"""
+    from triage_agent import _NUM, _strip
+    leaves = [(s, p, v) for s, res in results.items() for p, v in flatten(res)
+              if isinstance(v, (int, float)) and not isinstance(v, bool)]
+    out = []
+    for tok in _NUM.findall(_strip(text)):
+        n = float(tok.replace(",", ""))
+        dec = len(tok.split(".")[1]) if "." in tok else 0
+        tol = 0.5 * 10 ** (-dec) + 1e-9
+        src = [f"step {s} {p}" for s, p, v in leaves if abs(n - float(v)) <= tol][:limit]
+        out.append({"number": tok, "sources": src or ["(structured draft or not found)"]})
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -349,8 +391,13 @@ def cmd_selftest(a) -> None:
                   "问题清单作为下一条消息交回模型")
             check("TRIAGE-RATIONALE-MARKER" not in json.dumps(seen_msgs[0], ensure_ascii=False),
                   "材料里没有 Agent 的分诊理由（案件快照里有，但没有交给模型）")
-            check("score_percentile" not in seen_msgs[0][1]["content"] and '"tier"' not in seen_msgs[0][1]["content"],
+            check("score_percentile" not in seen_msgs[0][1]["content"] and "tier =" not in seen_msgs[0][1]["content"],
                   "材料里没有模型分数分位和档位（v2：内部统计量不是证据）")
+            check(f"step 7 | matches[0].in_amt = {fx['in_amt']}" in seen_msgs[0][1]["content"],
+                  "证据逐行列出路径和值，路径可以原样照抄（v3）")
+            ns = number_sources(good, {7: {"matches": [m]}})
+            check(any("matches[0].in_amt" in src for x in ns for src in x["sources"]),
+                  "number_sources 能指出理由里的数字出自哪一步哪个字段")
             cur.execute("SELECT created_by, generator, body FROM str_drafts WHERE case_id = %s AND version = 2", (cid,))
             who, gen, b2 = cur.fetchone()
             check(who == "alice" and gen["kind"] == "model" and gen["prompt_version"] == PROMPT_VERSION,

@@ -40,7 +40,7 @@ import psycopg
 from db import connect, connect_review
 from review import act, explain
 
-BUILDER = "str-builder-v1.1"   # v1.1：同一步的多条事实合并成一条来源说明
+BUILDER = "str-builder-v1.2"   # v1.1：同一步的多条事实合并成一条来源说明；v1.2：不再把主体名下的其他账户当作证据账户（D82）
 SGT = ZoneInfo("Asia/Singapore")
 MAX_ROWS = 40                                  # 表格里账户、交易各最多 40 个（D79）
 ACCT_RE = re.compile(r"^\d+:[0-9A-Za-z]+$")
@@ -98,9 +98,17 @@ def _container(result: dict, path: str):
     return container
 
 
+# 主体名下的其他账户（inv_entity_profile.other_accounts，最多列 10 个）说明的是"谁持有哪些账户"，不是资金流向；
+# 而且只是按账号排序的前 10 个，挑哪几个列入报告完全是任意的。v1.1 把它们当作证据账户列入，dev 上一个案件
+# 列了 12 个账户，模型还据此写出"其中 10 个在他行"这种错误推断（D82）
+HOLDING_KEYS = {"other_accounts"}
+
+
 def _scan(obj, txns: list[int], accts: list[str]) -> None:
     if isinstance(obj, dict):
         for k, v in obj.items():
+            if k in HOLDING_KEYS:
+                continue
             if k in TXN_KEYS and isinstance(v, int):
                 txns.append(v)
             elif k == "txn_path" and isinstance(v, list):
@@ -215,6 +223,11 @@ def build_body(cur, case: dict) -> tuple[dict, str | None]:
     if clearing:
         limitations.append(f"Clearing-layer accounts {clearing} are listed but their full activity is not attached "
                            "(they process thousands of unrelated payments).")
+    more = [e for e in entities if e["accounts_in_dataset"] > len(e["reported_accounts"])]
+    if more:
+        limitations.append("Other accounts held by the same entities are not listed because they do not appear in the "
+                           "evidence: " + "; ".join(f"entity {e['entity_id']} holds {e['accounts_in_dataset']} accounts "
+                                                    f"at {e['banks_in_dataset']} banks" for e in more) + ".")
 
     # 理由：手法由复核员确认时选定（D79）；可疑类别 = 这种手法的知识图谱原文中，审查日期仍然有效的那些
     confirm = case["confirm"] or {}
