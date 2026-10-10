@@ -1,0 +1,16 @@
+# R10d test：第二位评分者（Claude）的独立评分，在看到用户评分之前按 r10d_rubric_test.yaml 的同一标准完成（D84）。
+# 只列出与"全部被支撑 / 三项为 true"不同的地方；未列出的句子 = supported: true，未列出的三项 = true。
+rater: claude
+prompt_version: str-narrative-v3.1
+sentences:
+- {alert_id: 880, n: 5, supported: false, note: "payer 70:1004288E8 is flagged as a clearing layer; its 3,177 outbound transfers are payment processing, not a measured 'dispersal of funds'"}
+- {alert_id: 880, n: 9, supported: false, note: "uses the clearing-layer volume as evidence of placing funds back into circulation; a repeat identical payment on the same route indicates a regular relationship (D74), not suspicion"}
+- {alert_id: 1510, n: 8, supported: false, note: "70:100428660 is flagged as a clearing layer (57,813 payments in 72h); its volume cannot show 'funds being dispersed into the wider economy'"}
+- {alert_id: 2135, n: 3, supported: false, note: "the pass-through check matched each 11,376.97 credit separately to the same 10,937.55 debit; one payment of 10,937.55 cannot carry both credits (22,753.94), so 'both were moved out as a single payment' misreads the tool output"}
+- {alert_id: 2135, n: 10, supported: false, borderline: true, note: "'high relative to the period': no baseline was measured"}
+- {alert_id: 3502, n: 8, supported: false, note: "a repeat same-direction payment of an identical amount is listed as a reason for suspicion; under the triage rule it points to a regular relationship"}
+- {alert_id: 1298, n: 5, supported: true, borderline: true, note: "'the USD 6,009.50 ... was sent out again' – only 5,435.45 left; sentence 6 gives the 9.6% difference"}
+items:
+- {alert_id: 880, weak_signals_not_overstated: false}
+- {alert_id: 1510, weak_signals_not_overstated: false}
+- {alert_id: 2135, flow_of_funds_clear: false}

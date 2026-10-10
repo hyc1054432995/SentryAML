@@ -280,12 +280,47 @@ def score(split: str, path: Path | None = None) -> None:
                 print(f"    #{it['alert_id']} 第 {s['n']} 句：{s['text'][:110]}  —— {s.get('note') or ''}")
 
 
+def compare(split: str, other: Path) -> None:
+    """两位评分者的一致率（D84）。other 只列与"全部为 true"不同的地方，未列出的视为 true。"""
+    doc = yaml.safe_load(rubric_path(split).read_text(encoding="utf-8"))
+    r2 = yaml.safe_load(other.read_text(encoding="utf-8"))
+    s2 = {(x["alert_id"], x["n"]): x for x in r2.get("sentences", [])}
+    i2 = {x["alert_id"]: x for x in r2.get("items", [])}
+    keys = ("flow_of_funds_clear", "why_suspicious_explained", "weak_signals_not_overstated")
+    n = agree = f1 = f2 = 0
+    diff = []
+    for it in doc["items"]:
+        for s in it["sentences"]:
+            a = bool(s["supported"])
+            b = bool(s2.get((it["alert_id"], s["n"]), {}).get("supported", True))
+            n += 1
+            agree += a == b
+            f1 += not a
+            f2 += not b
+            if a != b:
+                diff.append((it["alert_id"], s["n"], a, b, s2.get((it["alert_id"], s["n"]), {}).get("note", ""),
+                             s["text"]))
+    print(f"[两位评分者] {split}：{n} 句，一致 {agree}（{agree / n:.0%}）；判为不被支撑：评分表 {f1} 句、"
+          f"{r2.get('rater', '第二位')} {f2} 句"
+          f"（其中临界 {sum(1 for x in r2.get('sentences', []) if x.get('borderline') and not x['supported'])} 句）")
+    for k in keys:
+        a = sum(bool(it[k]) for it in doc["items"])
+        b = sum(bool(i2.get(it["alert_id"], {}).get(k, True)) for it in doc["items"])
+        print(f"  {k}：评分表 {a}/{len(doc['items'])}，{r2.get('rater', '第二位')} {b}/{len(doc['items'])}")
+    for aid, k, a, b, note, text in diff:
+        print(f"  #{aid} 第 {k} 句  评分表 {a} / {r2.get('rater', '第二位')} {b}：{text[:90]}…\n      {note}")
+
+
 def main():
     ap = argparse.ArgumentParser(description="R10d：STR 草稿的成批评测")
     ap.add_argument("--split", choices=["dev", "test"], required=True)
     ap.add_argument("--score", action="store_true", help="汇总人工评分")
     ap.add_argument("--rubric", help="汇总指定的评分表（例如存档的旧版本）")
+    ap.add_argument("--compare", help="与第二位评分者的评分比较（只列不同之处的 YAML）")
     a = ap.parse_args()
+    if a.compare:
+        compare(a.split, Path(a.compare))
+        return
     if a.score:
         score(a.split, Path(a.rubric) if a.rubric else None)
         return
