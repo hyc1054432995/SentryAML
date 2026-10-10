@@ -15,6 +15,9 @@ Agent 判完之后，人怎么接手。规则全部在数据库里（sql/025_rev
 两种连接：
     open、smoke  主连接（流水线 / 测试），建案件是流水线的事
     queue、show、act  复核员连接（sentry_review）：只能读、只能追加事件，读不到标签
+
+身份：命令行里复核员是谁由 --as 声明，只用于开发和演示。R11a 起，多人使用走网页接口（review_api.py），
+身份来自登录会话，请求里根本不接受 actor 字段（D85）。别人认领的案件，命令行同样会被数据库拒绝（027）。
 """
 
 from __future__ import annotations
@@ -201,7 +204,13 @@ def explain(e: psycopg.Error) -> str:
              "str_version": "草稿版本不对：批准或记录的必须是最新版本",
              "str_author": "这个草稿版本不是你写的",
              "str_narrative": "草稿的理由（自由文本）还没写，不能批准",
-             "str_invalid": "草稿没有通过数据库检查"}
+             "str_invalid": "草稿没有通过数据库检查",
+             "str_state": "只有确认可疑之后才能写草稿",
+             "review_claimed": "这个案件正被别人认领处理，等对方释放或租约到期（MLRO 可以写明理由接管）",
+             "claim_state": "已关闭或已批准的案件不需要认领",
+             "claim_none": "这个案件现在没有人认领",
+             "claim_role": "只有分析员和 MLRO 能认领案件",
+             "session_role": "这个账号不能登录"}
     code = msg.split(":", 1)[0]
     return f"{hints.get(code, '数据库拒绝')}（{msg}）"
 

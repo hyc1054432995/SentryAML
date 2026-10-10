@@ -98,9 +98,13 @@ def _connect_restricted(env_var: str, role_hint: str, sql_file: str, **kwargs) -
     return conn
 
 
-def connect_review() -> psycopg.Connection:
-    """复核操作专用连接（R10a）。每个复核动作是一个独立事务：写入成功就提交，被规则拒绝就整体回滚。"""
-    return _connect_restricted("REVIEW_DATABASE_URL", "sentry_review", "025_review.sql")
+def connect_review(**kwargs) -> psycopg.Connection:
+    """复核操作专用连接（R10a）。每个复核动作是一个独立事务：写入成功就提交，被规则拒绝就整体回滚。
+
+    kwargs 原样传给 psycopg.connect：网页接口（R11a）用 autocommit=True 加 conn.transaction() 控制事务边界，
+    并设 statement_timeout，避免一个慢查询占住接口。
+    """
+    return _connect_restricted("REVIEW_DATABASE_URL", "sentry_review", "025_review.sql", **kwargs)
 
 
 def check_connection() -> None:
