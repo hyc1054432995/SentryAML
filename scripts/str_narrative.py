@@ -47,7 +47,14 @@ from triage_agent import FactArg, check_facts, number_pool, ungrounded_numbers
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNS = PROJECT_ROOT / "reports" / "r10_narrative_runs.json"
-PROMPT_VERSION = "str-narrative-v1"
+PROMPT_VERSION = "str-narrative-v2"
+# v2（D80，dev 案件 26 的第一份真实理由之后）：
+#   1. 材料里去掉模型内部的统计量：告警的分数分位和档位（第 0 步），以及金额画像（amount_profile）——
+#      "训练期洗钱金额区间"是我们模型训练数据的统计，不是可以写进 STR 的"洗钱常见特征"（v1 的理由就这样写了）
+#   2. 新增规则 8：只陈述证据显示的事实，不推出证据之外的结论（v1 写了"账户里没有留下任何资金""这组关系是专门
+#      为这笔转账建立的"，两句都没有证据）
+INTERNAL_TOOLS = {"amount_profile"}
+INTERNAL_ALERT_FIELDS = {"score_percentile", "tier"}
 MAX_ATTEMPTS = 2
 COPY_WORDS = 8
 
@@ -68,6 +75,7 @@ then why this pattern is suspicious and how it relates to the selected typology.
 explain the facts instead.
 6. The transaction monitoring score is not evidence; do not cite it.
 7. Write in plain English, 120 to 350 words, in 2 to 5 short paragraphs.
+8. State only what the evidence shows, then why it is unusual. Do not extend an observation beyond what was measured: a pass-through check covers the matched pair in its window, not the whole account balance; "no prior transactions" means none before the alert time, not that a relationship was created for this payment. Avoid words such as "purpose-built", "clearly", "no funds were retained" unless a fact states exactly that.
 
 Return JSON only:
 {"narrative": "<the text>", "facts": [{"step": <int>, "path": "<field path>", "value": <value copied exactly>}]}
@@ -90,9 +98,12 @@ def alert_result(case: dict, cur) -> dict:
 
 def materials(cur, case: dict, draft: dict) -> tuple[dict[int, dict], str]:
     """返回 (可引用的结果 {step: result}, 给模型的材料文字)。只给核验过的事实所在的那些步骤。"""
-    all_results = {step: res for step, (_, res) in tool_results(cur, case["agent_run_id"]).items()}
+    calls = tool_results(cur, case["agent_run_id"])
     steps = sorted({f["step"] for f in draft["body"].get("evidence_facts", []) if f.get("step")})
-    results = {0: alert_result(case, cur)} | {s: all_results[s] for s in steps if s in all_results}
+    # 内部统计量不交给模型（v2）：去掉以后，模型想引用它们也找不到出处，事实核验和数字核验会直接拦下
+    a0 = alert_result(case, cur)
+    a0["result"] = {k: v for k, v in a0["result"].items() if k not in INTERNAL_ALERT_FIELDS}
+    results = {0: a0} | {s: calls[s][1] for s in steps if s in calls and calls[s][0] not in INTERNAL_TOOLS}
     b = draft["body"]
     r = b["reasons"]
     parts = ["CASE",
@@ -332,6 +343,8 @@ def cmd_selftest(a) -> None:
                   "问题清单作为下一条消息交回模型")
             check("TRIAGE-RATIONALE-MARKER" not in json.dumps(seen_msgs[0], ensure_ascii=False),
                   "材料里没有 Agent 的分诊理由（案件快照里有，但没有交给模型）")
+            check("score_percentile" not in seen_msgs[0][1]["content"] and '"tier"' not in seen_msgs[0][1]["content"],
+                  "材料里没有模型分数分位和档位（v2：内部统计量不是证据）")
             cur.execute("SELECT created_by, generator, body FROM str_drafts WHERE case_id = %s AND version = 2", (cid,))
             who, gen, b2 = cur.fetchone()
             check(who == "alice" and gen["kind"] == "model" and gen["prompt_version"] == PROMPT_VERSION,
