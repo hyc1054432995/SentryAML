@@ -237,6 +237,10 @@ def write(case_id: int, actor: str, use_cache: bool = True, cur=None) -> dict:
             body["reasons"]["narrative_facts"] = rec["facts"]          # 理由所依据的事实，随草稿一起保存
             gen = {"kind": "model", "model": rec["model"], "prompt_version": PROMPT_VERSION,
                    "base_version": d["version"], "attempts": len(rec["attempts"])}
+            # 在调用方的事务里执行时（自检、R10d 评测），用保存点隔开：写入被数据库拒绝时只撤销这一步，
+            # 不让整个事务进入"已出错"状态、连累后面的案件
+            if not own:
+                cur.execute("SAVEPOINT narrative_insert")
             try:
                 v, _ = insert_draft(cur, case, actor, body, d["csv"], gen)
                 rec["new_version"] = v
@@ -245,6 +249,8 @@ def write(case_id: int, actor: str, use_cache: bool = True, cur=None) -> dict:
             except psycopg.Error as e:
                 if own:
                     conn.rollback()
+                else:
+                    cur.execute("ROLLBACK TO SAVEPOINT narrative_insert")
                 rec.update(status="rejected_by_db", db_error=explain_str(e))
         rec["ms"] = round((time.perf_counter() - t0) * 1000)
         return rec
