@@ -47,7 +47,11 @@ from triage_agent import FactArg, check_facts, number_pool, ungrounded_numbers
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNS = PROJECT_ROOT / "reports" / "r10_narrative_runs.json"
-PROMPT_VERSION = "str-narrative-v3"
+PROMPT_VERSION = "str-narrative-v3.1"
+# v3.1（D83）：提示词不变；生成失败（输出截断、JSON 解析失败）时不再直接放弃，而是提醒一次再试——
+#   dev 上 #2063 第一次调用就生成失败，v3 没有给第二次机会。成功的调用请求不变，缓存照常命中
+GEN_RETRY = ("Your previous reply could not be used ({error}). Reply now with the JSON object only: a narrative "
+             "of at most 350 words and at most 12 facts.")
 # v2（D80，dev 案件 26 的第一份真实理由之后）：
 #   1. 材料里去掉模型内部的统计量：告警的分数分位和档位（第 0 步），以及金额画像（amount_profile）——
 #      "训练期洗钱金额区间"是我们模型训练数据的统计，不是可以写进 STR 的"洗钱常见特征"（v1 的理由就这样写了）
@@ -150,10 +154,15 @@ def flatten(obj, prefix: str = "") -> list[tuple[str, object]]:
     return out
 
 
-def number_sources(text: str, results: dict[int, dict], limit: int = 3) -> list[dict]:
+def number_sources(text: str, results: dict[int, dict], limit: int = 3, cited=()) -> list[dict]:
     """理由里每个数字出自哪里：给人工复核和评分用（R10d 的评分表、以后 R11 的逐句对照界面）。
-    匹配规则与 ungrounded_numbers 相同：按写出的精度四舍五入相等。"""
+    匹配规则与 ungrounded_numbers 相同：按写出的精度四舍五入相等。
+
+    同一个数可能出现在很多字段里（"5" 到处都是）。理由自己引用的事实（cited：{(step, path)}）排在最前面，
+    其余的最多列 limit 个，再注明还有几处——v3 的评分表只列前 3 个，#3444 的"5 个账户"真正的出处
+    （第 13 步 n_accounts）被挤掉了，列出来的反而是不相干的日交易笔数（D83）。"""
     from triage_agent import _NUM, _strip
+    cited = {(int(s), p) for s, p in cited}
     leaves = [(s, p, v) for s, res in results.items() for p, v in flatten(res)
               if isinstance(v, (int, float)) and not isinstance(v, bool)]
     out = []
@@ -161,7 +170,12 @@ def number_sources(text: str, results: dict[int, dict], limit: int = 3) -> list[
         n = float(tok.replace(",", ""))
         dec = len(tok.split(".")[1]) if "." in tok else 0
         tol = 0.5 * 10 ** (-dec) + 1e-9
-        src = [f"step {s} {p}" for s, p, v in leaves if abs(n - float(v)) <= tol][:limit]
+        hits = [(s, p) for s, p, v in leaves if abs(n - float(v)) <= tol]
+        first = [h for h in hits if h in cited]
+        rest = [h for h in hits if h not in cited]
+        src = [f"step {s} {p} (cited)" for s, p in first] + [f"step {s} {p}" for s, p in rest[:limit]]
+        if len(rest) > limit:
+            src.append(f"+{len(rest) - limit} more")
         out.append({"number": tok, "sources": src or ["(structured draft or not found)"]})
     return out
 
@@ -242,7 +256,9 @@ def draft_narrative(results: dict, material: str, draft: dict, use_cache: bool =
         for k in ("prompt", "hit", "completion", "reasoning"):
             rec["usage"][k] = rec["usage"].get(k, 0) + (usage.get(k) or 0)
         if out is None:
-            break
+            # 生成失败：没有可以放回对话的完整回复，只追加一句提醒（v3.1）；与"核验不通过"共用两次机会
+            messages = messages + [{"role": "user", "content": GEN_RETRY.format(error=rec["attempts"][-1]["error"])}]
+            continue
         v = verify(out, results, draft)
         rec["attempts"].append({"attempt": attempt, "ok": v["ok"], "problems": v["problems"],
                                 "chars": len((out.get("narrative") or "").strip())})
@@ -348,6 +364,9 @@ def cmd_selftest(a) -> None:
     def fake_chat_json(messages, purpose, max_tokens=4000, use_cache=True):
         seen_msgs.append(messages)
         out = script.pop(0)
+        if isinstance(out, Exception):
+            out.usage = {"prompt": 1000, "hit": 0, "completion": 6000, "reasoning": 5900}
+            raise out
         return out, {"prompt": 1000, "hit": 0, "completion": 300, "reasoning": 100, "cached": False,
                      "raw": json.dumps(out)}
 
@@ -415,17 +434,29 @@ def cmd_selftest(a) -> None:
             check(rec["status"] == "failed" and cur.fetchone()[0] == 2, "状态 failed，草稿仍是第 2 版",
                   str([sorted(p["problem"] for p in at["problems"]) for at in rec["attempts"]]))
 
+            print("[2b] 生成失败（输出截断）→ 提醒一次后正常提交（v3.1）")
+            script[:] = [llm.LLMError("输出被截断（finish_reason=length）"), {"narrative": good, "facts": good_facts}]
+            rec = write(cid, "alice", cur=cur)
+            check(rec["status"] == "verified" and rec.get("new_version") == 3 and "could not be used" in
+                  seen_msgs[-1][-1]["content"], "截断后追加提醒、第二次通过，写入第 3 版",
+                  f"status={rec['status']} attempts={[a.get('error') or a.get('ok') for a in rec['attempts']]}")
+            check(rec["usage"]["completion"] >= 6000, "截断那次的用量照常记账")
+            ns = number_sources(good, {7: {"matches": [m]}, 0: {"result": {"amount_usd": fx["amt"]}}},
+                                cited={(0, "result.amount_usd")})
+            check(any(src.endswith("(cited)") for x in ns for src in x["sources"]),
+                  "number_sources 把理由自己引用的出处排在最前面并标注 (cited)")
+
             print("[3] 双人复核照常：起草人不能批准，另一位 MLRO 可以")
             from review import act as review_act
             cur.execute("SAVEPOINT s")
             try:
-                review_act(cur, cid, "approve_str", "alice", payload={"draft_version": 2})
+                review_act(cur, cid, "approve_str", "alice", payload={"draft_version": 3})
                 check(False, "分析员 alice 批准 → 应被拒绝")
             except psycopg.Error as e:
                 cur.execute("ROLLBACK TO SAVEPOINT s")
                 check("review_role" in e.diag.message_primary, "分析员 alice 批准 → 拒绝", e.diag.message_primary[:80])
-            seq, st = review_act(cur, cid, "approve_str", "carol", payload={"draft_version": 2})
-            check(st == "str_approved", "Carol 批准第 2 版（模型起草、alice 采纳、carol 批准）")
+            seq, st = review_act(cur, cid, "approve_str", "carol", payload={"draft_version": 3})
+            check(st == "str_approved", "Carol 批准第 3 版（模型起草、alice 采纳、carol 批准）")
             conn.rollback()
     finally:
         llm.chat_json = real

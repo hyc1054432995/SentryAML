@@ -1,0 +1,3859 @@
+{
+ "split": "test",
+ "prompt_version": "str-narrative-v3.1",
+ "builder": "str-builder-v1.2",
+ "analyst": "alice",
+ "excluded": [],
+ "rows": [
+  {
+   "alert_id": 880,
+   "case_id": 54,
+   "typology": "known_launderer_integration",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 17,
+   "categories": 2,
+   "sentence_sources": [
+    [
+     {
+      "number": "10,797.74",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 2 a_to_b.amt (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "10,797.74",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 2 a_to_b.amt (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours",
+       "step 9 window_hours",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "3,177",
+      "sources": [
+       "step 11 result.out_cnt (cited)"
+      ]
+     },
+     {
+      "number": "602,257,380.99",
+      "sources": [
+       "step 11 result.out_amt (cited)"
+      ]
+     },
+     {
+      "number": "532",
+      "sources": [
+       "step 11 result.out_cp"
+      ]
+     },
+     {
+      "number": "3",
+      "sources": [
+       "step 5 result.cp_total_before",
+       "step 11 result.in_cp",
+       "step 11 result.in_cnt"
+      ]
+     },
+     {
+      "number": "822.75",
+      "sources": [
+       "step 11 result.in_amt"
+      ]
+     },
+     {
+      "number": "3",
+      "sources": [
+       "step 5 result.cp_total_before",
+       "step 11 result.in_cp",
+       "step 11 result.in_cnt"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours",
+       "step 9 window_hours",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "7",
+      "sources": [
+       "step 5 result.in_cnt"
+      ]
+     },
+     {
+      "number": "11,760.38",
+      "sources": [
+       "step 5 result.in_amt (cited)"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 5 result.in_cp"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "10",
+      "sources": [
+       "step 7 tolerance_pct"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "9",
+      "sources": [
+       "step 3 cases[0].n_txns (cited)"
+      ]
+     }
+    ],
+    []
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1361,
+   "cost_usd": 0.01009,
+   "cached": false,
+   "ms": 34980,
+   "text": "On 2022-09-09 at 05:02, account 70:1004288E8 sent USD 10,797.74 to account 214:80CD62000 (txn 4374583). This was not the first payment on the same route: the two accounts had one earlier transfer of USD 10,797.74 from 70:1004288E8 to 214:80CD62000 on 2022-09-02 06:47. Before the alert, no funds moved back from 214:80CD62000 to 70:1004288E8.\n\nIn the 72 hours to the alert, account 70:1004288E8 shows 3,177 outbound transfers totalling USD 602,257,380.99 to 532 counterparties, against 3 inbound transfers totalling USD 822.75 from 3 counterparties; its outbound activity is flagged as a clearing layer. That is a heavy one-directional dispersal of funds.\n\nIn the same 72-hour window, account 214:80CD62000 received 7 transfers totalling USD 11,760.38 from 2 counterparties and made none. No matching pass-through pair was found for that account within the window at a 10% tolerance, and no two-hop gathering in or out was found in the window.\n\nAccount 70:1004288E8 also has a confirmed case in which it appears as payer, covering 9 transactions between 2022-09-02 01:57 and 2022-09-08 15:32, confirmed on 2022-09-09 00:00. The repeat same-amount payments along one route, combined with the high-volume outbound dispersal from the payer account across hundreds of counterparties, is consistent with funds being placed back into circulation rather than retained.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-09 05:02"
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.payer",
+     "value": "70:1004288E8"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.payee",
+     "value": "214:80CD62000"
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 10797.74
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.amt",
+     "value": 10797.74
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.last_ts",
+     "value": "2022-09-02 06:47"
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 0
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 3,
+     "path": "cases[0].n_txns",
+     "value": 9
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 5,
+     "path": "result.in_amt",
+     "value": 11760.38
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 7,
+     "path": "n_matches",
+     "value": 0
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 11,
+     "path": "result.out_cnt",
+     "value": 3177
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 11,
+     "path": "result.out_amt",
+     "value": 602257380.99
+    }
+   ]
+  },
+  {
+   "alert_id": 915,
+   "case_id": 55,
+   "typology": "known_launderer_integration",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 11,
+   "categories": 2,
+   "sentence_sources": [
+    [
+     {
+      "number": "1,545,151.62",
+      "sources": [
+       "step 0 result.amount_usd (cited)"
+      ]
+     },
+     {
+      "number": "3625791",
+      "sources": [
+       "step 0 result.txn_id (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "2",
+      "sources": [
+       "step 5 result.out_cnt (cited)",
+       "step 5 result.out_cp",
+       "step 5 result.cp_total_before",
+       "step 6 days[6].out_cp",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "1,564,381.34",
+      "sources": [
+       "step 5 result.out_amt (cited)",
+       "step 6 days[6].out_amt"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 5 result.out_cnt (cited)",
+       "step 5 result.out_cp",
+       "step 5 result.cp_total_before",
+       "step 6 days[6].out_cp",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 11 result.window_hours"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "7",
+      "sources": [
+       "step 6 window_days"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 6 active_days (cited)",
+       "step 4 n_cases"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 11 result.window_hours"
+      ]
+     },
+     {
+      "number": "4",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt"
+      ]
+     },
+     {
+      "number": "4",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt"
+      ]
+     },
+     {
+      "number": "1,566,602.71",
+      "sources": [
+       "step 11 result.in_amt (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "1",
+      "sources": [
+       "step 6 active_days (cited)",
+       "step 4 n_cases"
+      ]
+     },
+     {
+      "number": "3",
+      "sources": [
+       "step 4 cases[0].n_txns"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "1,545,151.62",
+      "sources": [
+       "step 0 result.amount_usd (cited)"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 5 result.out_cnt (cited)",
+       "step 5 result.out_cp",
+       "step 5 result.cp_total_before",
+       "step 6 days[6].out_cp",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 11 result.window_hours"
+      ]
+     },
+     {
+      "number": "4",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt"
+      ]
+     },
+     {
+      "number": "4",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt"
+      ]
+     }
+    ],
+    []
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1318,
+   "cost_usd": 0.00527,
+   "cached": false,
+   "ms": 15585,
+   "text": "On 2022-09-09 at 15:17, account 1362:8067576D0 sent USD 1,545,151.62 to account 18511:811CCBB50 (transaction 3625791). Before the alert time there were no transactions between the two accounts in either direction, so this transfer is the first recorded link between them.\n\nAccount 1362:8067576D0 shows no incoming payments and 2 outgoing payments totalling USD 1,564,381.34 to 2 counterparties within a 72-hour window. In a 7-day window that account was active on 1 day.\n\nWithin 72 hours, account 18511:811CCBB50 received 4 payments from 4 counterparties totalling USD 1,566,602.71, and made no outgoing payments in that window. That account is recorded as payee in 1 confirmed case with a FAN-IN pattern, covering 3 transactions between 2022-09-07 18:03 and 2022-09-08 23:15 and confirmed on 2022-09-09 00:00.\n\nA single payment of USD 1,545,151.62 therefore moved from an account whose only recorded activity is 2 large outgoing payments on the day of the alert, into an account that had, within 72 hours, taken in 4 payments from 4 counterparties and had been confirmed as the payee in a fan-in case the same day. Funds gathered from multiple counterparties into one receiving account, followed by a seven-figure payment into that account, is consistent with the integration of laundered funds back into the economy.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.txn_id",
+     "value": 3625791
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-09 15:17"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 1545151.62
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 0
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 0
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 5,
+     "path": "result.out_amt",
+     "value": 1564381.34
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 5,
+     "path": "result.out_cnt",
+     "value": 2
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 6,
+     "path": "active_days",
+     "value": 1
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_cp",
+     "value": 4
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_amt",
+     "value": 1566602.71
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 4,
+     "path": "cases[0].pattern_types",
+     "value": [
+      "FAN-IN"
+     ]
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 4,
+     "path": "cases[0].confirmed_at",
+     "value": "2022-09-09 00:00"
+    }
+   ]
+  },
+  {
+   "alert_id": 1148,
+   "case_id": 56,
+   "typology": "random_walk",
+   "draft": "ok",
+   "accounts": 4,
+   "txns": 3,
+   "attachment_rows": 35,
+   "categories": 3,
+   "sentence_sources": [
+    [
+     {
+      "number": "9300.86",
+      "sources": [
+       "step 15 matches[0].in_amt (cited)"
+      ]
+     },
+     {
+      "number": "4088409",
+      "sources": [
+       "step 15 matches[0].in_txn"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "9044.70",
+      "sources": [
+       "step 7 matches[0].in_amt (cited)",
+       "step 15 matches[0].out_amt"
+      ]
+     },
+     {
+      "number": "4088411",
+      "sources": [
+       "step 7 matches[0].in_txn",
+       "step 15 matches[0].out_txn"
+      ]
+     },
+     {
+      "number": "39.4",
+      "sources": [
+       "step 15 matches[0].lag_hours (cited)"
+      ]
+     },
+     {
+      "number": "2.8",
+      "sources": [
+       "step 15 matches[0].diff_pct (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "8692.16",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 7 matches[0].out_amt"
+      ]
+     },
+     {
+      "number": "4088413",
+      "sources": [
+       "step 0 result.txn_id",
+       "step 7 matches[0].out_txn"
+      ]
+     },
+     {
+      "number": "5.1",
+      "sources": [
+       "step 7 matches[0].lag_hours (cited)"
+      ]
+     },
+     {
+      "number": "3.9",
+      "sources": [
+       "step 7 matches[0].diff_pct (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "9044.70",
+      "sources": [
+       "step 7 matches[0].in_amt (cited)",
+       "step 15 matches[0].out_amt"
+      ]
+     },
+     {
+      "number": "8692.16",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 7 matches[0].out_amt"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 7 window_hours",
+       "step 15 window_hours"
+      ]
+     },
+     {
+      "number": "10",
+      "sources": [
+       "step 7 tolerance_pct",
+       "step 15 tolerance_pct"
+      ]
+     },
+     {
+      "number": "9300.86",
+      "sources": [
+       "step 15 matches[0].in_amt (cited)"
+      ]
+     },
+     {
+      "number": "9044.70",
+      "sources": [
+       "step 7 matches[0].in_amt (cited)",
+       "step 15 matches[0].out_amt"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "1",
+      "sources": [
+       "step 7 n_matches",
+       "step 13 cases[0].n_txns",
+       "step 13 n_cases",
+       "+1 more"
+      ]
+     }
+    ],
+    [],
+    []
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1648,
+   "cost_usd": 0.00268,
+   "cached": false,
+   "ms": 8067,
+   "text": "On 2022-09-08 at 19:15, account 18067:80307A9E0 sent 9300.86 USD to account 12719:807214430 (transaction 4088409). That account then sent 9044.70 USD to account 214529:80567CFE0 on 2022-09-10 at 10:37 (transaction 4088411), 39.4 hours later and 2.8% less than the amount received. Account 214529:80567CFE0 in turn sent 8692.16 USD to account 25075:804E71900 on 2022-09-10 at 15:44 (transaction 4088413), the alerted transaction, 5.1 hours after the incoming payment and 3.9% below it.\n\nThe funds therefore moved through three hops in a chain, each payment leaving an account shortly after arriving and each outgoing amount slightly smaller than the amount received. The pattern check on 214529:80567CFE0 matched the 9044.70 USD credit of 2022-09-10 10:37 to the 8692.16 USD debit of 2022-09-10 15:44 within a 72-hour window and a 10% tolerance, and the check on 12719:807214430 matched the 9300.86 USD credit of 2022-09-08 19:15 to the 9044.70 USD debit of 2022-09-10 10:37 on the same basis.\n\nBefore the alert time there were no transactions between 214529:80567CFE0 and 25075:804E71900 in either direction. Account 12719:807214430 appears as payee in one previously confirmed case, involving 1 transaction dated 2022-09-08 19:15, with pattern type CYCLE, confirmed on 2022-09-09.\n\nThe rapid succession of credits and near-equal debits across four accounts, with small deductions at each step, is consistent with funds being moved quickly through successive accounts so that the original source and the final recipient are separated. This layering of transactions across multiple accounts and jurisdictions is the basis for the suspicion reported.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 8692.16
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-10 15:44"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 0
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 0
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].in_amt",
+     "value": 9044.7
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].lag_hours",
+     "value": 5.1
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].diff_pct",
+     "value": 3.9
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 15,
+     "path": "matches[0].in_amt",
+     "value": 9300.86
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 15,
+     "path": "matches[0].lag_hours",
+     "value": 39.4
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 15,
+     "path": "matches[0].diff_pct",
+     "value": 2.8
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 13,
+     "path": "cases[0].pattern_types",
+     "value": [
+      "CYCLE"
+     ]
+    }
+   ]
+  },
+  {
+   "alert_id": 1298,
+   "case_id": 57,
+   "typology": "cycle",
+   "draft": "ok",
+   "accounts": 3,
+   "txns": 3,
+   "attachment_rows": 56,
+   "categories": 1,
+   "sentence_sources": [
+    [],
+    [
+     {
+      "number": "6,009.50",
+      "sources": [
+       "step 7 matches[0].in_amt (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "5,435.45",
+      "sources": [
+       "step 7 matches[0].out_amt (cited)",
+       "step 0 result.amount_usd"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "3",
+      "sources": [
+       "step 12 cycles[0].hops (cited)"
+      ]
+     },
+     {
+      "number": "3586640",
+      "sources": [
+       "(structured draft or not found)"
+      ]
+     },
+     {
+      "number": "3586642",
+      "sources": [
+       "step 7 matches[0].in_txn"
+      ]
+     },
+     {
+      "number": "3586644",
+      "sources": [
+       "step 0 result.txn_id",
+       "step 7 matches[0].out_txn"
+      ]
+     },
+     {
+      "number": "35.6",
+      "sources": [
+       "step 12 cycles[0].span_hours (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "6,009.50",
+      "sources": [
+       "step 7 matches[0].in_amt (cited)"
+      ]
+     },
+     {
+      "number": "14.0",
+      "sources": [
+       "step 7 matches[0].lag_hours (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "9.6",
+      "sources": [
+       "step 7 matches[0].diff_pct (cited)"
+      ]
+     },
+     {
+      "number": "10",
+      "sources": [
+       "step 7 matches[0].diff_pct (cited)",
+       "step 7 tolerance_pct (cited)"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 7 window_hours (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "1",
+      "sources": [
+       "step 3 cases[0].n_txns",
+       "step 3 n_cases",
+       "step 4 cases[0].n_txns",
+       "+5 more"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 3 cases[0].n_txns",
+       "step 3 n_cases",
+       "step 4 cases[0].n_txns",
+       "+5 more"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 11 n_cases (cited)"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 3 cases[0].n_txns",
+       "step 3 n_cases",
+       "step 4 cases[0].n_txns",
+       "+5 more"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 3 cases[0].n_txns",
+       "step 3 n_cases",
+       "step 4 cases[0].n_txns",
+       "+5 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "35.6",
+      "sources": [
+       "step 12 cycles[0].span_hours (cited)"
+      ]
+     },
+     {
+      "number": "9.6",
+      "sources": [
+       "step 7 matches[0].diff_pct (cited)"
+      ]
+     }
+    ]
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1472,
+   "cost_usd": 0.0056,
+   "cached": false,
+   "ms": 15654,
+   "text": "On 2022-09-07 16:22, account 14:81016E050 sent funds to account 32564:80C1EB8B0 (txn 3586640). On 2022-09-08 14:01, account 32564:80C1EB8B0 sent USD 6,009.50 to account 111312:8045732A0 (txn 3586642). On 2022-09-09 03:58, account 111312:8045732A0 sent USD 5,435.45 back to account 14:81016E050 (txn 3586644, the alerted transaction).\n\nThese three transfers form a 3-hop cycle that begins and ends at account 14:81016E050, following the path 14:81016E050 → 32564:80C1EB8B0 → 111312:8045732A0 → 14:81016E050 over transaction ids 3586640, 3586642 and 3586644, from 2022-09-07 16:22 to 2022-09-09 03:58, a span of 35.6 hours.\n\nThe USD 6,009.50 credited to account 111312:8045732A0 on 2022-09-08 14:01 was sent out again on 2022-09-09 03:58, 14.0 hours later, to the account that originated the sequence. The outgoing amount differs from the incoming amount by 9.6%, within the 10% tolerance applied over the 72-hour matching window of the pass-through check.\n\nEach of the three accounts is linked to confirmed cases carrying pattern type CYCLE: account 14:81016E050 as payer for 1 transaction dated 2022-09-07 16:22; account 111312:8045732A0 as payee for 1 transaction dated 2022-09-08 14:01; and account 32564:80C1EB8B0 in 2 cases, as payee for 1 transaction dated 2022-09-07 16:22 and as payer for 1 transaction dated 2022-09-08 14:01. Value leaving and returning to the originating account within 35.6 hours, in amounts that differ by 9.6%, is what makes this flow unusual.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 12,
+     "path": "cycles[0].hops",
+     "value": 3
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 12,
+     "path": "cycles[0].path",
+     "value": [
+      "14:81016E050",
+      "32564:80C1EB8B0",
+      "111312:8045732A0",
+      "14:81016E050"
+     ]
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 12,
+     "path": "cycles[0].txn_path",
+     "value": [
+      3586640,
+      3586642,
+      3586644
+     ]
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 12,
+     "path": "cycles[0].span_hours",
+     "value": 35.6
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].in_amt",
+     "value": 6009.5
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].out_amt",
+     "value": 5435.45
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].lag_hours",
+     "value": 14.0
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].diff_pct",
+     "value": 9.6
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 7,
+     "path": "tolerance_pct",
+     "value": 10
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 7,
+     "path": "window_hours",
+     "value": 72
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 3,
+     "path": "cases[0].pattern_types",
+     "value": [
+      "CYCLE"
+     ]
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 11,
+     "path": "n_cases",
+     "value": 2
+    }
+   ]
+  },
+  {
+   "alert_id": 1510,
+   "case_id": 58,
+   "typology": "known_launderer_integration",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 19,
+   "categories": 2,
+   "sentence_sources": [
+    [
+     {
+      "number": "12,333.12",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 2 a_to_b.amt"
+      ]
+     },
+     {
+      "number": "4565373",
+      "sources": [
+       "step 0 result.txn_id (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "197",
+      "sources": [
+       "step 3 cases[0].n_txns (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours",
+       "step 11 result.window_hours"
+      ]
+     },
+     {
+      "number": "296",
+      "sources": [
+       "step 11 result.in_cp",
+       "step 11 result.in_cnt"
+      ]
+     },
+     {
+      "number": "296",
+      "sources": [
+       "step 11 result.in_cp",
+       "step 11 result.in_cnt"
+      ]
+     },
+     {
+      "number": "134,310.17",
+      "sources": [
+       "step 11 result.in_amt"
+      ]
+     },
+     {
+      "number": "57,813",
+      "sources": [
+       "step 11 result.out_cnt (cited)"
+      ]
+     },
+     {
+      "number": "10,099",
+      "sources": [
+       "step 11 result.out_cp"
+      ]
+     },
+     {
+      "number": "11,949,545,430.64",
+      "sources": [
+       "step 11 result.out_amt (cited)"
+      ]
+     },
+     {
+      "number": "14,775",
+      "sources": [
+       "step 11 result.cp_total_before"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours",
+       "step 11 result.window_hours"
+      ]
+     },
+     {
+      "number": "9",
+      "sources": [
+       "step 5 result.in_cnt"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 5 result.in_cp"
+      ]
+     },
+     {
+      "number": "15,183.52",
+      "sources": [
+       "step 5 result.in_amt (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours",
+       "step 11 result.window_hours"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours",
+       "step 11 result.window_hours"
+      ]
+     },
+     {
+      "number": "10",
+      "sources": [
+       "step 7 tolerance_pct"
+      ]
+     }
+    ],
+    []
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1455,
+   "cost_usd": 0.00382,
+   "cached": false,
+   "ms": 10774,
+   "text": "On 2022-09-09 12:35, account 70:100428660 sent USD 12,333.12 to account 22736:8052195D0 in transaction 4565373. The same pair had moved the same amount once before, on 2022-09-02 12:08, and no payment from 22736:8052195D0 back to 70:100428660 is recorded before the alert time.\n\nAccount 70:100428660 has one confirmed case history predating the alert: it was the payer in 197 transactions between 2022-09-01 00:01 and 2022-09-08 21:28, confirmed on 2022-09-09 00:00.\n\nIn the 72 hours before the alert, 70:100428660 received 296 payments from 296 counterparties totalling USD 134,310.17 and sent 57,813 payments to 10,099 counterparties totalling USD 11,949,545,430.64; the profile records 14,775 counterparties seen before and flags the account as a clearing layer. Over the same 72 hours, 22736:8052195D0 received 9 payments from 2 counterparties totalling USD 15,183.52 and made no outgoing payments.\n\nThe alerted payment repeated the 2022-09-02 amount, sent from an account with a confirmed case history to one that, within the 72-hour window, received funds without any outbound payments. A pass-through check on 22736:8052195D0 over a 72-hour window at a 10% tolerance returned no matches, so no outgoing payment in that window was matched to the incoming funds. The volume and spread of the outbound payments from 70:100428660 indicate funds being dispersed into the wider economy rather than retained, which is the integration pattern under review.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.txn_id",
+     "value": 4565373
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-09 12:35"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 12333.12
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.last_ts",
+     "value": "2022-09-02 12:08"
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 0
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 3,
+     "path": "cases[0].n_txns",
+     "value": 197
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 3,
+     "path": "cases[0].confirmed_at",
+     "value": "2022-09-09 00:00"
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 11,
+     "path": "result.out_cnt",
+     "value": 57813
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 11,
+     "path": "result.out_amt",
+     "value": 11949545430.64
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 11,
+     "path": "result.clearing_layer",
+     "value": true
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 5,
+     "path": "result.in_amt",
+     "value": 15183.52
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 7,
+     "path": "n_matches",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "alert_id": 2135,
+   "case_id": 59,
+   "typology": "gather_scatter",
+   "draft": "ok",
+   "accounts": 4,
+   "txns": 4,
+   "attachment_rows": 232,
+   "categories": 6,
+   "sentence_sources": [
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours",
+       "step 11 result.window_hours"
+      ]
+     },
+     {
+      "number": "91660.64",
+      "sources": [
+       "step 5 result.in_amt (cited)"
+      ]
+     },
+     {
+      "number": "9",
+      "sources": [
+       "step 5 result.in_cnt"
+      ]
+     },
+     {
+      "number": "4",
+      "sources": [
+       "step 7 matches[0].diff_pct (cited)",
+       "step 5 result.in_cp",
+       "step 7 matches[1].diff_pct",
+       "step 11 result.in_cnt"
+      ]
+     },
+     {
+      "number": "39304.47",
+      "sources": [
+       "step 5 result.out_amt (cited)"
+      ]
+     },
+     {
+      "number": "7",
+      "sources": [
+       "step 5 result.out_cnt"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 5 result.out_cp",
+       "step 7 n_matches"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "11376.97",
+      "sources": [
+       "step 7 matches[0].in_amt (cited)",
+       "step 7 matches[1].in_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "10937.55",
+      "sources": [
+       "step 7 matches[0].out_amt (cited)",
+       "step 7 matches[1].out_amt"
+      ]
+     },
+     {
+      "number": "10.4",
+      "sources": [
+       "step 7 matches[0].lag_hours (cited)"
+      ]
+     },
+     {
+      "number": "4.9",
+      "sources": [
+       "step 7 matches[1].lag_hours (cited)"
+      ]
+     },
+     {
+      "number": "3.9",
+      "sources": [
+       "step 7 matches[0].diff_pct (cited)",
+       "step 7 matches[1].diff_pct"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours",
+       "step 11 result.window_hours"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 5 result.out_cp",
+       "step 7 n_matches"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "6516.71",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 2 a_to_b.amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "6516.71",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 2 a_to_b.amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours",
+       "step 11 result.window_hours"
+      ]
+     },
+     {
+      "number": "1133273.27",
+      "sources": [
+       "step 11 result.out_amt (cited)"
+      ]
+     },
+     {
+      "number": "68",
+      "sources": [
+       "step 11 result.out_cnt"
+      ]
+     },
+     {
+      "number": "8",
+      "sources": [
+       "step 11 result.out_cp"
+      ]
+     },
+     {
+      "number": "7168.72",
+      "sources": [
+       "step 11 result.in_amt"
+      ]
+     },
+     {
+      "number": "4",
+      "sources": [
+       "step 7 matches[0].diff_pct (cited)",
+       "step 5 result.in_cp",
+       "step 7 matches[1].diff_pct",
+       "step 11 result.in_cnt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "102",
+      "sources": [
+       "step 13 result.n_accounts (cited)"
+      ]
+     },
+     {
+      "number": "65",
+      "sources": [
+       "step 13 result.n_banks"
+      ]
+     }
+    ],
+    [],
+    [],
+    []
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1759,
+   "cost_usd": 0.00301,
+   "cached": false,
+   "ms": 8239,
+   "text": "Over 72 hours to 2022-09-09 12:17, account 5:8076924E0 received 91660.64 USD across 9 credits from 4 counterparties and paid out 39304.47 USD across 7 debits to 2 counterparties. Two of those credits came from 211:8076768C0 in the same amount, 11376.97 USD each, on 2022-09-06 22:07 (txn 3218458) and 2022-09-07 03:39 (txn 3340085). Both were moved out to 7:8076DEF40 as a single payment of 10937.55 USD at 2022-09-07 08:33 (txn 3438178) - 10.4 hours after the first credit and 4.9 hours after the second, so 3.9% of the credited amount was not transferred on in that matched pair. A pass-through check over a 72-hour window matched both credits to that one outgoing payment (n_matches = 2).\n\nOn 2022-09-09 12:17 the same account sent 6516.71 USD to a different payee, 22575:808413E60 (txn 4560470, the alerted transaction). Between those two accounts there had been one earlier transfer of 6516.71 USD from 5:8076924E0 to 22575:808413E60 on 2022-09-02 17:45; no transfers had been received from that payee.\n\nIn the same 72-hour window, the funding account 211:8076768C0 paid out 1133273.27 USD across 68 debits to 8 counterparties while receiving only 7168.72 USD across 4 credits. The payee of the alerted transaction, 22575:808413E60, is a Corporation with 102 accounts across 65 banks.\n\nThe funds entered 5:8076924E0 and left within hours, in amounts close to the credits received, continuing out to an account held elsewhere. Credits and debits follow each other closely, the outgoing amount tracks the incoming amount, and the volume of payments through both the account and its funding counterparty is high relative to the period. This is consistent with funds being gathered into an account and scattered onward to third parties shortly after receipt.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 6516.71
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 1
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.last_ts",
+     "value": "2022-09-02 17:45"
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 5,
+     "path": "result.in_amt",
+     "value": 91660.64
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 5,
+     "path": "result.out_amt",
+     "value": 39304.47
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].in_amt",
+     "value": 11376.97
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].out_amt",
+     "value": 10937.55
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].lag_hours",
+     "value": 10.4
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 7,
+     "path": "matches[1].lag_hours",
+     "value": 4.9
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 7,
+     "path": "matches[0].diff_pct",
+     "value": 3.9
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 11,
+     "path": "result.out_amt",
+     "value": 1133273.27
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 13,
+     "path": "result.n_accounts",
+     "value": 102
+    }
+   ]
+  },
+  {
+   "alert_id": 2147,
+   "case_id": 60,
+   "typology": "fan_in",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 21,
+   "categories": 5,
+   "sentence_sources": [
+    [
+     {
+      "number": "3,428.84",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 6 days[6].out_amt (cited)"
+      ]
+     },
+     {
+      "number": "4562383",
+      "sources": [
+       "step 0 result.txn_id (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "1",
+      "sources": [
+       "step 6 active_days (cited)",
+       "step 6 days[6].in_cp",
+       "step 6 days[6].in_cnt",
+       "step 6 days[6].out_cp",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "7",
+      "sources": [
+       "step 6 window_days",
+       "step 14 window_days"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "609.09",
+      "sources": [
+       "step 6 days[6].in_amt (cited)"
+      ]
+     },
+     {
+      "number": "3,428.84",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 6 days[6].out_amt (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "14",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt",
+       "step 11 result.cp_total_before",
+       "step 14 days[6].in_cp",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "14",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt",
+       "step 11 result.cp_total_before",
+       "step 14 days[6].in_cp",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "318,559.79",
+      "sources": [
+       "step 11 result.in_amt (cited)",
+       "step 14 days[6].in_amt (cited)"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "7",
+      "sources": [
+       "step 6 window_days",
+       "step 14 window_days"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 6 active_days (cited)",
+       "step 6 days[6].in_cp",
+       "step 6 days[6].in_cnt",
+       "step 6 days[6].out_cp",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "14",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt",
+       "step 11 result.cp_total_before",
+       "step 14 days[6].in_cp",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 6 txns_last_2_days"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "7,820",
+      "sources": [
+       "step 15 result.n_accounts (cited)"
+      ]
+     },
+     {
+      "number": "1,185",
+      "sources": [
+       "step 15 result.n_banks"
+      ]
+     }
+    ],
+    [],
+    [],
+    [
+     {
+      "number": "14",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt",
+       "step 11 result.cp_total_before",
+       "step 14 days[6].in_cp",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "318,559.79",
+      "sources": [
+       "step 11 result.in_amt (cited)",
+       "step 14 days[6].in_amt (cited)"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)"
+      ]
+     }
+    ]
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1736,
+   "cost_usd": 0.0102,
+   "cached": false,
+   "ms": 31825,
+   "text": "On 2022-09-09 at 12:22, account 116:80F0D9210, held with the reporting institution, paid USD 3,428.84 to account 39775:80F0E84E0 held elsewhere (transaction 4562383). The two accounts had no transactions between them before the alert time in either direction.\n\nThe sending account was active on only 1 day within the 7-day review window. On 2022-09-09 it received one payment of USD 609.09 from one counterparty and made one outgoing payment, the USD 3,428.84 transfer above. There were no transactions at all on 2022-09-03, 2022-09-04, 2022-09-05, 2022-09-06, 2022-09-07 or 2022-09-08, and the alerted transfer is the account's first movement to this payee.\n\nThe receiving account 39775:80F0E84E0 collected 14 incoming payments from 14 counterparties totalling USD 318,559.79 within a 72-hour window, all recorded on 2022-09-09, and no outgoing payments from that account were recorded in the same window. In the 7-day review the account was active on 1 day, with 14 transactions in the last 2 days and none earlier. The payee account is linked to entity 800DB93F0, a Corporation recorded with 7,820 accounts across 1,185 banks.\n\nThis is the notified fan-in pattern: a large number of separate payers, including 116:80F0D9210, moving funds into a single collection account within a short window, with the collected value concentrated there rather than dispersed. The alerted sender fits this pattern in that its only prior activity in the window was a single small receipt followed by an outflow larger than that receipt, and it had no earlier relationship with the payee account. The concentration of 14 counterparties and USD 318,559.79 into one account over 72 hours is inconsistent with ordinary account use and warrants reporting.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.txn_id",
+     "value": 4562383
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-09 12:22"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 3428.84
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 0
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 6,
+     "path": "days[6].in_amt",
+     "value": 609.09
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 6,
+     "path": "days[6].out_amt",
+     "value": 3428.84
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 6,
+     "path": "active_days",
+     "value": 1
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_cp",
+     "value": 14
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_amt",
+     "value": 318559.79
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 11,
+     "path": "result.window_hours",
+     "value": 72
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 14,
+     "path": "days[6].in_amt",
+     "value": 318559.79
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 15,
+     "path": "result.n_accounts",
+     "value": 7820
+    }
+   ]
+  },
+  {
+   "alert_id": 2219,
+   "case_id": 61,
+   "typology": "known_launderer_integration",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 11,
+   "categories": 2,
+   "sentence_sources": [
+    [
+     {
+      "number": "6759.53",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 6 days[6].out_amt"
+      ]
+     },
+     {
+      "number": "3970863",
+      "sources": [
+       "step 0 result.txn_id (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "6759.53",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 6 days[6].out_amt"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "46297.4",
+      "sources": [
+       "step 11 result.in_amt (cited)"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "6759.53",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 6 days[6].out_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)"
+      ]
+     }
+    ],
+    []
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1090,
+   "cost_usd": 0.02012,
+   "cached": false,
+   "ms": 64679,
+   "text": "On 2022-09-10 at 15:08, account 14277:8067EE4E0 sent 6759.53 USD to account 17863:810C289B0 in transaction 3970863. The two accounts had no transactions between them before that time (step 2). In the seven days to 2022-09-10, account 14277:8067EE4E0 had one active day, that being the 6759.53 USD outgoing payment on 2022-09-10 (step 6). No cases were confirmed on this account before the alert (step 3).\n\nAccount 17863:810C289B0 received five incoming payments totalling 46297.4 USD within a 72-hour window ending at the alert time, with no outgoing payments (step 11). The account appeared in a case with pattern type FAN-IN (step 4). The alerted 6759.53 USD payment is one of the five inbound transfers to this account.\n\nThe payer account's inactivity followed by one outbound payment to an account that received five incoming payments and made no outbound payments in that 72-hour window is consistent with the integration typology. The absence of any prior relationship between the two accounts and the payer's lack of other activity in the period are unusual features of this payment.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.txn_id",
+     "value": 3970863
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-10 15:08"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 6759.53
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 0
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 0
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 3,
+     "path": "n_cases",
+     "value": 0
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 4,
+     "path": "cases[0].pattern_types",
+     "value": [
+      "FAN-IN"
+     ]
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 6,
+     "path": "active_days",
+     "value": 1
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 11,
+     "path": "result.window_hours",
+     "value": 72
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_cnt",
+     "value": 5
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_amt",
+     "value": 46297.4
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 11,
+     "path": "result.out_cnt",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "alert_id": 2313,
+   "case_id": 62,
+   "typology": "cycle",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 3,
+   "attachment_rows": 45,
+   "categories": 1,
+   "sentence_sources": [
+    [],
+    [
+     {
+      "number": "30880.67",
+      "sources": [
+       "step 13 days[1].out_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "1501.48",
+      "sources": [
+       "step 13 days[5].out_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "4692.53",
+      "sources": [
+       "step 0 result.amount_usd (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "2",
+      "sources": [
+       "step 2 b_to_a.n (cited)",
+       "step 13 days[6].in_cp",
+       "step 13 days[6].in_cnt",
+       "step 15 cycles[0].hops",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "128.1",
+      "sources": [
+       "step 15 cycles[0].span_hours (cited)"
+      ]
+     },
+     {
+      "number": "12.2",
+      "sources": [
+       "step 15 cycles[1].span_hours (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "32382.15",
+      "sources": [
+       "step 2 b_to_a.amt (cited)"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 2 b_to_a.n (cited)",
+       "step 13 days[6].in_cp",
+       "step 13 days[6].in_cnt",
+       "step 15 cycles[0].hops",
+       "+2 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "7",
+      "sources": [
+       "step 12 result.n_accounts (cited)",
+       "step 12 result.n_banks",
+       "step 13 window_days",
+       "step 15 window_days"
+      ]
+     },
+     {
+      "number": "3",
+      "sources": [
+       "step 13 active_days",
+       "step 13 txns_last_2_days"
+      ]
+     },
+     {
+      "number": "30880.67",
+      "sources": [
+       "step 13 days[1].out_amt"
+      ]
+     },
+     {
+      "number": "1501.48",
+      "sources": [
+       "step 13 days[5].out_amt"
+      ]
+     },
+     {
+      "number": "5043.55",
+      "sources": [
+       "step 13 days[6].in_amt (cited)"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 2 b_to_a.n (cited)",
+       "step 13 days[6].in_cp",
+       "step 13 days[6].in_cnt",
+       "step 15 cycles[0].hops",
+       "+2 more"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "7",
+      "sources": [
+       "step 12 result.n_accounts (cited)",
+       "step 12 result.n_banks",
+       "step 13 window_days",
+       "step 15 window_days"
+      ]
+     },
+     {
+      "number": "7",
+      "sources": [
+       "step 12 result.n_accounts (cited)",
+       "step 12 result.n_banks",
+       "step 13 window_days",
+       "step 15 window_days"
+      ]
+     }
+    ]
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1439,
+   "cost_usd": 0.00343,
+   "cached": false,
+   "ms": 8774,
+   "text": "Between 2022-09-05 and 2022-09-10, funds moved out of account 1124:800CD4540 to account 12:800CD4180 and then returned to 1124:800CD4540, twice over the same pair of accounts.\n\nOn 2022-09-05 03:12, txn 2359111 sent 30880.67 USD from 1124:800CD4540 to 12:800CD4180. On 2022-09-09 23:10, txn 4843478 sent 1501.48 USD in the same direction. The alerted transaction, txn 4974594, then moved 4692.53 USD on 2022-09-10 11:19 in the opposite direction, from 12:800CD4180 back to 1124:800CD4540. Cycle tracing matched two 2-hop loops through these two accounts: txn 2359111 with txn 4974594, spanning 128.1 hours, and txn 4843478 with txn 4974594, spanning 12.2 hours. The funds therefore left the account and came back to it rather than settling with any other counterparty shown.\n\nBefore the alert time, 1124:800CD4540 had sent 32382.15 USD to 12:800CD4180 across 2 transactions, while there were no transactions from 12:800CD4180 to 1124:800CD4540. In the 7-day window from 2022-09-04, 1124:800CD4540 was active on 3 days: outflows of 30880.67 USD on 2022-09-05 and 1501.48 USD on 2022-09-09, and inflows of 5043.55 USD across 2 transactions on 2022-09-10, the day of the alert.\n\nThe repeated return of value along the same route, in the same direction as the earlier outflows and back again, is what makes the alerted payment unusual. Account 1124:800CD4540 is linked to entity 800C91AC0, a sole proprietorship, with 7 accounts across 7 banks.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.txn_id",
+     "value": 4974594
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-10 11:19"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 4692.53
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 0
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 2
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.amt",
+     "value": 32382.15
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 13,
+     "path": "days[6].in_amt",
+     "value": 5043.55
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 15,
+     "path": "cycles[0].txn_path",
+     "value": [
+      2359111,
+      4974594
+     ]
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 15,
+     "path": "cycles[0].span_hours",
+     "value": 128.1
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 15,
+     "path": "cycles[1].txn_path",
+     "value": [
+      4843478,
+      4974594
+     ]
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 15,
+     "path": "cycles[1].span_hours",
+     "value": 12.2
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 12,
+     "path": "result.n_accounts",
+     "value": 7
+    }
+   ]
+  },
+  {
+   "alert_id": 3322,
+   "case_id": 63,
+   "typology": "fan_in",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 31,
+   "categories": 5,
+   "sentence_sources": [
+    [
+     {
+      "number": "5004929",
+      "sources": [
+       "step 0 result.txn_id (cited)"
+      ]
+     },
+     {
+      "number": "1661.75",
+      "sources": [
+       "step 0 result.amount_usd (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 11 result.out_cnt (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 11 result.out_cp",
+       "+41 more"
+      ]
+     },
+     {
+      "number": "0.0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 11 result.out_cnt (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 11 result.out_cp",
+       "+41 more"
+      ]
+     },
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 11 result.out_cnt (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 11 result.out_cp",
+       "+41 more"
+      ]
+     },
+     {
+      "number": "0.0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 11 result.out_cnt (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 11 result.out_cp",
+       "+41 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "11",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 12 days[6].in_cnt (cited)",
+       "step 11 result.in_cnt",
+       "step 11 result.cp_total_before",
+       "step 12 days[6].in_cp",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "29542.13",
+      "sources": [
+       "step 11 result.in_amt (cited)",
+       "step 12 days[6].in_amt"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)"
+      ]
+     },
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 11 result.out_cnt (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 11 result.out_cp",
+       "+41 more"
+      ]
+     },
+     {
+      "number": "0.0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 11 result.out_cnt (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 11 result.out_cp",
+       "+41 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "1",
+      "sources": [
+       "step 12 active_days (cited)"
+      ]
+     },
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 11 result.out_cnt (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 11 result.out_cp",
+       "+41 more"
+      ]
+     },
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 11 result.out_cnt (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 11 result.out_cp",
+       "+41 more"
+      ]
+     },
+     {
+      "number": "11",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 12 days[6].in_cnt (cited)",
+       "step 11 result.in_cnt",
+       "step 11 result.cp_total_before",
+       "step 12 days[6].in_cp",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "29542.13",
+      "sources": [
+       "step 11 result.in_amt (cited)",
+       "step 12 days[6].in_amt"
+      ]
+     },
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 11 result.out_cnt (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 11 result.out_cp",
+       "+41 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "11",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 12 days[6].in_cnt (cited)",
+       "step 11 result.in_cnt",
+       "step 11 result.cp_total_before",
+       "step 12 days[6].in_cp",
+       "+1 more"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "11",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 12 days[6].in_cnt (cited)",
+       "step 11 result.in_cnt",
+       "step 11 result.cp_total_before",
+       "step 12 days[6].in_cp",
+       "+1 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "3743",
+      "sources": [
+       "step 13 result.n_accounts (cited)"
+      ]
+     },
+     {
+      "number": "800",
+      "sources": [
+       "step 13 result.n_banks"
+      ]
+     }
+    ]
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1397,
+   "cost_usd": 0.00274,
+   "cached": false,
+   "ms": 7472,
+   "text": "On 2022-09-10 at 14:47, transaction 5004929 moved 1661.75 USD from account 287:8061DD610 to account 16792:806205260. No transaction between these two accounts appears before the alert time in either direction: 287:8061DD610 to 16792:806205260 count 0 and 0.0 USD, and the reverse direction count 0 and 0.0 USD.\n\nThe payee account 16792:806205260 received from 11 incoming counterparties a total of 29542.13 USD within the 72 hours to 2022-09-10 14:47, with 0 outgoing counterparties and 0.0 USD sent out. Daily activity over the seven days to 2022-09-10 shows 1 active day: from 2022-09-04 to 2022-09-09 the account had 0 incoming and 0 outgoing transactions, and on 2022-09-10 it had 11 incoming transactions totalling 29542.13 USD and 0 outgoing transactions. The alerted payment is one of those 11 credits.\n\nThis is a fan-in pattern: one account collecting payments from many separate payers on the same day, with no outgoing movement recorded at the alert time. A one-day burst of 11 credits against six preceding days with no recorded activity, combined with the absence of any prior dealing between the payer and payee accounts, is inconsistent with ordinary commercial payment behaviour and is consistent with an account used to aggregate funds from multiple third parties. The payee account is linked to entity 800B49C40, a Sole Proprietorship recorded with 3743 accounts across 800 banks.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.txn_id",
+     "value": 5004929
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-10 14:47"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 1661.75
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 0
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 0
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_cp",
+     "value": 11
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_amt",
+     "value": 29542.13
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 11,
+     "path": "result.window_hours",
+     "value": 72
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 11,
+     "path": "result.out_cnt",
+     "value": 0
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 12,
+     "path": "active_days",
+     "value": 1
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 12,
+     "path": "days[6].in_cnt",
+     "value": 11
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 13,
+     "path": "result.n_accounts",
+     "value": 3743
+    }
+   ]
+  },
+  {
+   "alert_id": 3502,
+   "case_id": 64,
+   "typology": "known_launderer_integration",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 2,
+   "categories": 2,
+   "sentence_sources": [
+    [
+     {
+      "number": "1806.71",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 2 a_to_b.amt (cited)",
+       "step 5 result.in_amt"
+      ]
+     },
+     {
+      "number": "4852316",
+      "sources": [
+       "step 0 result.txn_id (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "1806.71",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 2 a_to_b.amt (cited)",
+       "step 5 result.in_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "0",
+      "sources": [
+       "step 2 b_to_a.n (cited)",
+       "step 5 result.out_cnt (cited)",
+       "step 7 n_matches (cited)",
+       "step 2 b_to_a.amt",
+       "step 4 n_cases",
+       "step 5 result.out_cp",
+       "+1 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "19",
+      "sources": [
+       "step 3 cases[0].n_txns (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 5 result.in_cnt (cited)",
+       "step 3 n_cases",
+       "step 5 result.in_cp",
+       "step 5 result.cp_total_before"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 5 result.in_cnt (cited)",
+       "step 3 n_cases",
+       "step 5 result.in_cp",
+       "step 5 result.cp_total_before"
+      ]
+     },
+     {
+      "number": "1806.71",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 2 a_to_b.amt (cited)",
+       "step 5 result.in_amt"
+      ]
+     },
+     {
+      "number": "0",
+      "sources": [
+       "step 2 b_to_a.n (cited)",
+       "step 5 result.out_cnt (cited)",
+       "step 7 n_matches (cited)",
+       "step 2 b_to_a.amt",
+       "step 4 n_cases",
+       "step 5 result.out_cp",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "0.0",
+      "sources": [
+       "step 2 b_to_a.n (cited)",
+       "step 5 result.out_cnt (cited)",
+       "step 7 n_matches (cited)",
+       "step 2 b_to_a.amt",
+       "step 4 n_cases",
+       "step 5 result.out_cp",
+       "+1 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 7 window_hours"
+      ]
+     }
+    ],
+    [],
+    []
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1568,
+   "cost_usd": 0.00966,
+   "cached": false,
+   "ms": 32648,
+   "text": "On 2022-09-09 at 23:05, account 70:100428780 sent 1806.71 USD to account 13969:805671330 in transaction 4852316. This was not the first payment between the pair: the same two accounts had one earlier transfer in the same direction, also of 1806.71 USD, on 2022-09-02 at 12:37. No transfer in the opposite direction is recorded between them (b_to_a.n = 0), so over the period reviewed the movement between these two accounts has been one-way.\n\nThe sending account 70:100428780 has one confirmed case recorded before the alert time, in which it appears as payer and which covers 19 transactions between 2022-09-01 03:07 and 2022-09-08 16:08, confirmed on 2022-09-09 00:00.\n\nThe receiving account 13969:805671330 has no confirmed cases before the alert time. In the 72 hours reviewed around the alert, it shows 1 inbound counterparty and 1 inbound transaction totalling 1806.71 USD, and 0 outbound counterparties with an outbound amount of 0.0. The pass-through check on that account over the same 72-hour window returned no matches.\n\nThe pattern is unusual because funds were sent from an account already linked to a confirmed case, by a payer, to a further account with no case history, in a repeat same-direction payment of an identical amount, and the receiving account shows only this inbound payment within the window examined. The payment moves value out of the account connected to the confirmed case and into another account, which is consistent with funds being placed back into the wider financial system rather than being contained at the originating account.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-09 23:05"
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.txn_id",
+     "value": 4852316
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 1806.71
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 1
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.amt",
+     "value": 1806.71
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.first_ts",
+     "value": "2022-09-02 12:37"
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 0
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 3,
+     "path": "cases[0].role",
+     "value": "payer"
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 3,
+     "path": "cases[0].n_txns",
+     "value": 19
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 5,
+     "path": "result.in_cnt",
+     "value": 1
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 5,
+     "path": "result.out_cnt",
+     "value": 0
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 7,
+     "path": "n_matches",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "alert_id": 3603,
+   "case_id": 65,
+   "typology": "fan_in",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 26,
+   "categories": 5,
+   "sentence_sources": [
+    [
+     {
+      "number": "5,024.30",
+      "sources": [
+       "step 0 result.amount_usd (cited)"
+      ]
+     },
+     {
+      "number": "4314381",
+      "sources": [
+       "step 0 result.txn_id (cited)"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "16",
+      "sources": [
+       "step 12 result.in_cp (cited)",
+       "step 12 result.in_cnt",
+       "step 13 days[6].in_cp",
+       "step 13 days[6].in_cnt",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "115,073,170.54",
+      "sources": [
+       "step 12 result.in_amt (cited)",
+       "step 13 days[6].in_amt"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 12 result.window_hours (cited)"
+      ]
+     },
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 12 result.out_cp (cited)",
+       "step 13 txns_earlier_days (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 12 result.out_amt",
+       "+40 more"
+      ]
+     },
+     {
+      "number": "0.00",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 12 result.out_cp (cited)",
+       "step 13 txns_earlier_days (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 12 result.out_amt",
+       "+40 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "16",
+      "sources": [
+       "step 12 result.in_cp (cited)",
+       "step 12 result.in_cnt",
+       "step 13 days[6].in_cp",
+       "step 13 days[6].in_cnt",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "115,073,170.54",
+      "sources": [
+       "step 12 result.in_amt (cited)",
+       "step 13 days[6].in_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "7",
+      "sources": [
+       "step 13 window_days"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 13 active_days (cited)"
+      ]
+     },
+     {
+      "number": "16",
+      "sources": [
+       "step 12 result.in_cp (cited)",
+       "step 12 result.in_cnt",
+       "step 13 days[6].in_cp",
+       "step 13 days[6].in_cnt",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "(structured draft or not found)"
+      ]
+     },
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 12 result.out_cp (cited)",
+       "step 13 txns_earlier_days (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt",
+       "step 12 result.out_amt",
+       "+40 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "9",
+      "sources": [
+       "step 14 result.n_banks (cited)",
+       "step 14 result.n_accounts"
+      ]
+     },
+     {
+      "number": "9",
+      "sources": [
+       "step 14 result.n_banks (cited)",
+       "step 14 result.n_accounts"
+      ]
+     }
+    ],
+    [],
+    [],
+    [
+     {
+      "number": "16",
+      "sources": [
+       "step 12 result.in_cp (cited)",
+       "step 12 result.in_cnt",
+       "step 13 days[6].in_cp",
+       "step 13 days[6].in_cnt",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "115,073,170.54",
+      "sources": [
+       "step 12 result.in_amt (cited)",
+       "step 13 days[6].in_amt"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 12 result.window_hours (cited)"
+      ]
+     }
+    ]
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1354,
+   "cost_usd": 0.01057,
+   "cached": false,
+   "ms": 33686,
+   "text": "On 2022-09-09 at 03:20 an inbound credit of USD 5,024.30 was received into account 243805:812605C00 from account 4766:812604A60 (transaction 4314381). Records checked as at 2022-09-09 03:20 show no transfers between these two accounts before the alert time in either direction.\n\nAccount 243805:812605C00 was credited by 16 counterparties for a total of USD 115,073,170.54 within the 72 hours up to the alert time, while its outbound activity in that same window was 0 counterparties and USD 0.00. The daily breakdown for 2022-09-03 to 2022-09-09 shows activity on only one day: 2022-09-09 recorded 16 inbound payments totalling USD 115,073,170.54, with nil values on the other six days. Over the 7-day window there was 1 active day, 16 transactions in the last 2 days and 0 transactions in the earlier days.\n\nThe receiving account is linked to entity 800C45C90, a Corporation holding 9 accounts across 9 banks.\n\nThe pattern is that of a large number of separate parties paying into a single account within a short period. The alerted credit is an inbound payment to that account, and it originated from an account with which the payee had no prior transaction history. The volume and speed of the inflows - 16 payments and USD 115,073,170.54 within 72 hours, concentrated on one active day - are not explained by anything in the account records reviewed.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.txn_id",
+     "value": 4314381
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-09 03:20"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 5024.3
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 0
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 0
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 12,
+     "path": "result.in_cp",
+     "value": 16
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 12,
+     "path": "result.in_amt",
+     "value": 115073170.54
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 12,
+     "path": "result.out_cp",
+     "value": 0
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 12,
+     "path": "result.window_hours",
+     "value": 72
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 13,
+     "path": "active_days",
+     "value": 1
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 13,
+     "path": "txns_earlier_days",
+     "value": 0
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 14,
+     "path": "result.n_banks",
+     "value": 9
+    }
+   ]
+  },
+  {
+   "alert_id": 3651,
+   "case_id": 66,
+   "typology": "random_walk",
+   "draft": "ok",
+   "accounts": 4,
+   "txns": 5,
+   "attachment_rows": 235,
+   "categories": 3,
+   "sentence_sources": [
+    [
+     {
+      "number": "12701.66",
+      "sources": [
+       "step 14 matches[0].in_amt (cited)",
+       "step 14 matches[1].in_amt",
+       "step 14 matches[2].in_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "12450.22",
+      "sources": [
+       "step 14 matches[0].out_amt (cited)",
+       "step 14 matches[1].out_amt",
+       "step 14 matches[2].out_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "54.9",
+      "sources": [
+       "step 14 matches[0].lag_hours (cited)"
+      ]
+     },
+     {
+      "number": "39.1",
+      "sources": [
+       "step 14 matches[1].lag_hours (cited)"
+      ]
+     },
+     {
+      "number": "14.1",
+      "sources": [
+       "step 14 matches[2].lag_hours (cited)"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 12 result.window_hours",
+       "step 14 window_hours"
+      ]
+     },
+     {
+      "number": "10",
+      "sources": [
+       "step 14 tolerance_pct",
+       "step 17 result.in_cnt",
+       "step 17 result.cp_total_before"
+      ]
+     },
+     {
+      "number": "2.0",
+      "sources": [
+       "step 14 matches[0].diff_pct (cited)",
+       "step 5 result.out_cp",
+       "step 12 result.in_cp",
+       "step 14 matches[1].diff_pct",
+       "+2 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "1012.20",
+      "sources": [
+       "step 0 result.amount_usd (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "201.72",
+      "sources": [
+       "step 2 a_to_b.amt (cited)"
+      ]
+     },
+     {
+      "number": "20734.37",
+      "sources": [
+       "step 2 b_to_a.amt (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 5 result.window_hours",
+       "step 12 result.window_hours",
+       "step 14 window_hours"
+      ]
+     },
+     {
+      "number": "5",
+      "sources": [
+       "step 5 result.out_cnt"
+      ]
+     },
+     {
+      "number": "37073.98",
+      "sources": [
+       "step 5 result.out_amt (cited)"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 14 matches[0].diff_pct (cited)",
+       "step 5 result.out_cp",
+       "step 12 result.in_cp",
+       "step 14 matches[1].diff_pct",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "7",
+      "sources": [
+       "step 12 result.in_cnt"
+      ]
+     },
+     {
+      "number": "46396.47",
+      "sources": [
+       "step 12 result.in_amt"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 14 matches[0].diff_pct (cited)",
+       "step 5 result.out_cp",
+       "step 12 result.in_cp",
+       "step 14 matches[1].diff_pct",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "16",
+      "sources": [
+       "step 12 result.out_cnt"
+      ]
+     },
+     {
+      "number": "67059.08",
+      "sources": [
+       "step 12 result.out_amt (cited)"
+      ]
+     },
+     {
+      "number": "3",
+      "sources": [
+       "step 12 result.out_cp",
+       "step 14 n_matches"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "168",
+      "sources": [
+       "step 17 result.window_hours"
+      ]
+     },
+     {
+      "number": "10",
+      "sources": [
+       "step 14 tolerance_pct",
+       "step 17 result.in_cnt",
+       "step 17 result.cp_total_before"
+      ]
+     },
+     {
+      "number": "797452.45",
+      "sources": [
+       "step 17 result.in_amt"
+      ]
+     },
+     {
+      "number": "2",
+      "sources": [
+       "step 14 matches[0].diff_pct (cited)",
+       "step 5 result.out_cp",
+       "step 12 result.in_cp",
+       "step 14 matches[1].diff_pct",
+       "+2 more"
+      ]
+     },
+     {
+      "number": "82",
+      "sources": [
+       "step 17 result.out_cnt (cited)"
+      ]
+     },
+     {
+      "number": "207959.52",
+      "sources": [
+       "step 17 result.out_amt"
+      ]
+     },
+     {
+      "number": "6",
+      "sources": [
+       "step 12 result.cp_total_before",
+       "step 17 result.out_cp"
+      ]
+     }
+    ],
+    [],
+    []
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1792,
+   "cost_usd": 0.00361,
+   "cached": false,
+   "ms": 9654,
+   "text": "Between 2022-09-07 and 2022-09-09, three credits of 12701.66 USD each arrived in account 14:80FE5DCF0 from account 142836:80FE0D310: txn 3498241 at 2022-09-07 11:30, txn 3814299 at 2022-09-08 03:16 and txn 4348607 at 2022-09-09 04:15. On 2022-09-09 18:22 a single debit, txn 4723105, moved 12450.22 USD from 14:80FE5DCF0 to account 43049:8100CF410. The pass-through check matched all three incoming transactions to that one outgoing transaction, with lags of 54.9, 39.1 and 14.1 hours inside a 72-hour window and a 10 percent tolerance, each differing from the outgoing amount by 2.0 percent.\n\nThe alerted transaction, txn 4978183 at 2022-09-10 11:11, carried 1012.20 USD from 243614:80FE5DCA0 to 14:80FE5DCF0. Before that time, the only prior activity between the pair was one payment of 201.72 USD from 243614:80FE5DCA0 on 2022-09-07 08:55 and one payment of 20734.37 USD in the opposite direction on 2022-09-02 13:08.\n\nIn the 72 hours to 2022-09-10 11:11, account 243614:80FE5DCA0 recorded 5 outgoing transactions totalling 37073.98 USD to 2 counterparties and no incoming transactions, while 14:80FE5DCF0 recorded 7 incoming transactions totalling 46396.47 USD from 2 counterparties and 16 outgoing transactions totalling 67059.08 USD to 3 counterparties. Over 168 hours, account 142836:80FE0D310 showed 10 incoming transactions totalling 797452.45 USD from 2 counterparties and 82 outgoing transactions totalling 207959.52 USD to 6 counterparties.\n\nThe funds therefore arrive in similarly sized credits from one account, are consolidated in 14:80FE5DCF0 and moved onward to a further account within hours, with repeated high-volume activity spread across several accounts and counterparties. This is consistent with layered transfers that obscure the source and destination of the funds.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 14,
+     "path": "matches[0].in_amt",
+     "value": 12701.66
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 14,
+     "path": "matches[0].out_amt",
+     "value": 12450.22
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 14,
+     "path": "matches[0].lag_hours",
+     "value": 54.9
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 14,
+     "path": "matches[1].lag_hours",
+     "value": 39.1
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 14,
+     "path": "matches[2].lag_hours",
+     "value": 14.1
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 14,
+     "path": "matches[0].diff_pct",
+     "value": 2.0
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 1012.2
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.amt",
+     "value": 201.72
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.amt",
+     "value": 20734.37
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 5,
+     "path": "result.out_amt",
+     "value": 37073.98
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 12,
+     "path": "result.out_amt",
+     "value": 67059.08
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 17,
+     "path": "result.out_cnt",
+     "value": 82
+    }
+   ]
+  },
+  {
+   "alert_id": 4129,
+   "case_id": 67,
+   "typology": "known_launderer_integration",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 14,
+   "categories": 2,
+   "sentence_sources": [
+    [
+     {
+      "number": "3,919.00",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 11 result.in_amt"
+      ]
+     },
+     {
+      "number": "4380323",
+      "sources": [
+       "step 0 result.txn_id (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt"
+      ]
+     },
+     {
+      "number": "0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt"
+      ]
+     },
+     {
+      "number": "0.0",
+      "sources": [
+       "step 2 a_to_b.n (cited)",
+       "step 2 b_to_a.n (cited)",
+       "step 2 a_to_b.amt",
+       "step 2 b_to_a.amt"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "1",
+      "sources": [
+       "step 4 cases[0].n_txns",
+       "step 4 n_cases",
+       "step 11 result.in_cp",
+       "+3 more"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)"
+      ]
+     },
+     {
+      "number": "3,919.00",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 11 result.in_amt"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 4 cases[0].n_txns",
+       "step 4 n_cases",
+       "step 11 result.in_cp",
+       "+3 more"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 4 cases[0].n_txns",
+       "step 4 n_cases",
+       "step 11 result.in_cp",
+       "+3 more"
+      ]
+     },
+     {
+      "number": "11,697.64",
+      "sources": [
+       "step 11 result.out_amt (cited)"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 4 cases[0].n_txns",
+       "step 4 n_cases",
+       "step 11 result.in_cp",
+       "+3 more"
+      ]
+     },
+     {
+      "number": "1",
+      "sources": [
+       "step 4 cases[0].n_txns",
+       "step 4 n_cases",
+       "step 11 result.in_cp",
+       "+3 more"
+      ]
+     }
+    ],
+    [],
+    [
+     {
+      "number": "8",
+      "sources": [
+       "step 12 result.n_banks (cited)",
+       "step 12 result.n_accounts (cited)"
+      ]
+     },
+     {
+      "number": "8",
+      "sources": [
+       "step 12 result.n_banks (cited)",
+       "step 12 result.n_accounts (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)"
+      ]
+     }
+    ]
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1280,
+   "cost_usd": 0.00256,
+   "cached": false,
+   "ms": 7816,
+   "text": "On 2022-09-09 at 05:52, USD 3,919.00 was paid from account 116845:80F3AC9D0 to account 36121:80F3ACA20 under transaction 4380323. A check of the two accounts' dealings before the alert time recorded 0 transactions from 116845:80F3AC9D0 to 36121:80F3ACA20 and 0 in the reverse direction (amount 0.0 USD in each direction), so no earlier movement between this pair was observed at the alert time.\n\nThe receiving account 36121:80F3ACA20 already appears in a confirmed case record. In that case it acted as payer in 1 transaction dated 2022-09-07 09:16, and the case was confirmed on 2022-09-09 00:00 with pattern type STACK.\n\nWithin a 72-hour window around the alert, account 36121:80F3ACA20 received 3,919.00 USD from 1 counterparty in 1 transaction and sent out 11,697.64 USD to 1 counterparty in 1 transaction, so the single outgoing payment exceeded the amount received. Three counterparties were recorded for the account before this window. The account belongs to an entity holding 8 accounts across 8 banks and recorded as a Corporation.\n\nTaken together, funds left an account at the reporting institution to an account that has already been the subject of a confirmed case and that, in the surrounding 72 hours, passed out more value than it received through a single payment.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.txn_id",
+     "value": 4380323
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-09 05:52"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 3919.0
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 0
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "b_to_a.n",
+     "value": 0
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 4,
+     "path": "cases[0].last_ts",
+     "value": "2022-09-07 09:16"
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 4,
+     "path": "cases[0].pattern_types",
+     "value": [
+      "STACK"
+     ]
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 11,
+     "path": "result.out_amt",
+     "value": 11697.64
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 11,
+     "path": "result.window_hours",
+     "value": 72
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 11,
+     "path": "result.cp_total_before",
+     "value": 3
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 12,
+     "path": "result.n_accounts",
+     "value": 8
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 12,
+     "path": "result.n_banks",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "alert_id": 4170,
+   "case_id": 68,
+   "typology": "fan_in",
+   "draft": "ok",
+   "accounts": 2,
+   "txns": 1,
+   "attachment_rows": 55,
+   "categories": 5,
+   "sentence_sources": [
+    [
+     {
+      "number": "3475.63",
+      "sources": [
+       "step 0 result.amount_usd (cited)",
+       "step 5 result.out_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)",
+       "step 5 result.window_hours"
+      ]
+     }
+    ],
+    [],
+    [],
+    [
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)",
+       "step 5 result.window_hours"
+      ]
+     },
+     {
+      "number": "12",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt",
+       "step 12 days[6].in_cp",
+       "step 12 days[6].in_cnt",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "12",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt",
+       "step 12 days[6].in_cp",
+       "step 12 days[6].in_cnt",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "25360.32",
+      "sources": [
+       "step 11 result.in_amt (cited)",
+       "step 12 days[6].in_amt"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "7",
+      "sources": [
+       "step 12 window_days"
+      ]
+     },
+     {
+      "number": "12",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt",
+       "step 12 days[6].in_cp",
+       "step 12 days[6].in_cnt",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "875.65",
+      "sources": [
+       "step 12 days[2].out_amt (cited)"
+      ]
+     }
+    ],
+    [
+     {
+      "number": "12",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt",
+       "step 12 days[6].in_cp",
+       "step 12 days[6].in_cnt",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "12",
+      "sources": [
+       "step 11 result.in_cp (cited)",
+       "step 11 result.in_cnt",
+       "step 12 days[6].in_cp",
+       "step 12 days[6].in_cnt",
+       "+1 more"
+      ]
+     },
+     {
+      "number": "72",
+      "sources": [
+       "step 11 result.window_hours (cited)",
+       "step 5 result.window_hours"
+      ]
+     }
+    ],
+    []
+   ],
+   "narrative": "verified",
+   "attempts": 1,
+   "first_pass": true,
+   "problems": [
+    []
+   ],
+   "errors": [],
+   "chars": 1249,
+   "cost_usd": 0.0129,
+   "cached": false,
+   "ms": 40869,
+   "text": "On 2022-09-10 at 02:06, account 19890:8075E8A20, held with the reporting institution, transferred 3475.63 USD to account 18324:8075F1F70, held elsewhere (txn 4901398). In the 72 hours to that time, 19890:8075E8A20 recorded no incoming transactions and one outgoing payment, this transfer. No earlier transfer from 19890:8075E8A20 to 18324:8075F1F70 was recorded.\n\nThe receiving account shows a different pattern. In the 72 hours to 2022-09-10 02:06, 18324:8075F1F70 received 12 incoming payments from 12 different counterparties totalling 25360.32 USD, and made no outgoing payments in that window. Daily activity over the 7 days to the same time shows these 12 credits all falling on 2022-09-10; the only other movement in the period was a single outgoing payment of 875.65 USD on 2022-09-06.\n\nThe pattern is unusual because the alerted transfer is one of 12 incoming payments from 12 separate counterparties collected into 18324:8075F1F70 within a 72-hour window, while the sending account 19890:8075E8A20 had not transferred to that account before. Funds being gathered from multiple, unrelated senders into a single account in a short period is consistent with the fan-in typology, with 19890:8075E8A20 acting as one of the contributing senders.",
+   "facts": [
+    {
+     "fact": 1,
+     "verified": true,
+     "step": 0,
+     "path": "result.time",
+     "value": "2022-09-10 02:06"
+    },
+    {
+     "fact": 2,
+     "verified": true,
+     "step": 0,
+     "path": "result.payer",
+     "value": "19890:8075E8A20"
+    },
+    {
+     "fact": 3,
+     "verified": true,
+     "step": 0,
+     "path": "result.payee",
+     "value": "18324:8075F1F70"
+    },
+    {
+     "fact": 4,
+     "verified": true,
+     "step": 0,
+     "path": "result.amount_usd",
+     "value": 3475.63
+    },
+    {
+     "fact": 5,
+     "verified": true,
+     "step": 2,
+     "path": "a_to_b.n",
+     "value": 0
+    },
+    {
+     "fact": 6,
+     "verified": true,
+     "step": 5,
+     "path": "result.in_cnt",
+     "value": 0
+    },
+    {
+     "fact": 7,
+     "verified": true,
+     "step": 5,
+     "path": "result.out_cnt",
+     "value": 1
+    },
+    {
+     "fact": 8,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_cp",
+     "value": 12
+    },
+    {
+     "fact": 9,
+     "verified": true,
+     "step": 11,
+     "path": "result.in_amt",
+     "value": 25360.32
+    },
+    {
+     "fact": 10,
+     "verified": true,
+     "step": 11,
+     "path": "result.out_cnt",
+     "value": 0
+    },
+    {
+     "fact": 11,
+     "verified": true,
+     "step": 11,
+     "path": "result.window_hours",
+     "value": 72
+    },
+    {
+     "fact": 12,
+     "verified": true,
+     "step": 12,
+     "path": "days[2].out_amt",
+     "value": 875.65
+    }
+   ]
+  }
+ ],
+ "seconds": 331
+}

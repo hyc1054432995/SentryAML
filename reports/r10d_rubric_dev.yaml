@@ -4,13 +4,16 @@ instructions:
 - 'Mark supported: false when the sentence adds a conclusion that nothing measured, e.g. ''no funds were retained''
   (only one matched pair was checked), ''not explained by the business type'' (no business type is recorded), ''purpose-built
   relationship'', or a count read from a truncated list.'
+- 'The hardest cases have every number right: two different measurements joined into one story (e.g. the 4 counterparties
+  of all outflows described as where the matched pass-through funds went), or an observation from a limited window
+  stated as the whole history (''no earlier activity'' when only 7 days were checked). Mark these false too.'
 - Write the reason in note for every false.
 - 'The three questions per item: true = good. flow_of_funds_clear: a reader can follow where the money came from
   and went. why_suspicious_explained: the text says why this is unusual, not only what happened. weak_signals_not_overstated:
   weak signals (first contact alone, one fan count, amount size) are not presented as proof.'
 - Do not change the text.
 split: dev
-prompt_version: str-narrative-v3
+prompt_version: str-narrative-v3.1
 seed: 20261010
 items:
 - alert_id: 1673
@@ -44,29 +47,29 @@ items:
     - 3616042 <- step 7 matches[3].in_txn
     - 4078553 <- step 7 matches[5].in_txn
     - 4078554 <- step 7 matches[6].in_txn
-    supported: true 
+    supported: true
     note: ''
   - n: 2
     text: In the 72 hours before the alert, the account took in 17 credits totalling 684753.16 USD from 2 counterparties
       and sent out 16 debits totalling 4107070.98 USD to 4 counterparties.
     numbers:
     - 72 <- step 5 result.window_hours, step 7 window_hours
-    - 17 <- step 5 result.in_cnt, step 7 matches[0].lag_hours
-    - 684753.16 <- step 5 result.in_amt
-    - 2 <- step 5 result.in_cp, step 11 result.in_cp, step 13 days[5].in_cnt
+    - 17 <- step 7 matches[0].lag_hours (cited), step 5 result.in_cnt
+    - 684753.16 <- step 5 result.in_amt (cited)
+    - 2 <- step 5 result.in_cp, step 11 result.in_cp, step 13 days[5].in_cnt, +11 more
     - 16 <- step 5 result.out_cnt
-    - 4107070.98 <- step 5 result.out_amt
-    - 4 <- step 5 result.out_cp, step 13 days[5].out_cnt, step 13 days[9].out_cnt
-    supported: true 
+    - 4107070.98 <- step 5 result.out_amt (cited)
+    - 4 <- step 5 result.out_cp, step 13 days[5].out_cnt, step 13 days[9].out_cnt, +3 more
+    supported: true
     note: ''
   - n: 3
     text: A pass-through check over the same 72-hour window matched 7 pairs of incoming and outgoing payments at
       a 10% tolerance.
     numbers:
     - 72 <- step 5 result.window_hours, step 7 window_hours
-    - 7 <- step 7 n_matches, step 8 window_days, step 13 days[6].out_cnt
-    - 10 <- step 7 tolerance_pct
-    supported: true 
+    - 7 <- step 7 n_matches (cited), step 13 active_days (cited), step 8 window_days, step 13 days[6].out_cnt
+    - 10 <- step 7 tolerance_pct (cited)
+    supported: true
     note: ''
   - n: 4
     text: In those matched pairs the outgoing payment followed the incoming one by 5.8 to 31.3 hours, with the outgoing
@@ -76,7 +79,7 @@ items:
     - 31.3 <- step 7 matches[2].lag_hours
     - 3.3 <- step 7 matches[3].diff_pct, step 7 matches[6].diff_pct
     - 8.7 <- step 7 matches[0].diff_pct, step 7 matches[1].diff_pct, step 7 matches[4].diff_pct
-    supported: true 
+    supported: true
     note: ''
   - n: 5
     text: For example, 1446.20 USD received on 2022-09-06 18:06 (transaction 3142833) was followed on 2022-09-07
@@ -88,48 +91,113 @@ items:
     - 3142833 <- step 7 matches[0].in_txn
     - 1571.33 <- step 7 matches[0].out_amt, step 7 matches[1].out_amt, step 7 matches[4].out_amt
     - 3498649 <- step 7 matches[0].out_txn
-    - 17.4 <- step 7 matches[0].lag_hours
+    - 17.4 <- step 7 matches[0].lag_hours (cited)
     - 118197.39 <- step 7 matches[2].in_amt, step 7 matches[5].in_amt
     - 4078553 <- step 7 matches[5].in_txn
     - 110825.52 <- step 7 matches[2].out_amt, step 7 matches[5].out_amt
     - 4256263 <- step 7 matches[2].out_txn, step 7 matches[5].out_txn
-    - 8.1 <- step 7 matches[5].lag_hours
-    supported: true 
+    - 8.1 <- step 7 matches[5].lag_hours (cited)
+    supported: true
     note: ''
   - n: 6
     text: The alerted transaction 4616086 moved 3916121.5 USD from 222:811B6EEF0 to 119:811BBE850 on 2022-09-09
       at 14:12.
     numbers:
-    - 4616086 <- step 0 result.txn_id
-    - 3916121.5 <- step 0 result.amount_usd
-    supported: true 
+    - 4616086 <- step 0 result.txn_id (cited)
+    - 3916121.5 <- step 0 result.amount_usd (cited)
+    supported: true
     note: ''
   - n: 7
     text: 'That was the second payment between these two accounts: 222:811B6EEF0 had previously sent 3916120.25
       USD to 119:811BBE850 on 2022-09-02 01:01, and no funds moved in the opposite direction.'
     numbers:
-    - 3916120.25 <- step 2 a_to_b.amt
-    supported: true 
+    - 3916120.25 <- step 2 a_to_b.amt (cited)
+    supported: true
     note: ''
   - n: 8
     text: 119:811BBE850 was active on 7 of the preceding 14 days, with 12 transactions in the last 2 days.
     numbers:
-    - 7 <- step 7 n_matches, step 8 window_days, step 13 days[6].out_cnt
+    - 7 <- step 7 n_matches (cited), step 13 active_days (cited), step 8 window_days, step 13 days[6].out_cnt
     - 14 <- step 13 window_days
     - 12 <- step 8 max_hops, step 13 txns_last_2_days
-    - 2 <- step 5 result.in_cp, step 11 result.in_cp, step 13 days[5].in_cnt
-    supported: true 
+    - 2 <- step 5 result.in_cp, step 11 result.in_cp, step 13 days[5].in_cnt, +11 more
+    supported: true
     note: ''
   - n: 9
     text: The funds therefore entered 222:811B6EEF0 from two sources and were moved onwards to four counterparties
       within hours to a day, in amounts that closely tracked what had just arrived, before the account made an onward
       transfer of 3916121.5 USD to a counterparty that had received almost the same amount from it a week earlier.
     numbers:
-    - 3916121.5 <- step 0 result.amount_usd
-    supported: true 
+    - 3916121.5 <- step 0 result.amount_usd (cited)
+    supported: true
     note: ''
   - n: 10
     text: The pattern is consistent with funds being gathered into one account and then scattered out quickly.
+    numbers: []
+    supported: true
+    note: ''
+  flow_of_funds_clear: true
+  why_suspicious_explained: true
+  weak_signals_not_overstated: true
+  comment: ''
+- alert_id: 2066
+  typology: dormant_activation
+  facts:
+  - step 7 account = 15747:80F95BC50
+  - step 7 matches[0].in_txn = 3162492
+  - step 7 matches[0].in_from = 10:8005F0660
+  - step 7 matches[0].in_ts = 2022-09-09 04:58
+  - step 7 matches[0].in_amt = 7225.51
+  - step 7 matches[0].out_txn = 3162494
+  - step 7 matches[0].out_to = 223:811B86440
+  - step 7 matches[0].out_ts = 2022-09-09 07:46
+  - step 7 matches[0].out_amt = 7079.07
+  - step 7 matches[0].lag_hours = 2.8
+  - step 6 txns_last_2_days = 3
+  - step 6 txns_earlier_days = 0
+  sentences:
+  - n: 1
+    text: On 2022-09-09 at 04:58, account 10:8005F0660 sent 7225.51 USD to account 15747:80F95BC50 (txn 3162492).
+    numbers:
+    - 7225.51 <- step 7 matches[0].in_amt (cited)
+    supported: true 
+    note: ''
+  - n: 2
+    text: At 07:46 on the same date, account 15747:80F95BC50 sent 7079.07 USD to account 223:811B86440 (txn 3162494).
+    numbers:
+    - 7079.07 <- step 7 matches[0].out_amt (cited), step 0 result.amount_usd, step 5 result.out_amt, step 6 days[6].out_amt
+    supported: true 
+    note: ''
+  - n: 3
+    text: The pass-through check matched these two transactions with a lag of 2.8 hours.
+    numbers:
+    - 2.8 <- step 7 matches[0].lag_hours (cited)
+    supported: true 
+    note: ''
+  - n: 4
+    text: The activity record for 15747:80F95BC50 shows 3 transactions in the recent period and 0 transactions on
+      earlier days.
+    numbers:
+    - 3 <- step 6 txns_last_2_days (cited), step 7 matches[0].lag_hours (cited)
+    - 0 <- step 6 txns_earlier_days (cited), step 2 a_to_b.n, step 2 a_to_b.amt, step 2 b_to_a.n, +37 more
+    supported: true 
+    note: ''
+  - n: 5
+    text: This indicates the account was inactive before the alert and then became active.
+    numbers: []
+    supported: true 
+    note: ''
+  - n: 6
+    text: The inbound and outbound payments occurred on the same day, with the outbound payment made 2.8 hours after
+      the inbound payment.
+    numbers:
+    - 2.8 <- step 7 matches[0].lag_hours (cited)
+    supported: true 
+    note: ''
+  - n: 7
+    text: 'The rapid movement of funds from 10:8005F0660 through 15747:80F95BC50 to 223:811B86440 is consistent
+      with the dormant-account activation typology: an account with no earlier-day activity received funds and forwarded
+      them onward shortly afterward.'
     numbers: []
     supported: true 
     note: ''
@@ -155,74 +223,76 @@ items:
   - n: 1
     text: On 2022-09-10 at 16:45, account 4:806C024F0 sent USD 596.33 to account 116843:806C8A4E0 (transaction 5021225).
     numbers:
-    - 596.33 <- step 0 result.amount_usd
-    - 5021225 <- step 0 result.txn_id
-    supported: true 
+    - 596.33 <- step 0 result.amount_usd (cited)
+    - 5021225 <- step 0 result.txn_id (cited)
+    supported: true
     note: ''
   - n: 2
     text: A check for transactions strictly before the alert time found none between these two accounts in either
       direction.
     numbers: []
-    supported: true 
+    supported: true
     note: ''
   - n: 3
     text: Account 116843:806C8A4E0 shows a fan-in pattern.
     numbers: []
-    supported: true 
+    supported: true
     note: ''
   - n: 4
     text: In the 72 hours ending 2022-09-10 16:45 it received 18 incoming payments from 18 different counterparties
       totalling USD 47,959.30, against 1 outgoing payment of USD 1,440.45 to a single counterparty.
     numbers:
     - 72 <- step 11 result.window_hours
-    - 18 <- step 11 result.in_cp, step 11 result.in_cnt, step 12 days[6].in_cp
-    - 18 <- step 11 result.in_cp, step 11 result.in_cnt, step 12 days[6].in_cp
-    - 47,959.30 <- step 11 result.in_amt, step 12 days[6].in_amt
-    - 1 <- step 11 result.out_cp, step 11 result.out_cnt, step 12 days[6].out_cp
-    - 1,440.45 <- step 11 result.out_amt, step 12 days[6].out_amt
-    supported: true 
+    - 18 <- step 11 result.in_cnt (cited), step 11 result.in_cp, step 12 days[6].in_cp, step 12 days[6].in_cnt
+    - 18 <- step 11 result.in_cnt (cited), step 11 result.in_cp, step 12 days[6].in_cp, step 12 days[6].in_cnt
+    - 47,959.30 <- step 11 result.in_amt (cited), step 12 days[6].in_amt
+    - 1 <- step 11 result.out_cnt (cited), step 11 result.out_cp, step 12 days[6].out_cp, step 12 days[6].out_cnt,
+      +1 more
+    - 1,440.45 <- step 11 result.out_amt (cited), step 12 days[6].out_amt
+    supported: true
     note: ''
   - n: 5
     text: Daily activity from 2022-09-04 to 2022-09-10 shows nothing on 2022-09-04 through 2022-09-09.
     numbers: []
-    supported: true 
+    supported: true
     note: ''
   - n: 6
     text: On 2022-09-10 the account recorded 18 incoming payments totalling USD 47,959.30 and 1 outgoing payment
       of USD 1,440.45, giving 19 transactions in the last two days and none on earlier days.
     numbers:
-    - 18 <- step 11 result.in_cp, step 11 result.in_cnt, step 12 days[6].in_cp
-    - 47,959.30 <- step 11 result.in_amt, step 12 days[6].in_amt
-    - 1 <- step 11 result.out_cp, step 11 result.out_cnt, step 12 days[6].out_cp
-    - 1,440.45 <- step 11 result.out_amt, step 12 days[6].out_amt
-    - 19 <- step 11 result.cp_total_before, step 12 txns_last_2_days
-    supported: true 
+    - 18 <- step 11 result.in_cnt (cited), step 11 result.in_cp, step 12 days[6].in_cp, step 12 days[6].in_cnt
+    - 47,959.30 <- step 11 result.in_amt (cited), step 12 days[6].in_amt
+    - 1 <- step 11 result.out_cnt (cited), step 11 result.out_cp, step 12 days[6].out_cp, step 12 days[6].out_cnt,
+      +1 more
+    - 1,440.45 <- step 11 result.out_amt (cited), step 12 days[6].out_amt
+    - 19 <- step 12 txns_last_2_days (cited), step 11 result.cp_total_before
+    supported: true
     note: ''
   - n: 7
     text: The account is held by entity 800B49C40, a Sole Proprietorship, which has 3,743 accounts across 800 banks.
     numbers:
-    - 3,743 <- step 14 result.n_accounts
+    - 3,743 <- step 14 result.n_accounts (cited)
     - 800 <- step 14 result.n_banks
-    supported: true 
+    supported: true
     note: ''
   - n: 8
     text: The alerted payment of USD 596.33 arrived on the same day the account collected 18 payments from 18 different
       counterparties, and it had no prior transactions with the sending account.
     numbers:
-    - 596.33 <- step 0 result.amount_usd
-    - 18 <- step 11 result.in_cp, step 11 result.in_cnt, step 12 days[6].in_cp
-    - 18 <- step 11 result.in_cp, step 11 result.in_cnt, step 12 days[6].in_cp
-    supported: true 
+    - 596.33 <- step 0 result.amount_usd (cited)
+    - 18 <- step 11 result.in_cnt (cited), step 11 result.in_cp, step 12 days[6].in_cp, step 12 days[6].in_cnt
+    - 18 <- step 11 result.in_cnt (cited), step 11 result.in_cp, step 12 days[6].in_cp, step 12 days[6].in_cnt
+    supported: true
     note: ''
   - n: 9
     text: Funds were received from many separate senders within a single day and only one onward payment was made,
       so the incoming volume and the number of counterparties are not explained by any earlier activity on the account.
     numbers: []
-    supported: true 
+    supported: true
     note: ''
-  flow_of_funds_clear: true 
-  why_suspicious_explained: true 
-  weak_signals_not_overstated: true 
+  flow_of_funds_clear: true
+  why_suspicious_explained: true
+  weak_signals_not_overstated: true
   comment: ''
 - alert_id: 2101
   typology: known_launderer_integration
@@ -243,210 +313,131 @@ items:
   - n: 1
     text: On 2022-09-09 at 14:51, transaction 3586659 moved 295,519.28 USD from 11128:8045F4500 to 213704:805BD1400.
     numbers:
-    - 3586659 <- step 0 result.txn_id
-    - 295,519.28 <- step 0 result.amount_usd
-    supported: true 
+    - 3586659 <- step 0 result.txn_id (cited)
+    - 295,519.28 <- step 0 result.amount_usd (cited)
+    supported: true
     note: ''
   - n: 2
     text: The counterparty history counted only transactions strictly before the alert time and found 0 transactions
       from 11128:8045F4500 to 213704:805BD1400, so the payment went to a counterparty with no prior transaction
       relationship in that direction.
     numbers:
-    - 0 <- step 2 a_to_b.n, step 2 a_to_b.amt, step 2 b_to_a.n
-    supported: true 
+    - 0 <- step 2 a_to_b.n (cited), step 2 a_to_b.amt, step 2 b_to_a.n, step 2 b_to_a.amt, +3 more
+    supported: true
     note: ''
   - n: 3
     text: The payer account 11128:8045F4500 was already the payer in a confirmed case before the alert time; that
       case had pattern type FAN-OUT.
     numbers: []
-    supported: true 
+    supported: true
     note: ''
   - n: 4
     text: In the 72 hours ending at the alert time, the account's fan profile shows 321,057.83 USD of outbound activity.
     numbers:
-    - 72 <- step 5 result.window_hours
-    - 321,057.83 <- step 5 result.out_amt
-    supported: true 
+    - 72 <- step 5 result.window_hours (cited)
+    - 321,057.83 <- step 5 result.out_amt (cited)
+    supported: true
     note: ''
   - n: 5
     text: The account is linked to entity 800A71DA0 with 35 accounts at 29 banks.
     numbers:
-    - 35 <- step 10 result.n_accounts
-    - 29 <- step 10 result.n_banks
-    supported: true 
+    - 35 <- step 10 result.n_accounts (cited)
+    - 29 <- step 10 result.n_banks (cited)
+    supported: true
     note: ''
   - n: 6
     text: A large payment from an account with recent confirmed FAN-OUT activity to a new counterparty, together
       with many accounts across many banks, is consistent with the selected integration typology.
     numbers: []
-    supported: true 
+    supported: true
     note: ''
-  flow_of_funds_clear: true 
-  why_suspicious_explained: true 
-  weak_signals_not_overstated: true 
+  flow_of_funds_clear: true
+  why_suspicious_explained: true
+  weak_signals_not_overstated: true
   comment: ''
-- alert_id: 2415
-  typology: dormant_activation
+- alert_id: 3087
+  typology: fan_in
   facts:
-  - step 0 result.time = 2022-09-10 18:08
-  - step 0 result.txn_id = 4777025
-  - step 7 matches[0].in_txn = 4777024
-  - step 7 matches[0].in_ts = 2022-09-10 03:01
-  - step 7 matches[0].in_amt = 5840.05
-  - step 7 matches[0].out_amt = 5372.23
-  - step 7 matches[0].lag_hours = 15.1
-  - step 7 matches[0].diff_pct = 8.0
-  - step 6 active_days = 1
-  - step 6 txns_earlier_days = 0
+  - step 0 result.txn_id = 4782293
+  - step 0 result.time = 2022-09-09 20:42
+  - step 0 result.payer = 115700:8139C8F80
+  - step 0 result.payee = 32464:8139D8770
+  - step 0 result.amount_usd = 4335.92
   - step 2 a_to_b.n = 0
-  - step 12 n_matches = 0
+  - step 11 result.in_cp = 8
+  - step 11 result.in_amt = 21475.54
+  - step 11 result.window_hours = 72
+  - step 11 result.out_cnt = 0
+  - step 12 days[6].in_cnt = 8
+  - step 14 result.n_banks = 7
   sentences:
   - n: 1
-    text: On 2022-09-10, account 18819:805B9B260 received 5840.05 USD from 10709:80692A790 in transaction 4777024
-      at 03:01.
+    text: On 2022-09-09 at 20:42, txn 4782293 moved USD 4,335.92 from account 115700:8139C8F80 to account 32464:8139D8770,
+      an account held elsewhere.
     numbers:
-    - 5840.05 <- step 6 days[6].in_amt, step 7 matches[0].in_amt
-    - 4777024 <- step 7 matches[0].in_txn
+    - 4,335.92 <- step 0 result.amount_usd (cited)
     supported: true 
     note: ''
   - n: 2
-    text: At 18:08 the same day, it sent 5372.23 USD in transaction 4777025, the alerted transaction, to 1665:8005A25A0.
+    text: A check of transactions up to the alert time found 0 transfers in either direction between these two accounts
+      before this payment; that check counted only transactions strictly before 2022-09-09 20:42 and excludes the
+      alerted transaction itself.
     numbers:
-    - 5372.23 <- step 0 result.amount_usd, step 6 days[6].out_amt, step 7 matches[0].out_amt
-    - 4777025 <- step 0 result.txn_id, step 7 matches[0].out_txn
+    - 0 <- step 2 a_to_b.n (cited), step 11 result.out_cnt (cited), step 2 a_to_b.amt, step 2 b_to_a.n, step 2 b_to_a.amt,
+      +42 more
     supported: true 
     note: ''
   - n: 3
-    text: The outgoing payment was made 15.1 hours after the incoming credit and was 8.0% lower in amount.
+    text: Account 32464:8139D8770 received 8 inbound transfers from 8 different counterparties totalling USD 21,475.54
+      within the 72 hours before the alert time.
     numbers:
-    - 15.1 <- step 7 matches[0].lag_hours
-    - 8.0 <- step 7 matches[0].diff_pct
+    - 8 <- step 11 result.in_cp (cited), step 12 days[6].in_cnt (cited), step 11 result.in_cnt, step 11 result.cp_total_before,
+      step 12 days[6].in_cp, +1 more
+    - 8 <- step 11 result.in_cp (cited), step 12 days[6].in_cnt (cited), step 11 result.in_cnt, step 11 result.cp_total_before,
+      step 12 days[6].in_cp, +1 more
+    - 21,475.54 <- step 11 result.in_amt (cited), step 12 days[6].in_amt
+    - 72 <- step 11 result.window_hours (cited)
     supported: true 
     note: ''
   - n: 4
-    text: Account 18819:805B9B260 showed no activity in the days before this.
-    numbers: []
+    text: Its daily activity shows no inbound or outbound activity on 2022-09-03 through 2022-09-08, with all 8
+      inbound transactions and the full USD 21,475.54 arriving on 2022-09-09.
+    numbers:
+    - 8 <- step 11 result.in_cp (cited), step 12 days[6].in_cnt (cited), step 11 result.in_cnt, step 11 result.cp_total_before,
+      step 12 days[6].in_cp, +1 more
+    - 21,475.54 <- step 11 result.in_amt (cited), step 12 days[6].in_amt
     supported: true 
     note: ''
   - n: 5
-    text: Over the seven-day window ending 2022-09-10 it was active on 1 day and recorded no transactions on earlier
-      days (txns_earlier_days = 0); the two transactions of 2022-09-10 are the only activity the account shows in
-      that window.
+    text: Over the same 72-hour window the account made 0 outbound transfers (USD 0.00).
     numbers:
-    - 1 <- step 6 days[6].in_cp, step 6 days[6].in_cnt, step 6 days[6].out_cp
-    - 0 <- step 2 a_to_b.n, step 2 a_to_b.amt, step 2 b_to_a.n
+    - 72 <- step 11 result.window_hours (cited)
+    - 0 <- step 2 a_to_b.n (cited), step 11 result.out_cnt (cited), step 2 a_to_b.amt, step 2 b_to_a.n, step 2 b_to_a.amt,
+      +42 more
+    - 0.00 <- step 2 a_to_b.n (cited), step 11 result.out_cnt (cited), step 2 a_to_b.amt, step 2 b_to_a.n, step
+      2 b_to_a.amt, +42 more
     supported: true 
     note: ''
   - n: 6
-    text: The incoming 5840.05 USD and the outgoing 5372.23 USD therefore represent an abrupt departure from the
-      account's prior inactivity.
+    text: Account 32464:8139D8770 is linked to entity 800C27D90, a Sole Proprietorship that holds 7 accounts across
+      7 banks.
     numbers:
-    - 5840.05 <- step 6 days[6].in_amt, step 7 matches[0].in_amt
-    - 5372.23 <- step 0 result.amount_usd, step 6 days[6].out_amt, step 7 matches[0].out_amt
+    - 7 <- step 14 result.n_banks (cited), step 12 window_days, step 14 result.n_accounts
+    - 7 <- step 14 result.n_banks (cited), step 12 window_days, step 14 result.n_accounts
     supported: true 
     note: ''
   - n: 7
-    text: There were no prior transactions from 18819:805B9B260 to 1665:8005A25A0 before the alert time (a_to_b.n
-      = 0).
+    text: The activity is therefore a concentration of relatively small incoming payments from a number of separate
+      senders into one account on a single day, after six days of no activity, immediately preceding the transfer
+      of USD 4,335.92 to a different institution.
     numbers:
-    - 0 <- step 2 a_to_b.n, step 2 a_to_b.amt, step 2 b_to_a.n
+    - 4,335.92 <- step 0 result.amount_usd (cited)
     supported: true 
     note: ''
   - n: 8
-    text: The pass-through check on the receiving account 1665:8005A25A0 returned no matches.
+    text: A single account receiving funds from multiple third parties in that manner, and passing funds onward
+      shortly after, is consistent with the fan-in typology selected for this alert.
     numbers: []
-    supported: true 
-    note: ''
-  - n: 9
-    text: The pattern is suspicious because an account with no recorded activity in the preceding days received
-      a credit and then, within 15.1 hours, moved almost the same amount out to a counterparty with which it had
-      no prior transaction history.
-    numbers:
-    - 15.1 <- step 7 matches[0].lag_hours
-    supported: true 
-    note: ''
-  - n: 10
-    text: The short interval, the 8.0% difference between the two amounts and the new relationship indicate funds
-      being moved through an account that had been inactive, rather than activity consistent with the account's
-      earlier pattern.
-    numbers:
-    - 8.0 <- step 7 matches[0].diff_pct
-    supported: true 
-    note: ''
-  flow_of_funds_clear: true 
-  why_suspicious_explained: true 
-  weak_signals_not_overstated: true 
-  comment: ''
-- alert_id: 3444
-  typology: fan_in
-  facts:
-  - step 0 result.time = 2022-09-09 01:11
-  - step 0 result.amount_usd = 3690.97
-  - step 2 a_to_b.n = 0
-  - step 2 b_to_a.n = 0
-  - step 11 result.in_cp = 6
-  - step 11 result.in_amt = 13197.43
-  - step 11 result.out_cnt = 0
-  - step 11 result.window_hours = 72
-  - step 12 days[4].in_amt = 34.61
-  - step 12 days[6].in_cnt = 5
-  - step 12 days[6].in_amt = 13162.82
-  - step 13 result.n_accounts = 5
-  sentences:
-  - n: 1
-    text: On 2022-09-09 at 01:11, transaction 4258955 transferred 3,690.97 USD from account 6276:809B6F930 to account
-      17401:809B74330.
-    numbers:
-    - 4258955 <- step 0 result.txn_id
-    - 3,690.97 <- step 0 result.amount_usd
-    supported: true 
-    note: ''
-  - n: 2
-    text: Checks covering the period before the alert time found no earlier transfers between the two accounts in
-      either direction (0 transfers each way).
-    numbers:
-    - 0 <- step 2 a_to_b.n, step 2 a_to_b.amt, step 2 b_to_a.n
-    supported: true 
-    note: ''
-  - n: 3
-    text: The alerted payment formed part of a wider inflow into 17401:809B74330.
-    numbers: []
-    supported: true 
-    note: ''
-  - n: 4
-    text: Over the 72 hours to the alert time, that account received 6 inbound transfers from 6 counterparties totalling
-      13,197.43 USD, while 0 outbound transfers were recorded.
-    numbers:
-    - 72 <- step 11 result.window_hours
-    - 6 <- step 11 result.in_cp, step 11 result.in_cnt
-    - 6 <- step 11 result.in_cp, step 11 result.in_cnt
-    - 13,197.43 <- step 11 result.in_amt
-    - 0 <- step 2 a_to_b.n, step 2 a_to_b.amt, step 2 b_to_a.n
-    supported: true 
-    note: ''
-  - n: 5
-    text: 'Daily activity for 17401:809B74330 over the 7 days to 2022-09-09 shows the inflow concentrated on a single
-      day: no inbound or outbound activity on 2022-09-03 to 2022-09-06, one inbound transfer of 34.61 USD on 2022-09-07,
-      then five inbound transfers totalling 13,162.82 USD on 2022-09-09, with no outbound transfers on any of those
-      days.'
-    numbers:
-    - 7 <- step 11 result.cp_total_before, step 12 window_days
-    - 34.61 <- step 12 days[4].in_amt
-    - 13,162.82 <- step 12 days[6].in_amt
-    supported: true 
-    note: ''
-  - n: 6
-    text: Account 17401:809B74330 belongs to entity 800C60310, a Partnership, which holds 5 accounts.
-    numbers:
-    - 5 <- step 12 days[6].in_cp, step 12 days[6].in_cnt, step 12 txns_last_2_days
-    supported: true 
-    note: ''
-  - n: 7
-    text: 'This is consistent with a fan-in pattern: value from a number of different parties converging into one
-      receiving account within a short window, with the alerted payment of 3,690.97 USD arriving at 01:11 from a
-      counterparty that had no prior transaction history with that account.'
-    numbers:
-    - 3,690.97 <- step 0 result.amount_usd
     supported: true 
     note: ''
   flow_of_funds_clear: true 

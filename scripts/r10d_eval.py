@@ -139,7 +139,9 @@ def run(split: str) -> dict:
             if r["status"] == "verified":
                 # 每句话里的数字出自哪一步哪个字段：写进评分表，评分的人不必自己去翻工具结果（D82）
                 results, _ = narr.materials(cur, load_case(cur, cid), latest(cur, cid))
-                row["sentence_sources"] = [narr.number_sources(sx, results) for sx in sentences(r["narrative"])]
+                cited = {(f["step"], f["path"]) for f in r["facts"]}
+                row["sentence_sources"] = [narr.number_sources(sx, results, cited=cited)
+                                           for sx in sentences(r["narrative"])]
             row.update(narrative=r["status"], attempts=len(r["attempts"]),
                        first_pass=bool(r["attempts"]) and bool(r["attempts"][0].get("ok")),
                        problems=[sorted({p_["problem"] for p_ in at.get("problems", [])}) for at in r["attempts"]],
@@ -150,7 +152,7 @@ def run(split: str) -> dict:
             rows.append(row)
             print(f"  #{p['alert_id']:<5} {rec['typology']:<28} 账户 {row['accounts']:>2} 交易 {row['txns']:>2} "
                   f"类别 {row['categories']}  理由 {r['status']:<9} 尝试 {row['attempts']}  "
-                  f"{'首次通过' if row['first_pass'] else '首次退回 ' + ','.join(row['problems'][0]) if row['problems'] else ''}"
+                  f"{'首次通过' if row['first_pass'] else ('首次生成失败' if row['errors'] and not row['problems'][0] else '首次退回 ' + ','.join(row['problems'][0])) if row['attempts'] else ''}"
                   f"  {row['chars']} 字符  ${row['cost_usd']:.4f}")
         conn.rollback()                                            # 什么都不留下
     return {"split": split, "prompt_version": narr.PROMPT_VERSION, "builder": BUILDER, "analyst": ANALYST,
@@ -206,6 +208,10 @@ def write_rubric(res: dict) -> Path:
         "Mark supported: false when the sentence adds a conclusion that nothing measured, e.g. 'no funds were "
         "retained' (only one matched pair was checked), 'not explained by the business type' (no business type "
         "is recorded), 'purpose-built relationship', or a count read from a truncated list.",
+        "The hardest cases have every number right: two different measurements joined into one story (e.g. the "
+        "4 counterparties of all outflows described as where the matched pass-through funds went), or an "
+        "observation from a limited window stated as the whole history ('no earlier activity' when only 7 days "
+        "were checked). Mark these false too.",
         "Write the reason in note for every false.",
         "The three questions per item: true = good. flow_of_funds_clear: a reader can follow where the money came "
         "from and went. why_suspicious_explained: the text says why this is unusual, not only what happened. "
@@ -214,9 +220,11 @@ def write_rubric(res: dict) -> Path:
         "Do not change the text."], "split": res["split"], "prompt_version": res["prompt_version"],
         "seed": SEED, "items": items}
     p = rubric_path(res["split"])
+    carried = 0
     if p.exists():
         # 人工评分花的是人的时间，不能被重跑覆盖：同一提示词版本、已经开始打分的评分表保留不动；
-        # 版本不同的旧表改名存档（评分对应的是旧版本的理由）
+        # 版本不同的旧表改名存档（评分对应的是旧版本的理由）。新表里与旧表一字不差的句子、
+        # 句子全部相同的整份理由，沿用旧表的判断（理由没变，判断也不该变），只有新出现的内容需要人去读
         old = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
         started = any(s.get("supported") is not None for it in old.get("items", []) for s in it["sentences"])
         if started and old.get("prompt_version") == res["prompt_version"]:
@@ -224,6 +232,23 @@ def write_rubric(res: dict) -> Path:
             return p
         if started:
             p.rename(p.with_name(f"{p.stem}_{old.get('prompt_version')}.yaml"))
+            sent_old = {(it["alert_id"], s["text"]): s for it in old["items"] for s in it["sentences"]}
+            item_old = {it["alert_id"]: it for it in old["items"]}
+            for it in items:
+                same = it["alert_id"] in item_old and [s["text"] for s in it["sentences"]] == \
+                    [s["text"] for s in item_old[it["alert_id"]]["sentences"]]
+                for s in it["sentences"]:
+                    o = sent_old.get((it["alert_id"], s["text"]))
+                    if o is not None and o.get("supported") is not None:
+                        s["supported"], s["note"] = o["supported"], o.get("note", "")
+                        carried += 1
+                if same:
+                    for k in ("flow_of_funds_clear", "why_suspicious_explained", "weak_signals_not_overstated",
+                              "comment"):
+                        if k in item_old[it["alert_id"]]:
+                            it[k] = item_old[it["alert_id"]][k]
+            if carried:
+                print(f"  沿用旧评分表里一字不差的 {carried} 句的判断；新出现的句子需要重新阅读")
     p.write_text(yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=110), encoding="utf-8")
     return p
 
