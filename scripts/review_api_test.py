@@ -207,6 +207,8 @@ def main() -> None:
         check(r.status_code == 403 and code_of(r) == "review_role", "分析员重开 → 403 review_role")
         r = alice.get("/api/cases/999999999")
         check(r.status_code == 404, "不存在的案件 → 404")
+        r = alice.get("/api/cases?state=1")
+        check(r.status_code == 422, "队列的状态写错（state=1）→ 422，而不是返回空队列")
 
         # ---------------- [4] 认领与租约 ----------------
         print("[4] 认领与租约")

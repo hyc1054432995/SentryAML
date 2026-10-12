@@ -189,9 +189,14 @@ def _require_case(cur, case_id: int) -> None:
         raise err(404, "no_case", f"no case {case_id}")
 
 
+CaseState = Literal["pending_review", "suspicious_confirmed", "str_drafted", "str_approved", "closed"]
+
+
 @app.get("/api/cases")
-def queue(state: str | None = Query(None, max_length=40), mine: bool = False,
+def queue(state: CaseState | None = Query(None, description="只看某个状态的案件；不填 = 全部"),
+          mine: bool = Query(False, description="true = 只看我认领中的案件"),
           who: auth.Reviewer = Depends(me), conn: psycopg.Connection = Depends(get_db)):
+    # state 写成固定的几个取值：写错（例如 state=1）直接 422，而不是悄悄返回一个空队列，让人以为没有案件
     def q(cur):
         # 队列里不列 Agent 的结论：先看证据再看结论（自动化偏差，D78）；来源（route）本身是分流规则，不是结论
         cur.execute("""SELECT s.case_id, s.alert_id, a.tier, s.route, s.state, s.last_seq, s.last_actor, s.last_at,
