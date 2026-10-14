@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}登录 · SentryAML{% endblock %}
+{% block main %}
+<section class="login">
+  <h1>复核员登录</h1>
+  <form id="login-form" autocomplete="on">
+    <label>账号<input name="reviewer_id" autocomplete="username" required></label>
+    <label>密码<input name="password" type="password" autocomplete="current-password" required></label>
+    <button type="submit" class="primary">登录</button>
+  </form>
+  <p class="quiet">密码在数据库里只存 argon2id 哈希；连续输错 5 次会暂停登录 15 分钟。</p>
+</section>
+{% endblock %}

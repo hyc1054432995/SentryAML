@@ -271,14 +271,16 @@ def build_body(cur, case: dict) -> tuple[dict, str | None]:
     return body, csv_text
 
 
-def insert_draft(cur, case: dict, actor: str, body: dict, csv_text: str | None, generator: dict) -> tuple[int, str]:
-    """写入草稿 + 记录复核事件，在同一个事务里：要么都成功，要么都不发生。"""
+def insert_draft(cur, case: dict, actor: str, body: dict, csv_text: str | None, generator: dict,
+                 seen: str | None = None) -> tuple[int, str]:
+    """写入草稿 + 记录复核事件，在同一个事务里：要么都成功，要么都不发生。
+    seen：页面加载时看到的状态（R11b 网页接口传入，数据库做防过期检查）；命令行不传，取当前状态。"""
     cur.execute("""INSERT INTO str_drafts (case_id, version, created_by, generator, body, attachment_csv)
                    VALUES (%s, 0, %s, %s, %s, %s) RETURNING version, attachment_sha256""",
                 (case["case_id"], actor, json.dumps(generator), json.dumps(body, ensure_ascii=False), csv_text))
     version, sha = cur.fetchone()
     action = "draft_str" if case["state"] == "suspicious_confirmed" else "edit_str"
-    act(cur, case["case_id"], action, actor, payload={"draft_version": version})
+    act(cur, case["case_id"], action, actor, seen=seen, payload={"draft_version": version})
     return version, sha
 
 

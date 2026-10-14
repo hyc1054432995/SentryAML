@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% set c = d.case %}
+{% set draft = aids.draft %}
+{% set editable = c.state == "str_drafted" and not blocked %}
+{% block title %}案件 #{{ c.case_id }} · SentryAML{% endblock %}
+{% block main %}
+<p class="crumbs"><a href="/queue">← 复核队列</a></p>
+<h1>案件 #{{ c.case_id }} <span class="state s-{{ c.state }}">{{ STATE_NAMES.get(c.state, c.state) }}</span></h1>
+<p class="meta">告警 #{{ c.alert_id }} · {{ ROUTE_NAMES.get(c.route, c.route) }} · 档位 {{ d.alert.tier }}</p>
+
+<section class="card claim">
+  {% if c.state in ("closed", "str_approved") %}
+    <span class="quiet">已{{ STATE_NAMES[c.state] }}，不需要认领。</span>
+  {% elif not d.claim.holder %}
+    <span>没有人认领。认领后 30 分钟内，其他分析员不能操作这个案件。</span>
+    <button type="button" data-post="/api/cases/{{ c.case_id }}/claim">认领</button>
+  {% elif d.claim.mine %}
+    <span>你认领中，至 {{ d.claim.expires_at|sgt }}。</span>
+    <button type="button" data-post="/api/cases/{{ c.case_id }}/claim">续期</button>
+    <button type="button" data-post="/api/cases/{{ c.case_id }}/release">释放</button>
+  {% else %}
+    <span class="warn">{{ d.claim.holder }} 认领中，至 {{ d.claim.expires_at|sgt }}。</span>
+    {% if who.role == "mlro" %}
+    <button type="button" data-post="/api/cases/{{ c.case_id }}/claim" data-fields="reason">接管（理由写在下方"理由"框）</button>
+    <button type="button" data-post="/api/cases/{{ c.case_id }}/release" data-fields="reason">替 TA 释放</button>
+    {% else %}
+    <span class="quiet">认领期间只有认领人和 MLRO 能操作。</span>
+    {% endif %}
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>1 告警</h2>
+  <dl class="kv">
+    <dt>交易</dt><dd>#{{ d.alert.txn_id }} · {{ d.alert.time.strftime("%Y-%m-%d %H:%M") if d.alert.time else "" }}（数据集时间）</dd>
+    <dt>付款方</dt><dd><code>{{ d.alert.from }}</code></dd>
+    <dt>收款方</dt><dd><code>{{ d.alert.to }}</code></dd>
+    <dt>金额</dt><dd>{{ "{:,.2f}".format(d.alert.amount_usd|float) }} USD</dd>
+    <dt>模型分数</dt><dd>分位 {{ "%.3f"|format(d.alert.score_pct) }}（排名用，不是概率）</dd>
+  </dl>
+</section>
+
+<section class="card">
+  <h2>2 证据 <span class="quiet">Agent 每条都由程序核对过工具结果</span></h2>
+  {% if d.evidence %}
+  <table class="grid">
+    <thead><tr><th>步骤</th><th>工具</th><th>字段</th><th>值</th><th>核验</th></tr></thead>
+    <tbody>
+    {% for e in d.evidence %}
+      <tr><td>{{ e.step }}</td><td>{{ e.tool or "?" }}</td><td><code>{{ e.path }}</code></td>
+          <td>{{ e.value }}</td><td>{{ "✓" if e.verified else "✗" }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="quiet">没有 Agent 调查的证据（{{ d.agent_note or "T1 告警不经过 Agent" }}）。</p>
+  {% endif %}
+  {% if aids.hints %}
+  <div class="hints">
+    <h3>解读提示（由代码检查证据得出，不是模型判断）</h3>
+    <ol>
+    {% for h in aids.hints %}
+      <li id="hint-{{ loop.index }}"><span class="badge h-{{ h.kind }}">{{ HINT_NAMES.get(h.kind, h.kind) }}</span> {{ h.text }}</li>
+    {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+  {% if d.not_checked %}
+  <p><strong>Agent 没能查的：</strong>{{ d.not_checked }}</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>3 Agent 的结论</h2>
+  {% if d.agent %}
+  <details>
+    <summary>先看完上面的证据，形成自己的判断，再展开</summary>
+    <dl class="kv">
+      <dt>结论</dt><dd>{{ d.agent.decision }}</dd>
+      <dt>手法</dt><dd>{{ d.agent.typology }}</dd>
+      <dt>把握</dt><dd>{{ d.agent.confidence }}</dd>
+      <dt>理由</dt><dd>{{ d.agent.rationale }}</dd>
+    </dl>
+  </details>
+  {% else %}
+  <p class="quiet">{{ d.agent_note }}</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>4 复核动作</h2>
+  {% if blocked %}
+    <p class="warn">{{ d.claim.holder }} 认领中，你现在不能操作这个案件。</p>
+  {% elif d.allowed_actions or c.state == "suspicious_confirmed" %}
+    <label class="block">理由
+      <textarea id="reason" rows="3" placeholder="推翻 Agent 的结论、没有 Agent 结论、要求补查、退回、重开时必须写"></textarea>
+    </label>
+    {% if "confirm_suspicious" in d.allowed_actions %}
+    <label class="block">手法（确认可疑时必须选定；STR 的可疑类别由它决定）
+      <select id="typology">
+        <option value="">请选择</option>
+        {% for t, name in typologies %}<option value="{{ t }}">{{ name }}（{{ t }}）</option>{% endfor %}
+      </select>
+    </label>
+    {% endif %}
+    <div class="buttons">
+    {% for a in d.allowed_actions %}
+      {% set body = {"action": a, "seen_state": c.state} %}
+      {% if a in ("approve_str", "return_draft") and draft %}{% set body = {"action": a, "seen_state": c.state, "draft_version": draft.version} %}{% endif %}
+      <button type="button" class="{{ 'primary' if a in ('confirm_suspicious', 'approve_str') else '' }}"
+              data-post="/api/cases/{{ c.case_id }}/actions" data-body='{{ body|tojson }}'
+              data-fields="{{ 'reason,typology' if a == 'confirm_suspicious' else 'reason' }}">{{ ACTION_NAMES.get(a, a) }}{% if a == "approve_str" and draft %} · 第 {{ draft.version }} 版{% endif %}</button>
+    {% endfor %}
+    {% if c.state == "suspicious_confirmed" %}
+      <button type="button" class="primary" data-post="/api/cases/{{ c.case_id }}/drafts"
+              data-body='{{ {"seen_state": c.state}|tojson }}'>组装 STR 草稿</button>
+    {% endif %}
+    </div>
+  {% else %}
+    <p class="quiet">当前状态下你没有可做的动作。</p>
+  {% endif %}
+</section>
+
+{% if draft %}
+{% set b = draft.body %}
+<section class="card">
+  <h2>5 STR 草稿 · 第 {{ draft.version }} 版</h2>
+  <p class="meta">{{ draft.created_by }} · {{ draft.generator.kind }} · {{ draft.created_at|sgt }} · 审查日期 {{ b.review_date }}</p>
+  {% if draft.problems %}
+    <div class="problems"><strong>数据库检查没有通过，不能批准：</strong>
+      <ul>{% for p in draft.problems %}<li><code>{{ p.problem }}</code> {{ p.detail }}</li>{% endfor %}</ul></div>
+  {% else %}
+    <p class="ok">数据库检查通过（str_draft_problems）{% if not draft.has_narrative %}；理由尚未撰写，写好之前不能批准{% endif %}。</p>
+  {% endif %}
+
+  <h3>账户</h3>
+  <table class="grid">
+    <thead><tr><th>账户</th><th></th><th>主体</th><th>为什么列入</th></tr></thead>
+    <tbody>
+    {% for x in b.accounts %}
+      <tr><td><code>{{ x.account }}</code></td>
+          <td>{{ "本行" if x.held_with_reporting_institution else "他行" }}{% if x.clearing_layer %} <span class="badge h-clearing">清算层</span>{% endif %}</td>
+          <td>{{ x.entity_id }}</td><td class="small">{{ x.why|join("；") }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>可疑交易</h3>
+  <table class="grid">
+    <thead><tr><th>时间</th><th>付款方</th><th>收款方</th><th class="num">金额（USD）</th><th>交易</th></tr></thead>
+    <tbody>
+    {% for t in b.suspicious_transactions %}
+      <tr><td>{{ t.time }}</td><td><code>{{ t.from }}</code></td><td><code>{{ t.to }}</code></td>
+          <td class="num">{{ "{:,.2f}".format(t.amount_usd) }}</td><td>#{{ t.txn_id }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="small">附件 {{ b.attachment.filename }}：{{ b.attachment.rows }} 笔（{{ b.attachment.from }} 至 {{ b.attachment.to }}），sha256 {{ (draft.sha256 or "")[:16] }}…</p>
+
+  <h3>可疑类别 <span class="quiet">手法 {{ b.reasons.typology }}；知识图谱原文，审查日期仍然有效</span></h3>
+  <ul class="cats">
+  {% set can_drop = editable and b.reasons.categories|length > 1 %}
+  {% for cat in b.reasons.categories %}
+    <li>{% if can_drop %}<label class="inline"><input type="checkbox" name="drop" value="{{ cat.indicator_id }}"> 去掉这一条</label>{% endif %}
+        <span class="quiet">{{ cat.doc_id }} {{ cat.unit_id }}{{ " " ~ cat.item if cat.item }}</span> “{{ cat.quote }}”</li>
+  {% endfor %}
+  </ul>
+  {% if editable %}<p class="small quiet">{% if can_drop %}勾选不符合本案的类别，再点下方"保存为第 {{ draft.version + 1 }} 版"才会生效；至少要留一条。
+  {% else %}只有这一条，不能去掉：STR 至少要有一个可疑类别。觉得手法本身不对，应该退回重新确认手法，而不是删类别。{% endif %}</p>{% endif %}
+
+  <h3>理由（Reason(s) for Suspicion）</h3>
+  {% if draft.has_narrative %}
+  <p class="quiet">逐句对照：右边是这句话里每个数字的出处（第几步、哪个字段；"cited" = 理由自己引用的事实）。
+     标了提示的句子要特别读——数字对，不等于意思对。</p>
+  <table class="grid sentences">
+    <thead><tr><th>#</th><th>句子</th><th>数字出处</th></tr></thead>
+    <tbody>
+    {% for s in draft.sentences %}
+      <tr class="{{ 'flag' if s.hints }}">
+        <td>{{ s.n }}</td>
+        <td>{{ s.text }}
+          {% for k in s.hints %}<a class="badge h-{{ aids.hints[k].kind }}" href="#hint-{{ k + 1 }}">提示 {{ k + 1 }} · {{ HINT_NAMES.get(aids.hints[k].kind) }}</a>{% endfor %}</td>
+        <td class="small">{% for x in s.numbers %}<div><code>{{ x.number }}</code> ← {{ x.sources|join("，") }}</div>{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="quiet">尚未撰写。</p>
+  {% endif %}
+
+  {% if editable %}
+  <div class="buttons">
+    <button type="button" class="primary" data-post="/api/cases/{{ c.case_id }}/narrative" data-busy="模型起草中，约 15 秒…"
+            data-body='{{ {"draft_version": draft.version}|tojson }}'>{{ "让模型重新起草理由" if draft.has_narrative else "让模型起草理由" }}</button>
+  </div>
+  <label class="block">修改理由（改完点"保存"生成新版本{% if can_drop %}；也可以不改文字，只去掉上面勾选的类别{% endif %}）
+    <textarea id="narrative" rows="10" data-original="{{ b.reasons.narrative or '' }}">{{ b.reasons.narrative or "" }}</textarea>
+  </label>
+  <div class="buttons">
+    <button type="button" data-post="/api/cases/{{ c.case_id }}/revise" data-fields="narrative,drop_categories"
+            data-body='{{ {"draft_version": draft.version}|tojson }}'>保存为第 {{ draft.version + 1 }} 版</button>
+  </div>
+  {% endif %}
+
+  {% if b.limitations %}
+  <h3>局限</h3>
+  <ul class="small">{% for x in b.limitations %}<li>{{ x }}</li>{% endfor %}</ul>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>复核记录 <span class="quiet">只追加，不能修改或删除</span></h2>
+  <table class="grid">
+    <thead><tr><th>#</th><th>时间</th><th>谁</th><th>动作</th><th>状态</th><th>理由</th></tr></thead>
+    <tbody>
+    {% for e in d.events %}
+      <tr><td>{{ e.seq }}</td><td>{{ e.created_at|sgt }}</td><td>{{ e.actor }}</td>
+          <td>{{ ACTION_NAMES.get(e.action, e.action) }}{% if e.overrides_agent %} <span class="badge warnb">推翻 Agent</span>{% endif %}
+              {% if e.payload.typology %}<span class="quiet">（{{ e.payload.typology }}）</span>{% endif %}
+              {% if e.payload.draft_version %}<span class="quiet">（第 {{ e.payload.draft_version }} 版）</span>{% endif %}</td>
+          <td class="small">{{ STATE_NAMES.get(e.from_state, e.from_state) }} → {{ STATE_NAMES.get(e.to_state, e.to_state) }}</td>
+          <td>{{ e.reason or "" }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

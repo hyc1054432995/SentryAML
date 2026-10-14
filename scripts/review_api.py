@@ -1,6 +1,6 @@
 """
-SentryAML - R11a：复核接口（FastAPI）
-=====================================
+SentryAML - R11a / R11b：复核接口与复核界面（FastAPI）
+=====================================================
 把命令行的复核流程变成多人使用的网页接口。这一层不重新实现任何规则——状态机、角色、理由、双人复核、防过期、
 租约全部由数据库强制（025、026、027）。接口只做三件事：
   1. 认出请求是谁发的：身份只来自登录会话（review_auth.py），请求内容里不接受 actor 字段
@@ -17,12 +17,18 @@ SentryAML - R11a：复核接口（FastAPI）
   POST /api/cases/{id}/release        释放
   POST /api/cases/{id}/actions        复核动作：必须带 seen_state（页面加载时看到的状态）
   GET  /api/typologies                确认可疑时可选的手法（知识图谱）
+  GET  /api/cases/{id}/aids           R11b：解读提示 + 最新草稿 + 数据库检查 + 理由逐句对照（review_hints.py）
+  POST /api/cases/{id}/drafts         R11b：组装 STR 草稿的结构化部分（str_draft.build_body），写入新版本
+  POST /api/cases/{id}/narrative      R11b：让模型起草理由并核验（str_narrative.write），通过才写入新版本
+  POST /api/cases/{id}/revise         R11b：人工修改理由、删减可疑类别，写入新版本
   GET  /api/docs                      自动生成的接口文档
+页面（R11b，review_pages.py）：/login、/queue、/cases/{id}——服务端渲染，按钮调用上面这些接口
 
 启动（只监听本机）：
-    python scripts/review_api.py            # http://127.0.0.1:8000/api/docs
+    python scripts/review_api.py            # 复核界面 http://127.0.0.1:8000/   接口文档 /api/docs
 测试：
-    python scripts/review_api_test.py       # 端到端测试，全部在一个事务里，结束时回滚
+    python scripts/review_api_test.py       # R11a 接口的端到端测试，全部在一个事务里，结束时回滚
+    python scripts/review_web_test.py       # R11b 草稿接口、页面、解读提示
 """
 
 from __future__ import annotations
@@ -30,6 +36,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import sys
 from datetime import datetime, timezone
 from typing import Iterator, Literal
 
@@ -57,6 +64,12 @@ STATUS = {"review_stale": 409, "review_claimed": 409, "review_illegal": 409, "cl
           "review_reason": 422, "str_typology": 422, "str_version": 422, "str_no_draft": 422, "str_narrative": 422,
           "str_invalid": 422, "str_state": 422}
 
+# 复核页面的内容安全策略：只允许运行、加载本站的脚本和样式（不允许页面里内联的脚本、不从外部 CDN 加载）。
+# 即使模型写的理由里混进了 <script>，模板转义之外还有这一道：浏览器拒绝执行不是来自本站文件的脚本。
+# /api/docs 的接口文档页需要从 CDN 加载 Swagger，不套用这条策略
+PAGE_CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; "
+            "form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'")
+
 app = FastAPI(title="SentryAML review API", version="r11a", docs_url="/api/docs", openapi_url="/api/openapi.json",
               redoc_url=None)
 
@@ -67,8 +80,11 @@ async def security_headers(request: Request, call_next):
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")    # 浏览器不要猜文件类型
     resp.headers.setdefault("X-Frame-Options", "DENY")              # 不能被别的网站嵌进框架里诱导点击
     resp.headers.setdefault("Referrer-Policy", "no-referrer")
-    if request.url.path.startswith("/api/") and not request.url.path.startswith("/api/docs"):
+    path = request.url.path
+    if not path.startswith("/api/docs") and not path.startswith("/api/openapi") and not path.startswith("/static/"):
         resp.headers.setdefault("Cache-Control", "no-store")        # 案件数据不留在浏览器缓存里
+    if not path.startswith("/api/"):
+        resp.headers.setdefault("Content-Security-Policy", PAGE_CSP)
     return resp
 
 
@@ -92,6 +108,10 @@ def db_call(conn: psycopg.Connection, fn):
             return fn(cur)
     except psycopg.errors.QueryCanceled:
         raise HTTPException(503, {"code": "timeout", "message": "the query took too long"})
+    except SystemExit as e:
+        # str_draft / str_narrative 是命令行脚本，遇到"没有草稿""状态不对"之类会 SystemExit；在接口里绝不能让它
+        # 结束服务器进程，翻译成 422（事务已随异常回滚）
+        raise HTTPException(422, {"code": "rejected", "message": str(e)})
     except psycopg.Error as e:
         msg = (e.diag.message_primary or str(e)) if getattr(e, "diag", None) else str(e)
         code = msg.split(":", 1)[0]
@@ -197,18 +217,20 @@ def queue(state: CaseState | None = Query(None, description="只看某个状态�
           mine: bool = Query(False, description="true = 只看我认领中的案件"),
           who: auth.Reviewer = Depends(me), conn: psycopg.Connection = Depends(get_db)):
     # state 写成固定的几个取值：写错（例如 state=1）直接 422，而不是悄悄返回一个空队列，让人以为没有案件
-    def q(cur):
-        # 队列里不列 Agent 的结论：先看证据再看结论（自动化偏差，D78）；来源（route）本身是分流规则，不是结论
-        cur.execute("""SELECT s.case_id, s.alert_id, a.tier, s.route, s.state, s.last_seq, s.last_actor, s.last_at,
-                              cl.holder, cl.expires_at
-                       FROM review_case_state s JOIN alerts a USING (alert_id)
-                       LEFT JOIN review_claim_state cl ON cl.case_id = s.case_id
-                       WHERE (%(state)s::text IS NULL OR s.state = %(state)s)
-                         AND (NOT %(mine)s OR cl.holder = %(me)s)
-                       ORDER BY s.case_id""", {"state": state, "mine": mine, "me": who.reviewer_id})
-        cols = [d.name for d in cur.description]
-        return [dict(zip(cols, r)) for r in cur.fetchall()]
-    return {"cases": db_call(conn, q)}
+    return {"cases": db_call(conn, lambda cur: queue_rows(cur, state, mine, who.reviewer_id))}
+
+
+def queue_rows(cur, state: str | None, mine: bool, reviewer_id: str) -> list[dict]:
+    """队列：接口和页面共用。不列 Agent 的结论：先看证据再看结论（自动化偏差，D78）；来源（route）是分流规则，不是结论。"""
+    cur.execute("""SELECT s.case_id, s.alert_id, a.tier, s.route, s.state, s.last_seq, s.last_actor, s.last_at,
+                          cl.holder, cl.expires_at
+                   FROM review_case_state s JOIN alerts a USING (alert_id)
+                   LEFT JOIN review_claim_state cl ON cl.case_id = s.case_id
+                   WHERE (%(state)s::text IS NULL OR s.state = %(state)s)
+                     AND (NOT %(mine)s OR cl.holder = %(me)s)
+                   ORDER BY s.case_id""", {"state": state, "mine": mine, "me": reviewer_id})
+    cols = [d.name for d in cur.description]
+    return [dict(zip(cols, r)) for r in cur.fetchall()]
 
 
 def case_detail(cur, case_id: int, who: auth.Reviewer) -> dict:
@@ -336,6 +358,142 @@ def do_action(case_id: int, body: ActionIn, who: auth.Reviewer = Depends(writer)
     return db_call(conn, go)
 
 
+# ---------------------------------------------------------------------------
+# R11b：草稿与理由
+# ---------------------------------------------------------------------------
+# draft_str / edit_str 两个复核事件不在通用动作接口里：它们必须和"写入草稿"在同一个事务里（D79），
+# 所以每个草稿接口都调用 str_draft.insert_draft——写草稿、记事件、数据库检查，要么都成功，要么都不发生
+def _latest_version(cur, case_id: int) -> int | None:
+    cur.execute("SELECT max(version) FROM str_drafts WHERE case_id = %s", (case_id,))
+    return cur.fetchone()[0]
+
+
+def _require_version(cur, case_id: int, seen: int) -> None:
+    """页面上看到的是第 seen 版，最新的却不是它：拒绝，要求刷新——在旧版本上修改，会悄悄覆盖别人的改动。"""
+    v = _latest_version(cur, case_id)
+    if v != seen:
+        raise err(409, "draft_stale", f"you are looking at version {seen}, but the latest draft is version {v}; "
+                                      "reload and review it again")
+
+
+def _claim_precheck(cur, case_id: int, who: auth.Reviewer) -> None:
+    """只是提前告知（调用模型要十几秒、要花钱）；真正的规则仍在数据库里（027 的租约触发器）。"""
+    cur.execute("SELECT holder FROM review_claim_state WHERE case_id = %s", (case_id,))
+    r = cur.fetchone()
+    if r and r[0] and r[0] != who.reviewer_id and who.role != "mlro":
+        raise err(409, "review_claimed", f"case {case_id} is claimed by {r[0]}")
+
+
+@app.get("/api/cases/{case_id}/aids")
+def aids(case_id: int, who: auth.Reviewer = Depends(me), conn: psycopg.Connection = Depends(get_db)):
+    import review_hints
+
+    def go(cur):
+        _require_case(cur, case_id)
+        return review_hints.case_aids(cur, case_id)
+    return db_call(conn, go)
+
+
+class DraftIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    seen_state: str = Field(min_length=1, max_length=40)
+
+
+@app.post("/api/cases/{case_id}/drafts")
+def build_draft(case_id: int, body: DraftIn, who: auth.Reviewer = Depends(writer),
+                conn: psycopg.Connection = Depends(get_db)):
+    """组装结构化部分（不调用模型，D79），写入新版本：首次为 draft_str，之后为 edit_str（理由会清空，需要重新起草）。"""
+    import str_draft as sd
+
+    def go(cur):
+        _require_case(cur, case_id)
+        case = sd.load_case(cur, case_id)
+        b, csv_text = sd.build_body(cur, case)
+        v, sha = sd.insert_draft(cur, case, who.reviewer_id, b, csv_text,
+                                 {"kind": "builder", "builder": sd.BUILDER}, seen=body.seen_state)
+        return {"case_id": case_id, "version": v, "accounts": len(b["accounts"]),
+                "transactions": len(b["suspicious_transactions"]), "attachment_rows": b["attachment"]["rows"],
+                "categories": len(b["reasons"]["categories"]), "attachment_sha256": sha}
+    return db_call(conn, go)
+
+
+class NarrativeIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    draft_version: int = Field(ge=1)
+
+
+@app.post("/api/cases/{case_id}/narrative")
+def write_narrative(case_id: int, body: NarrativeIn, who: auth.Reviewer = Depends(writer),
+                    conn: psycopg.Connection = Depends(get_db)):
+    """让模型起草理由（一次调用，不是 Agent，D80），程序核验；通过才写入新版本，作者是点按钮的人（他采纳了这段文字）。"""
+    import str_narrative as narr
+
+    def go(cur):
+        _require_case(cur, case_id)
+        cur.execute("SELECT state FROM review_case_state WHERE case_id = %s", (case_id,))
+        if cur.fetchone()[0] != "str_drafted":
+            raise err(409, "str_state", "assemble the draft first")
+        _require_version(cur, case_id, body.draft_version)
+        _claim_precheck(cur, case_id, who)
+        rec = narr.write(case_id, who.reviewer_id, cur=cur)
+        narr.save_run(rec)                                  # 每次运行（含失败）都留记录，与命令行一致
+        if rec["status"] != "verified" or "new_version" not in rec:
+            last = (rec["attempts"] or [{}])[-1]
+            detail = rec.get("db_error") or "; ".join(f"{p['problem']}: {p['detail']}" for p in last.get("problems", [])) \
+                or last.get("error") or rec["status"]
+            raise err(422, "narrative_failed", f"the drafted text did not pass the checks and was not saved ({detail})")
+        return {"case_id": case_id, "version": rec["new_version"], "attempts": len(rec["attempts"]),
+                "cost_usd": rec["cost_usd"], "prompt_version": rec["prompt_version"]}
+    return db_call(conn, go)
+
+
+class ReviseIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    draft_version: int = Field(ge=1)
+    narrative: str | None = Field(None, max_length=10000)
+    drop_categories: list[str] = Field(default_factory=list, max_length=50)
+
+    @model_validator(mode="after")
+    def _something(self):
+        if self.narrative is None and not self.drop_categories:
+            raise ValueError("没有要保存的修改：先改理由文字，或勾选要去掉的可疑类别")
+        return self
+
+
+@app.post("/api/cases/{case_id}/revise")
+def revise(case_id: int, body: ReviseIn, who: auth.Reviewer = Depends(writer),
+           conn: psycopg.Connection = Depends(get_db)):
+    """人工修改：只能改理由、删可疑类别（D79：结构化部分来自数据，要改就重新组装）。不能新增类别——
+    类别必须是知识图谱原文，由组装器按手法和审查日期取出；删减由数据库允许，但至少要留一条（no_categories）。"""
+    import str_draft as sd
+
+    def go(cur):
+        _require_case(cur, case_id)
+        case = sd.load_case(cur, case_id)
+        _require_version(cur, case_id, body.draft_version)
+        d = sd.latest(cur, case_id)
+        old = d["body"]["reasons"]
+        have = {c["indicator_id"] for c in old["categories"]}
+        unknown = sorted(set(body.drop_categories) - have)
+        if unknown:
+            raise err(422, "category_unknown", f"not in version {d['version']}: {unknown}")
+        text = body.narrative.strip() if body.narrative is not None else (old.get("narrative") or "")
+        edited = body.narrative is not None and text != (old.get("narrative") or "").strip()
+        b = sd.revise_body(d["body"], text or None)
+        if edited:
+            # 理由改过了，原来随理由保存的"依据的事实"对应的是旧文字，不再成立
+            b["reasons"].pop("narrative_facts", None)
+        drop = set(body.drop_categories)
+        b["reasons"]["categories"] = [c for c in old["categories"] if c["indicator_id"] not in drop]
+        b["reasons"]["categories_dropped_by_reviewer"] = sorted(
+            set(old.get("categories_dropped_by_reviewer") or []) | drop)
+        gen = {"kind": "human", "base_version": d["version"], "narrative_edited": edited,
+               "dropped_categories": sorted(drop)}
+        v, _ = sd.insert_draft(cur, case, who.reviewer_id, b, d["csv"], gen, seen="str_drafted")
+        return {"case_id": case_id, "version": v, "narrative_edited": edited, "dropped_categories": sorted(drop)}
+    return db_call(conn, go)
+
+
 @app.get("/api/typologies")
 def typologies(who: auth.Reviewer = Depends(me), conn: psycopg.Connection = Depends(get_db)):
     def q(cur):
@@ -353,6 +511,11 @@ def main():
     # 只监听 127.0.0.1：演示环境没有 HTTPS，不对局域网开放
     uvicorn.run(app, host="127.0.0.1", port=a.port)
 
+
+# 复核页面（R11b）：页面模块不反过来 import 本模块，而是由这里把本模块传给它——直接运行本文件时模块名是 __main__，
+# 页面模块若 import review_api 会得到第二份副本，路由会注册到一个没有在运行的 app 上
+import review_pages  # noqa: E402
+review_pages.register(app, sys.modules[__name__])
 
 if __name__ == "__main__":
     main()

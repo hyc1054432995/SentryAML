@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}复核队列 · SentryAML{% endblock %}
+{% block main %}
+<h1>复核队列</h1>
+<nav class="filters">
+  <a href="/queue" class="{{ 'on' if not state and not mine }}">全部</a>
+  {% for s in ["pending_review", "suspicious_confirmed", "str_drafted", "str_approved", "closed"] %}
+  <a href="/queue?state={{ s }}" class="{{ 'on' if state == s }}">{{ STATE_NAMES[s] }}</a>
+  {% endfor %}
+  <a href="/queue?mine=true" class="{{ 'on' if mine }}">我认领的</a>
+</nav>
+<table class="grid">
+  <thead><tr><th>案件</th><th>告警</th><th>档位</th><th>来源</th><th>状态</th><th>认领</th><th>最后操作</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><a href="/cases/{{ r.case_id }}">#{{ r.case_id }}</a></td>
+      <td>{{ r.alert_id }}</td>
+      <td>{{ r.tier }}</td>
+      <td>{{ ROUTE_NAMES.get(r.route, r.route) }}</td>
+      <td><span class="state s-{{ r.state }}">{{ STATE_NAMES.get(r.state, r.state) }}</span></td>
+      <td>{% if r.holder %}{{ r.holder }}<span class="quiet">（至 {{ r.expires_at|sgt }}）</span>{% endif %}</td>
+      <td>{{ r.last_actor or "" }} <span class="quiet">{{ r.last_at|sgt }}</span></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="quiet">没有案件</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="quiet">队列里不显示 Agent 的结论：先看证据，再看结论。</p>
+{% endblock %}

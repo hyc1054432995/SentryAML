@@ -106,14 +106,21 @@ def alert_result(case: dict, cur) -> dict:
         "payee": f"{tb}:{ta}", "amount_usd": round(float(amt), 2), "tier": tier, "score_percentile": round(pct, 3)}}
 
 
-def materials(cur, case: dict, draft: dict) -> tuple[dict[int, dict], str]:
-    """返回 (可引用的结果 {step: result}, 给模型的材料文字)。只给核验过的事实所在的那些步骤。"""
+def evidence_results(cur, case: dict, facts: list[dict]) -> dict[int, dict]:
+    """可引用的结果 {step: result}：告警本身（第 0 步）+ 核验过的事实所在的那些步骤。
+    模型起草理由时看到的、核验数字时用的、复核界面逐句对照时用的（R11b），都是这一份。
+    case 只需要 alert_id、agent_run_id；facts 只取 verified 的。"""
     calls = tool_results(cur, case["agent_run_id"])
-    steps = sorted({f["step"] for f in draft["body"].get("evidence_facts", []) if f.get("step")})
+    steps = sorted({f["step"] for f in facts if f.get("step") and f.get("verified", True)})
     # 内部统计量不交给模型（v2）：去掉以后，模型想引用它们也找不到出处，事实核验和数字核验会直接拦下
     a0 = alert_result(case, cur)
     a0["result"] = {k: v for k, v in a0["result"].items() if k not in INTERNAL_ALERT_FIELDS}
-    results = {0: a0} | {s: calls[s][1] for s in steps if s in calls and calls[s][0] not in INTERNAL_TOOLS}
+    return {0: a0} | {s: calls[s][1] for s in steps if s in calls and calls[s][0] not in INTERNAL_TOOLS}
+
+
+def materials(cur, case: dict, draft: dict) -> tuple[dict[int, dict], str]:
+    """返回 (可引用的结果 {step: result}, 给模型的材料文字)。只给核验过的事实所在的那些步骤。"""
+    results = evidence_results(cur, case, draft["body"].get("evidence_facts", []))
     b = draft["body"]
     r = b["reasons"]
     parts = ["CASE",
@@ -154,15 +161,10 @@ def flatten(obj, prefix: str = "") -> list[tuple[str, object]]:
     return out
 
 
-def number_sources(text: str, results: dict[int, dict], limit: int = 3, cited=()) -> list[dict]:
-    """理由里每个数字出自哪里：给人工复核和评分用（R10d 的评分表、以后 R11 的逐句对照界面）。
-    匹配规则与 ungrounded_numbers 相同：按写出的精度四舍五入相等。
-
-    同一个数可能出现在很多字段里（"5" 到处都是）。理由自己引用的事实（cited：{(step, path)}）排在最前面，
-    其余的最多列 limit 个，再注明还有几处——v3 的评分表只列前 3 个，#3444 的"5 个账户"真正的出处
-    （第 13 步 n_accounts）被挤掉了，列出来的反而是不相干的日交易笔数（D83）。"""
+def number_hits(text: str, results: dict[int, dict]) -> list[tuple[str, list[tuple[int, str]]]]:
+    """理由里的每个数字 → 它可能出自的 (step, path) 全部列表。匹配规则与 ungrounded_numbers 相同：按写出的精度
+    四舍五入相等；日期、时刻、账户号、"step 3"、交易编号不算数字。number_sources 和复核界面的解读提示（R11b）共用它。"""
     from triage_agent import _NUM, _strip
-    cited = {(int(s), p) for s, p in cited}
     leaves = [(s, p, v) for s, res in results.items() for p, v in flatten(res)
               if isinstance(v, (int, float)) and not isinstance(v, bool)]
     out = []
@@ -170,7 +172,20 @@ def number_sources(text: str, results: dict[int, dict], limit: int = 3, cited=()
         n = float(tok.replace(",", ""))
         dec = len(tok.split(".")[1]) if "." in tok else 0
         tol = 0.5 * 10 ** (-dec) + 1e-9
-        hits = [(s, p) for s, p, v in leaves if abs(n - float(v)) <= tol]
+        out.append((tok, [(s, p) for s, p, v in leaves if abs(n - float(v)) <= tol]))
+    return out
+
+
+def number_sources(text: str, results: dict[int, dict], limit: int = 3, cited=()) -> list[dict]:
+    """理由里每个数字出自哪里：给人工复核和评分用（R10d 的评分表、以后 R11 的逐句对照界面）。
+    匹配规则与 ungrounded_numbers 相同：按写出的精度四舍五入相等。
+
+    同一个数可能出现在很多字段里（"5" 到处都是）。理由自己引用的事实（cited：{(step, path)}）排在最前面，
+    其余的最多列 limit 个，再注明还有几处——v3 的评分表只列前 3 个，#3444 的"5 个账户"真正的出处
+    （第 13 步 n_accounts）被挤掉了，列出来的反而是不相干的日交易笔数（D83）。"""
+    cited = {(int(s), p) for s, p in cited}
+    out = []
+    for tok, hits in number_hits(text, results):
         first = [h for h in hits if h in cited]
         rest = [h for h in hits if h not in cited]
         src = [f"step {s} {p} (cited)" for s, p in first] + [f"step {s} {p}" for s, p in rest[:limit]]

@@ -199,7 +199,7 @@ def explain(e: psycopg.Error) -> str:
              "review_four_eyes": "双人复核：确认可疑或写过草稿的人不能批准",
              "review_actor": "没有这个复核员",
              "review_immutable": "复核记录只能追加，不能修改或删除",
-             "str_typology": "确认可疑时必须选定手法（--typology，知识图谱里的手法）",
+             "str_typology": "确认可疑时必须选定手法（知识图谱里的手法；命令行用 --typology）",
              "str_no_draft": "还没有草稿：先运行 str_draft.py build",
              "str_version": "草稿版本不对：批准或记录的必须是最新版本",
              "str_author": "这个草稿版本不是你写的",

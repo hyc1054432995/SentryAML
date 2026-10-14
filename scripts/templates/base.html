@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="{{ csrf }}">
+<title>{% block title %}SentryAML 复核{% endblock %}</title>
+<link rel="stylesheet" href="/static/review.css">
+<script src="/static/review.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/queue">SentryAML · 人工复核</a>
+  {% if who %}
+  <span class="who">{{ who.name }} · {{ ROLE_NAMES[who.role] }}</span>
+  <button type="button" class="link" data-logout>退出</button>
+  {% endif %}
+</header>
+<main>
+{% block main %}{% endblock %}
+</main>
+<div id="message" class="message" role="alert" hidden></div>
+</body>
+</html>
