@@ -1,8 +1,8 @@
 """
-SentryAML - R11a / R11b：复核接口与复核界面（FastAPI）
-=====================================================
+SentryAML - R11a–R11c：复核接口与复核界面（FastAPI）
+===================================================
 把命令行的复核流程变成多人使用的网页接口。这一层不重新实现任何规则——状态机、角色、理由、双人复核、防过期、
-租约全部由数据库强制（025、026、027）。接口只做三件事：
+租约全部由数据库强制（025、026、027、028）。接口只做三件事：
   1. 认出请求是谁发的：身份只来自登录会话（review_auth.py），请求内容里不接受 actor 字段
   2. 调用现有的函数（review.act 等），每个请求一个数据库事务：成功提交，被拒绝整体回滚
   3. 把数据库的拒绝翻译成 HTTP 状态码和人能看懂的提示
@@ -21,6 +21,8 @@ SentryAML - R11a / R11b：复核接口与复核界面（FastAPI）
   POST /api/cases/{id}/drafts         R11b：组装 STR 草稿的结构化部分（str_draft.build_body），写入新版本
   POST /api/cases/{id}/narrative      R11b：让模型起草理由并核验（str_narrative.write），通过才写入新版本
   POST /api/cases/{id}/revise         R11b：人工修改理由、删减可疑类别，写入新版本
+  POST /api/cases/{id}/ask            R11c：问法规（R8 的法规研究 Agent），记录谁在哪个案件上问的；不改变案件
+  GET  /api/cases/{id}/regulation     R11c：这个案件上问过的法规问题和回答
   GET  /api/docs                      自动生成的接口文档
 页面（R11b，review_pages.py）：/login、/queue、/cases/{id}——服务端渲染，按钮调用上面这些接口
 
@@ -29,6 +31,7 @@ SentryAML - R11a / R11b：复核接口与复核界面（FastAPI）
 测试：
     python scripts/review_api_test.py       # R11a 接口的端到端测试，全部在一个事务里，结束时回滚
     python scripts/review_web_test.py       # R11b 草稿接口、页面、解读提示
+    python scripts/review_reg_test.py       # R11c 问法规（假 Agent，不花钱）
 """
 
 from __future__ import annotations
@@ -36,7 +39,9 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import re
 import sys
+import threading
 from datetime import datetime, timezone
 from typing import Iterator, Literal
 
@@ -47,6 +52,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 import review_auth as auth
 from db import connect_review
 from review import act, explain
+from str_draft import SGT
 
 log = logging.getLogger("sentry.review_api")
 
@@ -60,9 +66,9 @@ THROTTLE = auth.Throttle()
 #   422 Unprocessable：内容不完整或不合格（缺理由、缺手法、草稿版本不对、草稿没通过检查）
 STATUS = {"review_stale": 409, "review_claimed": 409, "review_illegal": 409, "claim_state": 409, "claim_none": 409,
           "review_role": 403, "review_four_eyes": 403, "review_actor": 403, "str_author": 403, "claim_role": 403,
-          "session_role": 403,
+          "session_role": 403, "reg_role": 403,
           "review_reason": 422, "str_typology": 422, "str_version": 422, "str_no_draft": 422, "str_narrative": 422,
-          "str_invalid": 422, "str_state": 422}
+          "str_invalid": 422, "str_state": 422, "reg_answer": 422}
 
 # 复核页面的内容安全策略：只允许运行、加载本站的脚本和样式（不允许页面里内联的脚本、不从外部 CDN 加载）。
 # 即使模型写的理由里混进了 <script>，模板转义之外还有这一道：浏览器拒绝执行不是来自本站文件的脚本。
@@ -122,8 +128,10 @@ def db_call(conn: psycopg.Connection, fn):
         raise HTTPException(500, {"code": "internal", "message": "database error; see server log"})
 
 
-def err(status: int, code: str, message: str) -> HTTPException:
-    return HTTPException(status, {"code": code, "message": message})
+def err(status: int, code: str, message: str, hint: str | None = None, headers: dict | None = None) -> HTTPException:
+    """hint：给页面显示的中文说明（review.js 优先显示它）；message 是给调用接口的程序看的英文。"""
+    body = {"code": code, "message": message} | ({"hint": hint} if hint else {})
+    return HTTPException(status, body, headers=headers)
 
 
 # ---------------------------------------------------------------------------
@@ -494,6 +502,110 @@ def revise(case_id: int, body: ReviseIn, who: auth.Reviewer = Depends(writer),
     return db_call(conn, go)
 
 
+# ---------------------------------------------------------------------------
+# R11c：问法规
+# ---------------------------------------------------------------------------
+# 同时最多几个法规 Agent 在跑。普通 def 接口共用一个线程池（默认 40 个线程）：法规 Agent 每次要等模型 5–30 秒，
+# 不设上限的话，几十个人同时提问就会占满线程，连队列页面都打不开。上限也让我们对模型服务的并发不超过 3。
+# 这是每个进程一份（进程之间不共享内存）：开 N 个进程，全系统最多 3N 个；每人每小时的次数在数据库里数，不受影响
+REG_CONCURRENCY = 3
+REG_SLOTS = threading.BoundedSemaphore(REG_CONCURRENCY)
+# 问题里像账户号的写法（银行号:账户号，账户号至少 8 位十六进制）。"10:30"、条款编号 "mas_n626:14.1" 不会被当成账户
+ACCT_IN_TEXT = re.compile(r"(?<![\w.])\d{1,6}:[0-9A-Fa-f]{8,}\b")
+REG_STATUS = {"answered", "partial", "abstained"}
+
+
+class AskIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    question: str = Field(min_length=5, max_length=1000)
+
+
+def _case_accounts(cur, case_id: int) -> list[str]:
+    cur.execute("""SELECT a.from_bank || ':' || a.from_account, a.to_bank || ':' || a.to_account
+                   FROM review_cases c JOIN alerts a ON a.alert_id = c.alert_id WHERE c.case_id = %s""", (case_id,))
+    return [x for x in cur.fetchone() if x]
+
+
+@app.post("/api/cases/{case_id}/ask")
+def ask_regulation(case_id: int, body: AskIn, who: auth.Reviewer = Depends(writer),
+                   conn: psycopg.Connection = Depends(get_db)):
+    """向法规研究 Agent（R8 选定的 agent-v3）提问。回答只给复核员参考：不改变案件状态，不写进 STR，不能当复核理由。
+    顺序：检查问题 → 检查次数 → 取并发名额 → 调用 Agent（这期间不开数据库事务）→ 一个很短的事务写记录。"""
+    import kb_agent
+
+    question = " ".join(body.question.split())
+
+    def pre(cur):
+        _require_case(cur, case_id)
+        accounts = _case_accounts(cur, case_id)
+        cur.execute("SELECT review_reg_quota_left(%s)", (who.reviewer_id,))
+        return accounts, cur.fetchone()[0]
+    accounts, left = db_call(conn, pre)
+
+    # 数据最小化：问答日志是全库共用的，任何复核员都能读；问题里写了账户号，案件信息就流到了不该看的人那里。
+    # 而且法规检索靠意思，账户号检索不到任何条款。不悄悄删掉再发：那样日志里记的就不是复核员写的话
+    if ACCT_IN_TEXT.search(question) or any(a in question for a in accounts):
+        raise err(422, "reg_case_data", "the question contains an account number; ask about the situation in general "
+                                        "terms (e.g. 'funds received and moved out within hours'), not about this case",
+                  "问题里有账户号。请按一般情形提问（例如\"收到转账后数小时内全部转出\"），不要写本案的账户——"
+                  "问答日志所有复核员都能看到，而且法规检索用不上账户号")
+    if left <= 0:
+        raise err(429, "reg_quota", "hourly limit for regulation questions reached",
+                  "这一小时问法规的次数已经用完，请稍后再问", headers={"Retry-After": "600"})
+    if not REG_SLOTS.acquire(blocking=False):
+        raise err(503, "reg_busy", f"{REG_CONCURRENCY} regulation questions are already running; try again shortly",
+                  f"已有 {REG_CONCURRENCY} 个法规查询在进行，请半分钟后再试", headers={"Retry-After": "30"})
+    try:
+        # 调查日期 = 今天（新加坡时间）：STR 现在提交，适用现在有效的规则版本
+        rec = kb_agent.research(question, as_of=datetime.now(SGT).date())
+    except Exception:
+        log.exception("regulation agent failed")
+        raise err(502, "reg_failed", "the regulation agent failed; nothing was recorded",
+                  "法规查询出错，没有留下记录，可以再试一次")
+    finally:
+        REG_SLOTS.release()
+    if rec.get("answer_id") is None or rec.get("status") not in REG_STATUS:
+        log.error("regulation agent returned no logged answer: %s", rec.get("status"))
+        raise err(502, "reg_failed", "the regulation agent did not log its answer; nothing was recorded",
+                  "法规查询没有写入日志，没有留下记录，可以再试一次")
+
+    def link(cur):
+        cur.execute("""INSERT INTO review_reg_queries (case_id, actor, answer_id) VALUES (%s, %s, %s)
+                       RETURNING query_id""", (case_id, who.reviewer_id, rec["answer_id"]))
+        return cur.fetchone()[0]
+    query_id = db_call(conn, link)
+    return {"case_id": case_id, "query_id": query_id, "answer_id": rec["answer_id"], "as_of": rec["as_of"],
+            "status": rec["status"], "abstain_reason": rec.get("abstain_reason"), "cost_usd": rec.get("cost_usd")}
+
+
+def reg_history(cur, case_id: int) -> list[dict]:
+    """这个案件上问过的法规问题，新的在前。回答全文来自 kb_answer_log（Agent 写的），这里只挑页面要的字段。"""
+    cur.execute("""SELECT q.query_id, q.actor, q.created_at, l.question, l.as_of, l.status, l.abstain_reason, l.record
+                   FROM review_reg_queries q JOIN kb_answer_log l ON l.answer_id = q.answer_id
+                   WHERE q.case_id = %s ORDER BY q.query_id DESC""", (case_id,))
+    out = []
+    for qid, actor, at, question, as_of, status, reason, rec in cur.fetchall():
+        rec = rec or {}
+        claims = [{"statement": c.get("statement") or "", "ref": c.get("source") or "", "title": c.get("title") or "",
+                   "quote": c.get("quote") or "", "verified": bool(c.get("verified"))}
+                  for c in rec.get("claims") or []]
+        out.append({"query_id": qid, "actor": actor, "asked_at": at, "question": question, "as_of": as_of,
+                    "status": status, "abstain_reason": reason, "answer": rec.get("answer") or "",
+                    "missing": rec.get("missing") or "", "claims": claims, "cost_usd": rec.get("cost_usd"),
+                    "seconds": round((rec.get("ms") or {}).get("total", 0) / 1000, 1)})
+    return out
+
+
+@app.get("/api/cases/{case_id}/regulation")
+def regulation(case_id: int, who: auth.Reviewer = Depends(me), conn: psycopg.Connection = Depends(get_db)):
+    def go(cur):
+        _require_case(cur, case_id)
+        cur.execute("SELECT review_reg_quota_left(%s)", (who.reviewer_id,))
+        left = cur.fetchone()[0]
+        return {"queries": reg_history(cur, case_id), "quota_left": left}
+    return db_call(conn, go)
+
+
 @app.get("/api/typologies")
 def typologies(who: auth.Reviewer = Depends(me), conn: psycopg.Connection = Depends(get_db)):
     def q(cur):
@@ -504,7 +616,7 @@ def typologies(who: auth.Reviewer = Depends(me), conn: psycopg.Connection = Depe
 
 def main():
     import uvicorn
-    ap = argparse.ArgumentParser(description="复核接口（R11a）")
+    ap = argparse.ArgumentParser(description="复核接口与复核界面（R11）")
     ap.add_argument("--port", type=int, default=8000)
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO)

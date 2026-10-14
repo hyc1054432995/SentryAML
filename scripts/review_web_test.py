@@ -136,6 +136,12 @@ def main() -> None:
         check(not inline and " style=" not in r.text, "页面里没有内联脚本和内联样式（否则会被策略拦下）")
         check("content-security-policy" not in anon.get("/api/docs").headers,
               "接口文档页不套用这条策略（Swagger 要从 CDN 加载）")
+        import review_pages
+        v = review_pages.asset_version()
+        links = re.findall(r'/static/review\.(?:css|js)\?v=([0-9a-f]+)', r.text)
+        css = anon.get(f"/static/review.css?v={v}")
+        check(links == [v, v] and css.status_code == 200 and "no-store" not in css.headers.get("cache-control", ""),
+              "样式和脚本的链接带内容版本号：文件一改链接就变，浏览器不会继续用旧文件", f"?v={v}")
         login(alice, "alice")
         login(bob, "bob")
         login(carol, "carol")

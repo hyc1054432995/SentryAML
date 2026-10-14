@@ -210,7 +210,9 @@ def explain(e: psycopg.Error) -> str:
              "claim_state": "已关闭或已批准的案件不需要认领",
              "claim_none": "这个案件现在没有人认领",
              "claim_role": "只有分析员和 MLRO 能认领案件",
-             "session_role": "这个账号不能登录"}
+             "session_role": "这个账号不能登录",
+             "reg_role": "只有分析员和 MLRO 能问法规",
+             "reg_answer": "只能记录刚生成的、还没挂到别的案件上的回答"}
     code = msg.split(":", 1)[0]
     return f"{hints.get(code, '数据库拒绝')}（{msg}）"
 

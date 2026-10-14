@@ -1,4 +1,4 @@
-/* SentryAML 复核界面（R11b）。只有本站文件，页面里没有内联样式（内容安全策略不允许） */
+/* SentryAML 复核界面（R11b、R11c）。只有本站文件，页面里没有内联样式（内容安全策略不允许） */
 :root {
     --ink: #1d2433; --quiet: #5c6577; --line: #d9dee7; --bg: #f6f7f9; --card: #ffffff;
     --accent: #1f5fbf; --accent-bg: #e8f0fc; --warn: #8a5300; --warn-bg: #fff4e0;
@@ -66,3 +66,15 @@
   .message { position: fixed; right: 20px; bottom: 20px; max-width: 520px; padding: 12px 16px; border-radius: 8px;
              background: var(--bad-bg); color: var(--bad); border: 1px solid #f2c4c8; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
   .message.ok { background: var(--good-bg); color: var(--good); border-color: #bfe3cc; }
+  /* 问法规（R11c） */
+  .qa { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 12px; }
+  .qa .question { font-weight: 600; margin: 4px 0; }
+  .qa .answer { white-space: pre-wrap; }
+  .claims { padding-left: 20px; }
+  .claims li { margin: 8px 0; }
+  .claims blockquote { margin: 4px 0 0; padding: 4px 10px; border-left: 3px solid var(--line); color: var(--quiet); }
+  .claims li.bad-claim { color: var(--quiet); }
+  .claims li.bad-claim blockquote { text-decoration: line-through; }
+  .r-answered { background: var(--good-bg); color: var(--good); }
+  .r-partial { background: var(--warn-bg); color: var(--warn); }
+  .r-abstained { background: #eceff3; color: var(--quiet); }

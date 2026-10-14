@@ -177,9 +177,13 @@ def research(question: str, as_of: date | None = None, use_scope: bool = True, u
         if log:
             with connect() as conn, conn.cursor() as cur:
                 cur.execute("""INSERT INTO kb_answer_log (question, as_of, status, abstain_reason, prompt_version,
-                                                          model, record) VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                                                          model, record) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                               RETURNING answer_id""",
                             (question, as_of, status, reason, AGENT_VERSION, llm.MODEL,
                              json.dumps(rec, ensure_ascii=False, default=str)))
+                # R11c：复核界面要把这条回答挂到案件上（review_reg_queries），所以返回日志编号。
+                # 只在写完日志之后加到返回值里，日志里保存的记录和发给模型的内容都不变
+                rec["answer_id"] = cur.fetchone()[0]
                 conn.commit()
         return rec
 

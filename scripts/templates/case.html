@@ -87,6 +87,41 @@
   {% endif %}
 </section>
 
+<section class="card reg">
+  <h2>问法规 <span class="quiet">只供参考：不改变案件，回答不会写进 STR，也不能当作复核理由</span></h2>
+  <p class="small quiet">由法规研究 Agent 在知识库（MAS、STRO、FATF）里查找并逐字引用原文；按提问当天有效的版本回答，每次约 5–30 秒。
+     请按一般情形提问（例如"收到转账后数小时内全部转出，是否需要报告"），不要写账户号——问答日志所有复核员都能看到。
+     你这一小时还能问 {{ reg_left }} 次。</p>
+  <label class="block">问题
+    <textarea id="question" rows="2" maxlength="1000" placeholder="What must a bank do when it suspects funds are being moved through an account to empty it?"></textarea>
+  </label>
+  <div class="buttons">
+    <button type="button" data-post="/api/cases/{{ c.case_id }}/ask" data-fields="question"
+            data-busy="正在查法规，约 5–30 秒…">提问</button>
+  </div>
+  {% for q in regs %}
+  <div class="qa">
+    <p class="meta">{{ q.actor }} · {{ q.asked_at|sgt }} · 按 {{ q.as_of }} 有效的版本 ·
+       {{ "$%.4f"|format(q.cost_usd) if q.cost_usd is not none else "" }} · {{ q.seconds }} 秒</p>
+    <p class="question">问：{{ q.question }}</p>
+    <p><span class="state r-{{ q.status }}">{{ REG_STATUS_NAMES.get(q.status, q.status) }}</span>
+       {% if q.abstain_reason %}<span class="quiet">{{ REG_REASON_NAMES.get(q.abstain_reason, q.abstain_reason) }}</span>{% endif %}</p>
+    {% if q.answer %}<p class="answer">{{ q.answer }}</p>{% endif %}
+    {% if q.claims %}
+    <ol class="claims">
+      {% for cl in q.claims %}
+      <li class="{{ 'ok-claim' if cl.verified else 'bad-claim' }}">{{ cl.statement }}
+        <div class="small"><code>{{ cl.ref }}</code>{% if cl.title %} <span class="quiet">{{ cl.title }}</span>{% endif %}
+          {% if cl.verified %}<span class="ok">✓ 逐字核验通过</span>{% else %}<span class="warn">未通过逐字核验，不要引用</span>{% endif %}</div>
+        <blockquote>“{{ cl.quote }}”</blockquote></li>
+      {% endfor %}
+    </ol>
+    {% endif %}
+    {% if q.missing %}<p class="small"><strong>知识库没有覆盖的部分：</strong>{{ q.missing }}</p>{% endif %}
+  </div>
+  {% endfor %}
+</section>
+
 <section class="card">
   <h2>4 复核动作</h2>
   {% if blocked %}
