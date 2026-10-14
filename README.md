@@ -30,31 +30,23 @@ An analyst's day in this system:
 ## Architecture
 
 ```mermaid
-flowchart LR
-  subgraph Data["Data & rules (PostgreSQL 16)"]
-    T[(5.08M transactions)] --> R[Rule baseline]
-    T --> G[Graph analysis<br/>recursive CTEs]
-  end
-  subgraph ML["ML scoring"]
-    F[Point-in-time features] --> L[LightGBM]
-  end
-  subgraph KB["Regulatory knowledge"]
-    P[MAS / FATF PDFs<br/>parsed by clause] --> Q[(Qdrant hybrid index<br/>bge-m3 + BM25)]
-    P --> K[Typology knowledge graph]
-  end
-  subgraph Agents["LLM agents (hand-written tool loops)"]
-    A[Triage agent<br/>9 SQL tools]
-    RA[Regulation agent<br/>search / get clause / submit]
-  end
-  subgraph Review["Human review (FastAPI + DB triggers)"]
-    U[Review UI] --> S[STR draft<br/>SQL + verified narrative]
-  end
-  T --> F
-  L -->|alerts| A
-  K --> A
-  Q --> RA
-  A -->|evidence + conclusion| U
-  RA -->|cited answers| U
+flowchart TB
+  D["Transactions in PostgreSQL<br/>5.08M rows, rule baseline, graph analysis"]
+  M["ML scoring<br/>point-in-time features + LightGBM"]
+  KB["Regulatory knowledge<br/>MAS / FATF parsed by clause, Qdrant hybrid index, typology graph"]
+  A["Triage agent<br/>9 point-in-time SQL tools, every number fact-checked"]
+  RA["Regulation agent<br/>answers with verbatim, verified quotes"]
+  H["Human review UI<br/>FastAPI; rules enforced by DB triggers"]
+  S["STR draft<br/>built by SQL, narrative by LLM, numbers checked"]
+  P["MLRO approval<br/>four-eyes, specific version"]
+  D --> M
+  M -->|"mid-score alerts"| A
+  M -->|"high-score alerts"| H
+  KB --> A
+  KB --> RA
+  A -->|"evidence first, then conclusion"| H
+  RA -.->|"reference only"| H
+  H --> S --> P
 ```
 
 ## Layer by layer
